@@ -2,7 +2,7 @@
 
 | Capability | Status | Notes |
 |------------|--------|-------|
-| Design (ad0) | Started | [DESIGN.md](DESIGN.md): five apps (four role apps, an offline Signer), the operation file, parallel signing, the offline genesis ceremony, the vault; decisions AD001–AD007 |
+| Design (ad0) | Started | [DESIGN.md](DESIGN.md): five apps (four role apps, an offline Signer), the operation file, parallel signing, the offline genesis ceremony, the vault, amounts; scope against pp-token-admin; decisions AD001–AD010 |
 | Operation file in pp-ledger (ad1) | No | |
 | Offline-signed genesis in pp-ledger (ad2) | No | |
 | Skeleton, shared core and UI (ad3) | No | |

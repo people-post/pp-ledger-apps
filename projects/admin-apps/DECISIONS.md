@@ -73,3 +73,31 @@ descriptions in the file are shown as the creator's notes, never as its meaning.
 **Rationale:** A non-technical signer cannot read bytes; they must be able to trust the summary, and
 only a summary the app computes is safe from a tampered file.
 **Alternatives:** A description signed alongside (a second thing to keep in step with the bytes).
+
+## AD008 — The role app's operator submits, once the quorum is signed
+
+**Date:** 2026-10-17
+**Decision:** Whoever operates the role app and has collected enough signatures submits the
+operation; the app refuses to submit one short of its quorum.
+**Rationale:** The person who started an operation is the one following it; no separate submitter role
+to staff, and nothing incomplete reaches a node.
+**Alternatives:** A designated submitter per role (one more person in every operation). Any holder
+(the Signer would need the network: AD005).
+
+## AD009 — Amounts in the chain's integer units, grouped
+
+**Date:** 2026-10-17
+**Decision:** Apps show and take amounts as the chain's integer units with digit grouping
+("1,000,000"); a display unit pp-ledger may define later replaces this.
+**Rationale:** pp-ledger has no decimals convention, and the supply (2^30) reads well in whole units;
+inventing decimals here would make the apps disagree with every other tool.
+**Alternatives:** A decimals setting in the apps (one more way to misread an amount).
+
+## AD010 — Keys live in the vault; no hardware tokens for now
+
+**Date:** 2026-10-17
+**Decision:** Private keys are kept only in the app vault (and its encrypted backup).
+**Rationale:** ML-DSA-65 is not common on hardware tokens yet; the vault design does not preclude
+adding them later.
+**Alternatives:** Waiting for hardware support (blocks the apps on others' roadmaps).
+

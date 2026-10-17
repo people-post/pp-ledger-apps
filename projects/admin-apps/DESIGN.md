@@ -44,8 +44,10 @@ same vault on that machine (§ Vault).
    for anybody: each signs their own copy.
 4. **Merge.** Any app combines signed copies of the same operation into one (signatures of the same
    transaction bytes, nothing else may differ).
-5. **Submit.** Once the quorum is met, the role app sends it to a relay or the beacon (same bytes on
-   retry: pp-ledger's `Client::submitTransaction`) and follows it into a block.
+5. **Submit.** Once the quorum is met, the operator of the role app — whoever collected the
+   signatures — sends it to a relay or the beacon (same bytes on retry: pp-ledger's
+   `Client::submitTransaction`) and follows it into a block. The app submits only a complete
+   operation (AD008).
 
 ## The operation file
 
@@ -126,17 +128,23 @@ The stack follows pp-browser (C++, pp-cpp-ui, pp-cpp-crypto); pp-ledger comes in
 (`PP_LEDGER_BUILD_APPS=OFF`), so every transaction is built and checked by the chain's own code.
 Packages: AppImage / `.deb` on Linux, a signed and notarized `.dmg` on macOS.
 
+## Amounts
+
+The native token is an integer on chain (the whole supply is 2^30); apps show whole units with digit
+grouping — "1,000,000" — and take input the same way (AD009). If pp-ledger defines a display unit
+later, the apps follow it.
+
 ## What it does not do
 
+- Serve the owners of the accounts the registrar creates (token issuers and the like): that is
+  [pp-token-admin](https://github.com/nfsc-brief-web3/pp-token-admin), an app for potentially many
+  account owners, where these apps serve the chain's few system key holders. It may share pieces
+  later (the operation file is pp-ledger's; the vault and review screens could be extracted).
 - Hold keys of ordinary users or miners (wallets are pp-browser's).
+- Hold keys on hardware tokens: ML-DSA-65 is not common on them yet; keys live in the vault (AD010).
 - Talk to a node from the Signer.
 - Edit an operation after it is created: a change is a new operation (old signatures would not hold).
 
 ## Open questions
 
-- **pp-token-admin**: token issuers are accounts the registrar creates; does token administration
-  join these apps or stay apart?
-- **Amounts**: the native token's display unit and decimals (operators read "1,000,000", not raw
-  integers).
-- **Hardware keys**: ML-DSA-65 on a hardware token is not common yet; vault-only for now.
-- **Who submits**: any holder with network, or a designated operator per role?
+None at this stage.
