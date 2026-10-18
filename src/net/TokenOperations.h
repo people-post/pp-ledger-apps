@@ -1,5 +1,5 @@
 #pragma once
-// A token issuer's operations (projects/token-app/DESIGN.md): the issuer is an issued account, its
+// An account's operations, for a token issuer (projects/token-app/DESIGN.md) and the wallet: the issuer is an issued account, its
 // token the one with its own id (TA004). Issuing is a transfer of that token out of the account (its
 // balance of it goes negative: minus the supply); sending moves the native token or the issuer's; a
 // key replacement is the account's own update. Built against the chain as a node shows it and
@@ -32,6 +32,8 @@ struct TokenOverview {
   bool low{false};
   uint32_t minSignatures{0};
   std::vector<std::string> publicKeys;
+  /** Its recovery set and any recovery announced (pp-ledger projects/account-recovery). */
+  pp::AccountRecovery recovery;
   /** Other tokens the account holds: id and balance. */
   std::vector<std::pair<uint64_t, int64_t>> otherTokens;
   /** Latest first, at most kRecentShown. */
@@ -79,5 +81,39 @@ pp::Roe<pp::operation::Operation> makeKeyReplacement(const ChainInfo &chain, con
 pp::Roe<uint64_t> keyReplacementFee(const ChainInfo &chain, const pp::operation::SignerSet &current,
                                     const pp::UserAccount &state, const std::vector<std::string> &keys,
                                     uint32_t minSignatures);
+
+// ---- Account recovery (pp-ledger projects/account-recovery) ----
+// An account's recovery set names its next keys when all of its own are lost; they take over after
+// the account's delay unless its keys cancel. Each of these pays the least fee.
+
+/** Seconds an epoch lasts under the config in force (0 when the config does not say). */
+uint64_t epochSeconds(const ChainInfo &chain);
+/** The epoch at Unix time `now`, by the chain's clock (its genesis time and epoch length). */
+uint64_t epochAt(const ChainInfo &chain, int64_t now);
+/** The delay of `days`, in epochs (at least 1, rounded up). */
+pp::Roe<uint64_t> delayEpochsFor(const ChainInfo &chain, uint64_t days);
+
+/**
+ * The account's recovery set (`keys`, `minSignatures` of them to announce) and delay set, signed by
+ * the keys in force (`current`); no keys removes it. The account's keys stay; an announcement waiting
+ * is cancelled.
+ */
+pp::Roe<pp::operation::Operation> makeRecoverySet(const ChainInfo &chain, const pp::operation::SignerSet &current,
+                                                  const pp::UserAccount &state,
+                                                  const std::vector<std::string> &keys, uint32_t minSignatures,
+                                                  uint64_t delayEpochs, const Making &making);
+/** An update changing nothing, signed by the keys in force: cancels the recovery announced. */
+pp::Roe<pp::operation::Operation> makeRecoveryCancel(const ChainInfo &chain, const pp::operation::SignerSet &current,
+                                                     const pp::UserAccount &state, const Making &making);
+/** Who signs a recovery of `account`: its recovery set, as `state` holds it. */
+pp::Roe<pp::operation::SignerSet> recoverySignersOf(uint64_t account, const pp::UserAccount &state);
+/**
+ * Account `account`'s next keys (`keys`, `minSignatures` of them), announced by its recovery set: they
+ * take over after its delay unless its keys cancel. The account pays the fee.
+ */
+pp::Roe<pp::operation::Operation> makeRecoveryAnnouncement(const ChainInfo &chain, uint64_t account,
+                                                           const pp::UserAccount &state,
+                                                           const std::vector<std::string> &keys,
+                                                           uint32_t minSignatures, const Making &making);
 
 } // namespace apps::net

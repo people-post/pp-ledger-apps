@@ -9,9 +9,12 @@
 //     if missing.
 //   pp-ledger-devfixture card <home> <passphrase> <role> <name> <name>.pub
 //     Adds a key card to <home>/vault's address book.
+//   pp-ledger-devfixture card-file <role> <name> <name>.pub <out.json>
+//     Writes a key card file (as Keys → Save key card… does).
 //   pp-ledger-devfixture verify <operation file> <signatures>
 //     Exit 0 when the file holds exactly that many valid signatures (and no invalid one).
 #include "core/AddressBook.h"
+#include "core/KeyCard.h"
 #include "core/Vault.h"
 #include "chain/Genesis.h"
 #include "client/AccountIds.h"
@@ -66,6 +69,21 @@ int main(int argc, char **argv) {
         std::cerr << keyPath << ": " << key.error().message << "\n";
         return 1;
       }
+    }
+    return 0;
+  }
+  if (argc == 6 && std::string(argv[1]) == "card-file") {
+    const auto role = roleFromName(argv[2]);
+    std::ifstream pubFile(argv[4]);
+    std::string pubHex;
+    pubFile >> pubHex;
+    if (!role) {
+      std::cerr << "bad role\n";
+      return 1;
+    }
+    if (auto saved = saveKeyCard({argv[3], *role, pp::utl::hexDecode(pubHex)}, argv[5]); !saved) {
+      std::cerr << saved.error().message << "\n";
+      return 1;
     }
     return 0;
   }

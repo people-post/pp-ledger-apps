@@ -1,0 +1,36 @@
+# Against a running chain, after wallet-recover.script: the owner's wallet shows the recovery announced
+# on Accounts, proven, and its key cancels it.
+wait 5
+click #unlock-passphrase
+type wallet passphrase
+click #unlock
+idle
+wait 5
+click #nav-accounts
+idle
+wait 5
+idle
+wait 5
+expect #account-alert-0
+shot @OUT@/wallet-11-alert.png
+click #account-recovery-0
+idle
+wait 5
+idle
+wait 3
+expect #recovery-announced
+click #recovery-cancel
+idle
+wait 5
+idle
+wait 3
+expect #action-send
+click #action-send
+idle
+wait 5
+idle
+wait 5
+idle
+wait 5
+shot @OUT@/wallet-12-cancelled.png
+quit

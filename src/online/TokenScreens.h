@@ -5,6 +5,7 @@
 // (net/TokenOperations).
 
 #include "online/OperationForm.h"
+#include "online/RecoveryParts.h"
 
 #include <cstdint>
 #include <optional>
@@ -117,7 +118,10 @@ private:
   std::string fee_;
 };
 
-/** The issuer's keys and threshold replaced, signed by the keys in force. */
+/**
+ * The issuer's keys and threshold replaced, signed by the keys in force; and its recovery set — keys that
+ * can name its new keys if all of these are lost, after a delay in which these can cancel it.
+ */
 class SignersScreen : public OperationForm {
 public:
   SignersScreen(Online &online, ui_host::Session &session, Issuer &issuer,
@@ -141,6 +145,11 @@ private:
   void addCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void updateFee(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void makeReplacement(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void addRecoveryCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void dropRecoveryKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
+  void makeRecoverySet(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void makeRecoveryRemoval(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void makeRecoveryCancel(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void addCandidate(const std::string &publicKey, bool chosen);
   std::vector<std::string> chosenKeys() const;
 
@@ -151,6 +160,14 @@ private:
   std::vector<std::string> candidateKeys_;
   std::string threshold_;
   std::string fee_;
+  /** Its recovery now, and any recovery announced; "" until read. */
+  std::string recoveryNow_;
+  std::string announced_;
+  bool hasRecovery_{false};
+  bool isAnnounced_{false};
+  ChosenKeys recoveryKeys_;
+  std::string recoveryNeeded_{"1"};
+  std::string recoveryDays_{"7"};
 };
 
 } // namespace apps::online

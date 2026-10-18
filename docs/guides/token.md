@@ -39,3 +39,16 @@ sign. *Work it out* fills in the fee. The keys in force sign the change; once it
 new keys sign everything from then on.
 
 A lost key cannot sign: replace it while enough of the others can still sign.
+
+## Its recovery
+
+If too many of the keys are lost to sign anything, the account is lost — unless it has a **recovery
+set**: keys kept apart (in another office, with a trusted party) that can name its new keys. Under
+*Its recovery* on Signers: add each recovery key's card, choose how many must sign and the days you
+have to cancel in, then *Set the recovery…* — an operation the keys in force sign, like a key
+replacement. *Remove the recovery…* takes it away.
+
+To recover, the recovery keys' holders use the wallet (Recovery → *Recover an account*): they name the
+issuer's new keys, and those take over when the days have passed. Until then the account works as
+before, and **any change signed by the keys in force cancels it**: if Overview warns of a recovery you
+did not ask for, *Cancel the recovery…* on Signers.

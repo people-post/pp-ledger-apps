@@ -73,6 +73,7 @@ several makes a silent one harmless.
 | **Send** | Native or token transfers; a multi-signature account's as an operation file for its other holders |
 | **Receive** | The account number (and later a QR code) |
 | **Evacuate** | For an account whose keys may have leaked: replace its keys with new ones made here (`T_USER_UPDATE`, signed by the keys in force), or create a new account and move everything to it — prepared, reviewed and submitted in one flow, then checked |
+| **Recovery** | An account's way back if all its keys are lost (pp-ledger's account recovery, WL010): its recovery set and delay, set or removed by its keys; a recovery announced, shown proven on Accounts, cancelled by its keys; and, for whoever holds an account's recovery key, announcing its new keys |
 | **Review and sign** | Operation files, as the Signer does: the wallet signs offline too (WL006) |
 | **Keys**, **Network** | The vault, key import and export (WL005); the network card, its nodes and what they agree on |
 

@@ -86,3 +86,13 @@ host and packaging are the work.
 **Decision:** The vault as the other apps keep it: Argon2id at libsodium's sensitive limits, a
 passphrase, the 10-minute lock. To revisit if people find unlocking too slow.
 **Rationale:** The wallet holds the person's funds; a stolen computer must not give them up.
+
+## WL010 — A way back, in the wallet
+
+**Date:** 2026-10-19
+**Decision:** The wallet sets an account's recovery set (pp-ledger `projects/account-recovery`: keys
+from key cards, a delay in days), warns of a recovery announced — proven, on Accounts — and cancels
+it; and announces a recovery for whoever holds an account's recovery keys. The token app sets and
+cancels its issuer's; its recovery-key holders use the wallet.
+**Rationale:** The last resort is where lost keys are met; the owner's veto only works if the owner
+sees the announcement without trusting a node, and the wallet's reads are proven.

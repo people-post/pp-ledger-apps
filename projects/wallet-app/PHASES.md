@@ -9,3 +9,4 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
 - [x] **wl4** Evacuate: replace keys, or a new account with everything moved; verified after
 - [x] **wl5** Keys in and out: the key-backup contract (pp-ledger), import and export; offline signing
 - [x] **wl6** Packages: its own, Linux and macOS; reproducible builds, checksums; the repository public
+- [x] **wl7** Account recovery (pp-ledger's): set, warn, cancel, recover; the token app's issuer too

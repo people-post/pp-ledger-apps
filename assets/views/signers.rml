@@ -50,6 +50,36 @@
       <p class="notice" data-if="notice != ''">{{notice}}</p>
       <p class="error" data-if="error != ''">{{error}}</p>
     </div>
+    <div class="card">
+      <h2>Its recovery</h2>
+      <p class="muted">A way back if every key in force is lost: recovery keys can name the issuer's new keys.
+        They take over after a delay, in which the keys in force can cancel it — a recovery key alone cannot
+        take the account. The hours and notes above apply here too.</p>
+      <p id="recovery-now" data-if="recovery_now != ''">{{recovery_now}}</p>
+      <div data-if="is_announced">
+        <p id="recovery-announced" class="warning">{{announced}}</p>
+        <button id="recovery-cancel" class="primary" data-event-click="recovery_cancel()" data-attrif-disabled="busy">Cancel the recovery…</button>
+      </div>
+      <div class="item" data-for="k : recovery_keys">
+        <span class="grow">{{k.name}} <span class="muted">{{k.fingerprint}}</span></span>
+        <button class="small" data-event-click="recovery_drop(it_index)">Remove</button>
+      </div>
+      <button id="recovery-card" data-event-click="recovery_card()" data-attrif-disabled="busy">Add a recovery key card…</button>
+      <div class="row">
+        <div class="grow">
+          <label>Recovery keys that must sign</label>
+          <input id="recovery-needed" class="field" type="text" data-value="recovery_needed" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Days to cancel in</label>
+          <input id="recovery-days" class="field" type="text" data-value="recovery_days" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <button id="recovery-set" class="primary" data-event-click="recovery_set()" data-attrif-disabled="busy">Set the recovery…</button>
+        <button id="recovery-remove" data-if="has_recovery" data-event-click="recovery_remove()" data-attrif-disabled="busy">Remove the recovery…</button>
+      </div>
+    </div>
   </div>
 </body>
 </rml>
