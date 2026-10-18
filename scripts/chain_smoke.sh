@@ -4,7 +4,9 @@
 #   pp-admin-reserve: a reserve → registrar transfer (the registrar's balance);
 #   pp-admin-admin: a config update raising the mint cap (the config in force), a mint to the
 #   reserve (the reserve's balance), a rotation of the admin set (2 of 4);
-#   pp-admin-registrar: an issued account for an owner key, funded by the registrar (the account).
+#   pp-admin-registrar: an issued account for an owner key, funded by the registrar (the account);
+#   pp-admin-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
+#   as it freezes the admin set until it applies.
 # Each made from the chain, signed with the smoke keys (3 of 3), submitted, seen in a block.
 # Usage: chain_smoke.sh <build dir> <pp-ledger checkout, built with its apps> [<output dir>]
 set -euo pipefail
@@ -78,5 +80,17 @@ test "$(balance "$account")" = "$fund" || { echo "FAIL: account $account does no
 "$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' | grep -qi "$(tr -d ' \n' <"$out/owner.pub")" ||
   { echo "FAIL: account $account is not the owner's key"; exit 1; }
 echo "✓ Registrar: account $account created for the owner's key, holding $fund"
+
+# 4. Genesis: the recovery set announces a new admin set.
+rm -rf "$out/genesis-home" "$out/next-admin"*
+for i in 1 2 3; do "$client" keygen -o "$out/next-admin$i" >/dev/null; done
+"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/genesis-home" "genesis passphrase" recovery \
+  "$smoke/keys/recovery1.key"
+"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/genesis-home" "genesis passphrase" admin \
+  "$out/next-admin1.key" "$out/next-admin2.key" "$out/next-admin3.key"
+run_app genesis "$out/genesis-home" recovery-chain.script
+"$client" -b --host "$node" config 2>/dev/null | grep -q "pendingRecovery: {adminKeys: 3, adminMinSignatures: 2" ||
+  { echo "FAIL: no recovery pending for the new admin set"; exit 1; }
+echo "✓ Genesis: a recovery for a new admin set (2 of 3) is pending"
 
 echo "Chain smoke passed (screenshots in $out)"

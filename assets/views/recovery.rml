@@ -1,0 +1,42 @@
+<rml>
+<head>
+  <title>Recovery</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="recovery">
+    <div class="card">
+      <h1>Replace the admin set (recovery)</h1>
+      <p class="muted">When the admin keys are lost or stolen, the recovery set names a new admin set. The recovery set: {{recovery}}.
+        The admin set in force ({{admins}}) can do nothing meanwhile. Choose the new admins from their key cards (at least 3; 2 or more to sign).</p>
+      <div class="item" data-for="candidate : candidates">
+        <input type="checkbox" data-attr-id="'recovery-' + it_index" data-checked="candidate.chosen" data-attrif-disabled="busy"/>
+        <span class="grow">{{candidate.name}} ({{candidate.fingerprint}})</span>
+      </div>
+      <p class="muted" data-if="candidates.size == 0">No other admin key cards: add the new admins' cards under Keys and people.</p>
+      <label>Signatures needed</label>
+      <input id="recovery-threshold" class="field" type="text" data-value="threshold" data-attrif-disabled="busy"/>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="recovery-make" class="primary" data-event-click="recovery_make()" data-attrif-disabled="busy">Make the announcement…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

@@ -72,4 +72,33 @@ pp::Roe<pp::operation::Operation> makeIssuedAccount(const ChainInfo &chain, cons
 /** The least fee of a new account (of `keys`) under the config in force. */
 pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::string> &keys, uint32_t minSignatures);
 
+/**
+ * A recovery announcement (T_RECOVERY): the recovery set in force names a new admin set, applied its
+ * delay later (beacon-authority ba7). Signed by the recovery set — no account.
+ */
+pp::Roe<pp::operation::Operation> makeRecovery(const ChainInfo &chain, const std::vector<std::string> &adminKeys,
+                                               uint32_t minSignatures, const Making &making);
+
+/** The settings a genesis plan sets: an update's, and the slot timing (fixed from then on). */
+const std::vector<ConfigField> &genesisFields();
+
+/** Who holds a system account or key set in a genesis plan. */
+struct PlanKeys {
+  std::vector<std::string> publicKeys;
+  uint32_t minSignatures{0};
+};
+
+/** A genesis plan as a form fills it (DESIGN.md § The genesis ceremony). */
+struct GenesisForm {
+  pp::BlockChainConfig config; ///< networkId and genesisTime (the start) included
+  PlanKeys admin, reserve, registrar, fee, recycle, recovery;
+  uint64_t recoveryDelayEpochs{0};
+  std::string beaconKey;
+  /** Genesis miners: their key and stake (ids assigned from 2^20 up). */
+  std::vector<std::pair<std::string, uint64_t>> miners;
+};
+
+/** Block 0 as an operation for the admin set to sign offline (pp-beacon --init --genesis-op). */
+pp::Roe<pp::operation::Operation> makeGenesisPlan(const GenesisForm &form, const std::string &notes, int64_t now);
+
 } // namespace admin::net

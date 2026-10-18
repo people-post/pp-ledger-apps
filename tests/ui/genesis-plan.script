@@ -1,0 +1,40 @@
+# The genesis ceremony's plan: block 0 from the coordinator's key cards and vault keys, with smoke
+# slot timing, signed 2 of 3 by the vault's admin keys.
+wait 5
+click #unlock-passphrase
+type genesis passphrase
+click #unlock
+idle
+wait 5
+click #plan-network
+clear
+type genesis-smoke
+click #plan-start
+clear
+type +0
+click #plan-slotDuration
+clear
+type 2
+click #plan-slotsPerEpoch
+clear
+type 10
+click #plan-heartbeatSlots
+clear
+type 10
+click #plan-minerDueAfterSlots
+clear
+type 0
+click #plan-recovery-delay
+clear
+type 2
+answer @OUT@/genesis.json
+click #plan-make
+wait 5
+shot @OUT@/genesis-review.png
+answer @OUT@/genesis.signed1.json
+click #sign
+wait 5
+answer @OUT@/genesis.signed2.json
+click #sign
+wait 5
+quit

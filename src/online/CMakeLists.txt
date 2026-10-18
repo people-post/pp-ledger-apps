@@ -3,6 +3,8 @@
 add_library(admin_online STATIC
     AdminScreens.cpp
     AdminScreens.h
+    GenesisScreens.cpp
+    GenesisScreens.h
     NetworkScreen.cpp
     OperationForm.cpp
     OperationForm.h

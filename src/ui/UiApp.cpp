@@ -322,6 +322,12 @@ bool UiApp::stepScript() {
         scriptFailed_ = true;
         return false;
       }
+    } else if (verb == "scroll") {
+      if (ui::Element *element = shown_ && shown_->document()
+                                     ? shown_->document()->GetElementById(rest.substr(rest.front() == '#'))
+                                     : nullptr) {
+        element->ScrollIntoView(false);
+      }
     } else if (verb == "sleep") {
       SDL_Delay(static_cast<Uint32>(std::atoi(rest.c_str())));
       return true;

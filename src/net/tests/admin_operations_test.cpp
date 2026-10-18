@@ -1,6 +1,8 @@
 // The admin set's operations, built against a chain state and checked by pp-ledger's rules.
 #include "net/AdminOperations.h"
 
+#include "chain/Genesis.h"
+
 #include "client/AccountIds.h"
 #include "lib/common/BinaryPack.hpp"
 #include "lib/common/Utilities.h"
@@ -173,4 +175,49 @@ TEST(AdminOperationsTest, TheRegistrarCreatesIssuedAccountsAndPaysTheNewAccountF
   EXPECT_EQ(tx.fromWalletId, pp::AccountIds::ID_REGISTRAR);
   EXPECT_EQ(tx.toWalletId, id);
   EXPECT_EQ(tx.amount, 100u);
+}
+
+TEST(AdminOperationsTest, TheRecoverySetNamesANewAdminSet) {
+  const ChainInfo info = chain();
+  const std::vector<std::string> fresh = {key(), key(), key()};
+  EXPECT_FALSE(makeRecovery(info, {key(), key()}, 2, making()));                       // at least 3 keys
+  EXPECT_FALSE(makeRecovery(info, {info.meta.authority.recovery.publicKeys[0], key(), key()}, 2, making())); // no recovery key
+  auto recovery = makeRecovery(info, fresh, 2, making());
+  ASSERT_TRUE(recovery) << recovery.error().message;
+  EXPECT_EQ(recovery.value().kind, op::Kind::Recovery);
+  EXPECT_FALSE(recovery.value().signers.account); // a key set signs
+  EXPECT_EQ(recovery.value().signers.publicKeys, info.meta.authority.recovery.publicKeys);
+}
+
+TEST(AdminOperationsTest, AGenesisPlanIsBlockZeroForTheAdminSetToSign) {
+  GenesisForm form;
+  form.config = pp::chain_genesis::defaultConfig("new-net");
+  form.config.genesisTime = 1'900'000'000;
+  auto set = [](size_t n, uint32_t min) {
+    PlanKeys k;
+    for (size_t i = 0; i < n; ++i) {
+      k.publicKeys.push_back(key());
+    }
+    k.minSignatures = min;
+    return k;
+  };
+  form.admin = set(3, 2);
+  form.reserve = set(3, 2);
+  form.registrar = set(1, 1);
+  form.fee = set(1, 1);
+  form.recycle = set(1, 1);
+  form.recovery = set(3, 2);
+  form.recoveryDelayEpochs = pp::chain_genesis::defaultRecoveryDelayEpochs(form.config);
+  form.miners = {{key(), pp::chain_genesis::defaultMinerStake(1)}};
+  EXPECT_FALSE(makeGenesisPlan(form, "", 1'800'000'000)); // no beacon key yet
+  form.beaconKey = key();
+  auto plan = makeGenesisPlan(form, "launch", 1'800'000'000);
+  ASSERT_TRUE(plan) << plan.error().message;
+  EXPECT_EQ(plan.value().kind, op::Kind::Genesis);
+  EXPECT_EQ(plan.value().networkId, "new-net");
+  EXPECT_EQ(plan.value().signers.publicKeys, form.admin.publicKeys);
+  EXPECT_EQ(plan.value().moreRecords.size(), 5u); // fee, reserve, registrar, recycle, one miner
+
+  form.admin = set(2, 2); // the admin set needs at least 3 keys
+  EXPECT_FALSE(makeGenesisPlan(form, "", 1'800'000'000));
 }

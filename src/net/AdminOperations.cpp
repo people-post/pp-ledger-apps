@@ -2,6 +2,7 @@
 
 #include "chain/AccountPolicy.h"
 #include "chain/ConfigPolicy.h"
+#include "chain/Genesis.h"
 #include "chain/RecordHandler.h"
 #include "client/AccountAttachment.h"
 #include "client/AccountIds.h"
@@ -251,12 +252,12 @@ pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::s
   pp::Ledger::TxNewUser probe;
   probe.fromWalletId = pp::AccountIds::ID_REGISTRAR;
   probe.meta = ownerAccount(keys, minSignatures, 0).ltsToString();
-  auto metaFee = pp::minimumFeeFor(chain.meta.config, pp::Ledger::TypedTx(probe));
-  if (!metaFee) {
-    return pp::Error(metaFee.error().message);
+  // The metadata fee and the config's flat newAccountFee (pp-ledger's rule).
+  auto fee = pp::minimumFeeFor(chain.meta.config, pp::Ledger::TypedTx(probe));
+  if (!fee) {
+    return pp::Error(fee.error().message);
   }
-  // After genesis a new account also pays the config's flat fee (NewUserTxHandler).
-  return metaFee.value() + chain.meta.config.newAccountFee;
+  return fee.value();
 }
 
 pp::Roe<op::Operation> makeIssuedAccount(const ChainInfo &chain, const op::SignerSet &registrar, uint64_t id,
@@ -301,6 +302,101 @@ pp::Roe<op::Operation> makeIssuedAccount(const ChainInfo &chain, const op::Signe
   common.notes = making.notes;
   common.createdAt = making.now;
   return op::newAccount(common, id, ownerAccount(keys, minSignatures, amount), amount, fee);
+}
+
+pp::Roe<op::Operation> makeRecovery(const ChainInfo &chain, const std::vector<std::string> &adminKeys,
+                                    uint32_t minSignatures, const Making &making) {
+  if (auto ok = checkValidity(chain, making); !ok) {
+    return ok.error();
+  }
+  if (minSignatures > 255) {
+    return pp::Error("At most 255 signatures");
+  }
+  pp::RecoveryAnnouncement announcement;
+  announcement.networkId = chain.networkId;
+  announcement.adminPublicKeys = adminKeys;
+  announcement.adminMinSignatures = static_cast<uint8_t>(minSignatures);
+  const auto &authority = chain.meta.authority;
+  if (auto valid = pp::chain_tx::validateRecoveryAnnouncement(announcement, authority, chain.networkId); !valid) {
+    return pp::Error(valid.error().message);
+  }
+  op::Common common;
+  common.networkId = chain.networkId;
+  common.genesisHash = chain.genesisHash;
+  common.signers.publicKeys = authority.recovery.publicKeys; // the recovery set signs: no account
+  common.signers.minSignatures = authority.recovery.minSignatures;
+  common.window = op::windowFrom(making.now, making.validForSeconds);
+  common.notes = making.notes;
+  common.createdAt = making.now;
+  pp::Ledger::TxRecovery tx;
+  tx.fee = 0;
+  tx.meta = announcement.ltsToString();
+  stamp(tx, common);
+  pp::Ledger::Record record;
+  record.type = pp::Ledger::T_RECOVERY;
+  record.data = pp::utl::binaryPack(tx);
+  return op::wrap(common, record);
+}
+
+const std::vector<ConfigField> &genesisFields() {
+  using C = pp::BlockChainConfig;
+  static const std::vector<ConfigField> fields = [] {
+    std::vector<ConfigField> all = {field("slotDuration", "Slot (seconds)", &C::slotDuration),
+                                    field("slotsPerEpoch", "Slots per epoch", &C::slotsPerEpoch)};
+    for (const auto &f : configFields()) {
+      all.push_back(f);
+    }
+    return all;
+  }();
+  return fields;
+}
+
+pp::Roe<op::Operation> makeGenesisPlan(const GenesisForm &form, const std::string &notes, int64_t now) {
+  if (form.config.networkId.empty()) {
+    return pp::Error("Name the network");
+  }
+  if (form.config.genesisTime <= 0) {
+    return pp::Error("Set when the network starts");
+  }
+  if (form.beaconKey.size() != pp::utl::kMlDsaPublicKeyBytes) {
+    return pp::Error("Choose the beacon's key (its operator's key card)");
+  }
+  if (auto liveness = pp::chain_tx::validateLivenessSettings(form.config); !liveness) {
+    return pp::Error(liveness.error().message);
+  }
+  if (auto limits = pp::chain_tx::validateBlockLimits(form.config); !limits) {
+    return pp::Error(limits.error().message);
+  }
+  auto keys = [](const PlanKeys &k) {
+    return pp::chain_genesis::AccountKeys{k.publicKeys, static_cast<uint8_t>(std::min<uint32_t>(k.minSignatures, 255))};
+  };
+  pp::chain_genesis::Plan plan;
+  plan.config = form.config;
+  plan.keys.genesis = keys(form.admin);
+  plan.keys.reserve = keys(form.reserve);
+  plan.keys.registrar = keys(form.registrar);
+  plan.keys.fee = keys(form.fee);
+  plan.keys.recycle = keys(form.recycle);
+  for (const auto *k : {&form.admin, &form.reserve, &form.registrar, &form.fee, &form.recycle, &form.recovery}) {
+    if (k->publicKeys.empty() || k->minSignatures == 0 || k->minSignatures > k->publicKeys.size()) {
+      return pp::Error("Every account and the recovery set need keys, and between 1 and that many to sign");
+    }
+  }
+  uint64_t id = pp::AccountIds::ID_FIRST_ISSUED;
+  for (const auto &[publicKey, stake] : form.miners) {
+    plan.miners.push_back({id++, {publicKey}, 1, stake});
+  }
+  plan.authority.recovery.publicKeys = form.recovery.publicKeys;
+  plan.authority.recovery.minSignatures = static_cast<uint8_t>(std::min<uint32_t>(form.recovery.minSignatures, 255));
+  plan.authority.recovery.delayEpochs = form.recoveryDelayEpochs;
+  plan.authority.beacon.generation = 1;
+  plan.authority.beacon.publicKey = form.beaconKey;
+  plan.authority.beacon.cutoverHeight = 0;
+  auto records = pp::chain_genesis::records(plan);
+  if (!records) {
+    return pp::Error(records.error().message);
+  }
+  return op::genesis(records.value(), notes, now);
 }
 
 } // namespace admin::net
