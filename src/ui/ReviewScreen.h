@@ -42,6 +42,8 @@ private:
   void chooseFile(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void sign(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
   void close(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void addCopies(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void saveMerged(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void show();
   void say(const std::string &error, const std::string &notice = "");
 
@@ -60,6 +62,8 @@ private:
   bool complete_{false};
   std::string notes_;
   std::vector<SignKey> signable_;
+  /** Copies were merged in, not saved yet. */
+  bool unsaved_{false};
   std::string error_;
   std::string notice_;
 };

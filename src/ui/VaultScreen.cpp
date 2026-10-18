@@ -24,6 +24,7 @@ void VaultScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("passphrase", &passphrase_);
   model.Bind("confirm", &confirm_);
   model.Bind("error", &error_);
+  model.Bind("notice", &notice_);
   model.Bind("busy", &busy_);
   model.Bind("dir", &dir_);
   model.BindEventCallback("vault_unlock", &VaultScreen::unlock, this);
@@ -36,6 +37,8 @@ void VaultScreen::willShow() {
   wipe(passphrase_);
   wipe(confirm_);
   error_.clear();
+  notice_ = session_.lockedBecause;
+  session_.lockedBecause.clear();
   busy_ = false;
   refresh();
 }

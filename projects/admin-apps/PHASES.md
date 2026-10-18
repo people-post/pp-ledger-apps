@@ -19,7 +19,7 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
       macOS
   - [x] **ad3a** CMake (pp-ledger, pp-cpp-common, pp-cpp-crypto, GoogleTest), `admin_core`, CI
   - [x] **ad3b** pp-cpp-ui, the window host, `admin_ui`
-- [ ] **ad4** Signer (offline): open an operation, review it, sign with a vault key, merge copies,
+- [x] **ad4** Signer (offline): open an operation, review it, sign with a vault key, merge copies,
       save — the first app, used by every role (review and signing came with ad3b; ad4 adds merging,
       genesis operations' many records, packaging-ready polish)
 - [ ] **ad5** Reserve: transfers; `admin_net` (read chain state, submit, follow inclusion)

@@ -29,12 +29,12 @@ Run: `./build/src/apps/signer/pp-admin-signer [operation file]`. The vault lives
 
 Development builds (`-DPP_ADMIN_DEV_HOOKS=ON`, never a release) add `pp-admin-devfixture` (a vault
 and an operation to review) and let the apps run a script (`--script`: click, type, answer file
-dialogs, take screenshots); `scripts/ui_smoke.sh` drives the Signer that way under Xvfb (a ctest
-when `xvfb-run` is present).
+dialogs, check what is shown, take screenshots); `scripts/ui_smoke.sh` drives the Signer that way
+under Xvfb (a ctest when `xvfb-run` is present).
 
 | Piece | What |
 |-------|------|
 | `src/core` (`admin_core`) | The vault, key cards and the address book, the operation workflow — no network code |
 | `src/ui` (`admin_ui`) | The window host (SDL3 + OpenGL 3, pp-cpp-ui), the app frame, the shared screens: vault, keys and people, operation review |
-| `src/apps/signer` | `pp-admin-signer`: review and sign operations, offline |
+| `src/apps/signer` | `pp-admin-signer`: review, sign and merge operations (genesis plans included), offline; locks itself after 10 minutes without use |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

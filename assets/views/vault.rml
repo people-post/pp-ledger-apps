@@ -28,6 +28,7 @@
         <span class="muted" data-if="busy">Creating… this takes a few seconds.</span>
       </div>
     </div>
+    <p id="vault-notice" class="notice" data-if="notice != ''">{{notice}}</p>
     <p class="error" data-if="error != ''">{{error}}</p>
     <p class="muted">Vault: {{dir}}</p>
   </div>

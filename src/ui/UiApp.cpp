@@ -9,6 +9,7 @@
 
 #include <SDL3/SDL.h>
 
+#include <atomic>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -21,16 +22,16 @@ namespace {
 /** What a file dialog's callback carries back to the UI thread. */
 struct DialogRequest {
   UiApp *app;
-  std::function<void(std::optional<std::string>)> done;
+  std::function<void(std::vector<std::string>)> done;
   std::vector<FileFilter> filters;
   std::vector<SDL_DialogFileFilter> sdlFilters;
 };
 
 void dialogDone(void *userdata, const char *const *files, int) {
   auto *request = static_cast<DialogRequest *>(userdata);
-  std::optional<std::string> chosen;
-  if (files && files[0]) {
-    chosen = files[0];
+  std::vector<std::string> chosen;
+  for (size_t i = 0; files && files[i]; ++i) {
+    chosen.emplace_back(files[i]);
   }
   request->app->post([request, chosen] {
     request->done(chosen);
@@ -39,7 +40,7 @@ void dialogDone(void *userdata, const char *const *files, int) {
 }
 
 DialogRequest *newRequest(UiApp *app, const std::vector<FileFilter> &filters,
-                          std::function<void(std::optional<std::string>)> done) {
+                          std::function<void(std::vector<std::string>)> done) {
   auto *request = new DialogRequest{app, std::move(done), filters, {}};
   for (const auto &filter : request->filters) {
     request->sdlFilters.push_back({filter.name.c_str(), filter.pattern.c_str()});
@@ -191,31 +192,92 @@ void UiApp::runInBackground(std::function<void()> work, std::function<void()> do
   }).detach();
 }
 
-void UiApp::chooseFileToOpen(const std::vector<FileFilter> &filters,
-                             std::function<void(std::optional<std::string>)> done) {
-  if (!dialogAnswers_.empty()) { // a development script answers
-    const std::string answer = dialogAnswers_.front();
-    dialogAnswers_.erase(dialogAnswers_.begin());
-    post([done = std::move(done), answer] { done(answer); });
+/** A development script's answer to the next dialog, if it gave one ("a|b" for several files). */
+std::optional<std::vector<std::string>> UiApp::takeAnswer() {
+  if (dialogAnswers_.empty()) {
+    return std::nullopt;
+  }
+  std::vector<std::string> files;
+  std::string answer = dialogAnswers_.front();
+  dialogAnswers_.erase(dialogAnswers_.begin());
+  for (size_t start = 0;;) {
+    const size_t bar = answer.find('|', start);
+    files.push_back(answer.substr(start, bar - start));
+    if (bar == std::string::npos) {
+      break;
+    }
+    start = bar + 1;
+  }
+  return files;
+}
+
+void UiApp::chooseFilesToOpen(const std::vector<FileFilter> &filters,
+                              std::function<void(std::vector<std::string>)> done) {
+  if (auto answer = takeAnswer()) {
+    post([done = std::move(done), files = *answer] { done(files); });
     return;
   }
   auto *request = newRequest(this, filters, std::move(done));
+  SDL_ShowOpenFileDialog(dialogDone, request, host_.window(), request->sdlFilters.data(),
+                         static_cast<int>(request->sdlFilters.size()), nullptr, true);
+}
+
+void UiApp::chooseFileToOpen(const std::vector<FileFilter> &filters,
+                             std::function<void(std::optional<std::string>)> done) {
+  auto first = [done = std::move(done)](std::vector<std::string> files) {
+    done(files.empty() ? std::nullopt : std::optional<std::string>(files.front()));
+  };
+  if (auto answer = takeAnswer()) {
+    post([first = std::move(first), files = *answer] { first(files); });
+    return;
+  }
+  auto *request = newRequest(this, filters, std::move(first));
   SDL_ShowOpenFileDialog(dialogDone, request, host_.window(), request->sdlFilters.data(),
                          static_cast<int>(request->sdlFilters.size()), nullptr, false);
 }
 
 void UiApp::chooseFileToSave(const std::vector<FileFilter> &filters, const std::string &suggested,
                              std::function<void(std::optional<std::string>)> done) {
-  if (!dialogAnswers_.empty()) { // a development script answers
-    const std::string answer = dialogAnswers_.front();
-    dialogAnswers_.erase(dialogAnswers_.begin());
-    post([done = std::move(done), answer] { done(answer); });
+  auto first = [done = std::move(done)](std::vector<std::string> files) {
+    done(files.empty() ? std::nullopt : std::optional<std::string>(files.front()));
+  };
+  if (auto answer = takeAnswer()) {
+    post([first = std::move(first), files = *answer] { first(files); });
     return;
   }
-  auto *request = newRequest(this, filters, std::move(done));
+  auto *request = newRequest(this, filters, std::move(first));
   SDL_ShowSaveFileDialog(dialogDone, request, host_.window(), request->sdlFilters.data(),
                          static_cast<int>(request->sdlFilters.size()),
                          suggested.empty() ? nullptr : suggested.c_str());
+}
+
+namespace {
+
+std::atomic<uint64_t> g_lastTouchMs{0};
+
+bool noteTouch(void *, SDL_Event *event) {
+  switch (event->type) {
+  case SDL_EVENT_KEY_DOWN:
+  case SDL_EVENT_TEXT_INPUT:
+  case SDL_EVENT_MOUSE_MOTION:
+  case SDL_EVENT_MOUSE_BUTTON_DOWN:
+  case SDL_EVENT_MOUSE_WHEEL:
+  case SDL_EVENT_FINGER_DOWN:
+    g_lastTouchMs = SDL_GetTicks();
+    break;
+  default:
+    break;
+  }
+  return true;
+}
+
+} // namespace
+
+void UiApp::setIdleTimeout(int seconds, std::function<void()> onIdle) {
+  idleSeconds_ = seconds;
+  onIdle_ = std::move(onIdle);
+  g_lastTouchMs = SDL_GetTicks();
+  SDL_AddEventWatch(noteTouch, nullptr);
 }
 
 bool UiApp::stepScript() {
@@ -240,14 +302,28 @@ bool UiApp::stepScript() {
           shown_ && shown_->document() ? shown_->document()->GetElementById(rest.substr(rest.front() == '#')) : nullptr;
       if (!element) {
         SDL_Log("script: no element %s", rest.c_str());
+        scriptFailed_ = true;
         return false;
       }
+      element->ScrollIntoView(false); // as a person scrolls to it
+      context_->Update();
       const ui::Vector2f at =
           element->GetAbsoluteOffset(ui::BoxArea::Border) + element->GetBox().GetSize(ui::BoxArea::Border) / 2.0f;
       context_->ProcessMouseMove(static_cast<int>(at.x), static_cast<int>(at.y), 0);
       context_->ProcessMouseButtonDown(0, 0);
       context_->ProcessMouseButtonUp(0, 0);
       scriptWait_ = 2;
+      return true;
+    } else if (verb == "expect") {
+      ui::Element *element =
+          shown_ && shown_->document() ? shown_->document()->GetElementById(rest.substr(rest.front() == '#')) : nullptr;
+      if (!element || !element->IsVisible(true)) {
+        SDL_Log("script: expected %s on the screen shown", rest.c_str());
+        scriptFailed_ = true;
+        return false;
+      }
+    } else if (verb == "sleep") {
+      SDL_Delay(static_cast<Uint32>(std::atoi(rest.c_str())));
       return true;
     } else if (verb == "type") {
       context_->ProcessTextInput(rest);
@@ -273,7 +349,7 @@ int UiApp::run() {
   int frames = 0;
   while (running_) {
     if (!script_.empty() && !stepScript()) {
-      break;
+      return scriptFailed_ ? 1 : 0;
     }
     // Sleep until something happens, unless the UI animates, a screenshot is due or a script runs.
     const bool idle = options_.screenshot.empty() && script_.empty() && context_->GetNextUpdateDelay() > 0.1;
@@ -281,6 +357,13 @@ int UiApp::run() {
       break;
     }
     drainPosted();
+    if (onIdle_) {
+      const bool idleNow = SDL_GetTicks() - g_lastTouchMs.load() > static_cast<uint64_t>(idleSeconds_) * 1000;
+      if (idleNow && !idleFired_) {
+        onIdle_();
+      }
+      idleFired_ = idleNow;
+    }
     context_->Update();
     host_.beginFrame();
     context_->Render();

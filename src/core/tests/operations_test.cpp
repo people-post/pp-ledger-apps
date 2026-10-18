@@ -70,6 +70,26 @@ TEST(OperationsTest, SignersSignTheirCopiesWithVaultKeysAndTheCopiesMerge) {
   EXPECT_TRUE(op::check(merged.value()).complete());
 }
 
+TEST(OperationsTest, CopiesAddTheirSignaturesAndOtherOperationsAreRefused) {
+  Holders h;
+  const std::string file = h.transferFile("transfer.json");
+  auto bobs = openOperation(file).value();
+  ASSERT_TRUE(signWithVault(h.bob, h.bobKey.id, bobs.operation));
+  ASSERT_TRUE(op::save(bobs.operation, h.dir / "bob.json"));
+
+  auto review = openOperation(file).value();
+  ASSERT_TRUE(signWithVault(h.alice, h.aliceKey.id, review.operation));
+  review.signatures = op::check(review.operation);
+  auto gained = addCopies(review, {h.dir / "bob.json"});
+  ASSERT_TRUE(gained) << gained.error().message;
+  EXPECT_EQ(gained.value(), 1u);
+  EXPECT_TRUE(review.signatures.complete());
+  EXPECT_EQ(addCopies(review, {h.dir / "bob.json"}).value(), 0u); // nothing new
+
+  const std::string other = h.transferFile("other.json"); // same signers, another transaction
+  EXPECT_FALSE(addCopies(review, {other}));
+}
+
 TEST(OperationsTest, AFileWithAStrangersSignatureIsRefused) {
   Holders h;
   const std::string file = h.transferFile("transfer.json");

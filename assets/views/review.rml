@@ -47,6 +47,7 @@
       <div class="card">
         <h2>Signatures: {{progress}}</h2>
         <p class="notice" data-if="complete">Enough signatures: it can be submitted.</p>
+        <p class="warning" data-if="unsaved">Merged signatures are not saved yet.</p>
         <div class="item" data-for="signer : signers">
           <span class="status-done" data-if="signer.done">Signed</span>
           <span class="status-todo" data-if="!signer.done">Not yet</span>
@@ -60,6 +61,12 @@
           </div>
         </div>
         <p class="muted" data-if="signable.size == 0">None of your keys is asked to sign this, or they have signed it.</p>
+        <h3>Copies signed by others</h3>
+        <p class="muted">Each signer signs their own copy; add theirs here to collect the signatures in one file.</p>
+        <div class="row">
+          <button id="add-copies" data-event-click="review_add_copies()">Add signed copies…</button>
+          <button id="save-merged" class="primary" data-if="unsaved" data-event-click="review_save()">Save the merged operation…</button>
+        </div>
       </div>
       <p class="error" data-if="error != ''">{{error}}</p>
       <p class="notice" data-if="notice != ''">{{notice}}</p>

@@ -27,6 +27,25 @@ pp::Roe<Review> openOperation(const std::string &path) {
   return review;
 }
 
+pp::Roe<size_t> addCopies(Review &review, const std::vector<std::string> &paths) {
+  std::vector<op::Operation> copies{review.operation};
+  for (const auto &path : paths) {
+    auto copy = openOperation(path);
+    if (!copy) {
+      return copy.error();
+    }
+    copies.push_back(std::move(copy.value().operation));
+  }
+  auto merged = op::merge(copies);
+  if (!merged) {
+    return pp::Error(merged.error().message + ". A copy was made from another operation file");
+  }
+  const size_t before = review.signatures.signedBy.size();
+  review.operation = std::move(merged.value());
+  review.signatures = op::check(review.operation);
+  return review.signatures.signedBy.size() - before;
+}
+
 std::vector<KeyInfo> keysToSign(const op::Operation &operation, const std::vector<KeyInfo> &vaultKeys) {
   const auto signedBy = op::check(operation).signedBy;
   std::vector<KeyInfo> out;
