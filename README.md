@@ -2,12 +2,12 @@
 
 Desktop apps for the people who hold a [pp-ledger](https://github.com/people-post/pp-ledger) chain's
 system keys — kick-starting the chain and holding its restore keys, administering it (minting, config
-updates), operating its reserve and creating accounts. For non-technical operators: every step is a
-form or a file. Linux and macOS.
+updates), operating its reserve and creating accounts — and for token issuers' operators. For
+non-technical operators: every step is a form or a file. Linux and macOS.
 
 Guides for key holders: [docs/guides](docs/guides/getting-started.md). Packages: the repository's
-releases (a `.deb` and AppImages for Linux, a disk image for macOS; [docs/RELEASE.md](docs/RELEASE.md)).
-Design: [projects/admin-apps](projects/admin-apps/DESIGN.md).
+releases (`.deb`s and AppImages for Linux, disk images for macOS; [docs/RELEASE.md](docs/RELEASE.md)).
+Design: [projects/admin-apps](projects/admin-apps/DESIGN.md), [projects/token-app](projects/token-app/DESIGN.md).
 
 ## Build
 

@@ -1,7 +1,8 @@
 # Getting started
 
-These apps are for the people who hold a pp-ledger chain's system keys. Each of you uses the app for
-your role, and the Signer to review and sign what others make.
+These apps are for the people who hold a pp-ledger chain's system keys, and for those who run a
+token issuer. Each of you uses the app for your role, and the Signer to review and sign what others
+make.
 
 | App | For |
 |-----|-----|
@@ -10,14 +11,20 @@ your role, and the Signer to review and sign what others make.
 | **PP Ledger Admin** | The admin set: minting, config changes, the admin set itself, beacon keys |
 | **PP Ledger Registrar** | The registrar's holders: creating accounts for their owners |
 | **PP Ledger Genesis** | The people who start the chain and hold its recovery keys |
+| **PP Ledger Token** | A token issuer's operators: issuing its token, its balance, its signers ([Token](token.md)) |
 
 ## Install
 
-- **macOS (Apple silicon, macOS 13 or later):** open the disk image and drag the apps you need to
-  Applications.
-- **Linux (Ubuntu 24.04 or later, and similar):** install the `.deb` (`sudo apt install
-  ./pp-ledger-admin_…_amd64.deb`) for all five apps in your menu. Or download the AppImage of one
-  app, make it executable (`chmod +x`), and run it.
+Each release has two sets: **pp-ledger-admin** (the Signer, Reserve, Admin, Registrar and Genesis
+apps) for the system key holders, and **pp-ledger-token** (the Signer and the Token app) for token
+issuers.
+
+- **macOS (Apple silicon, macOS 13 or later):** open your set's disk image and drag the apps you need
+  to Applications.
+- **Linux (Ubuntu 24.04 or later, and similar):** install your set's `.deb` with the Signer's, in one
+  command: `sudo apt install ./pp-ledger-admin_…_amd64.deb ./pp-ledger-signer_…_amd64.deb` (token
+  issuers: `./pp-ledger-token_…_amd64.deb ./pp-ledger-signer_…_amd64.deb`). Or download the AppImage
+  of one app, make it executable (`chmod +x`), and run it.
 
 ## Your vault
 
@@ -33,7 +40,7 @@ computer, encrypted with a passphrase only you know. All the apps on this comput
 
 Under **Keys and people**:
 
-1. **Make a key** for your role (name it: whose key, what for). Or **import** one made with
+1. **Make a key** for your role (name it: whose key, what for; a token issuer's: *Account owner*). Or **import** one made with
    `pp-client keygen` (its `.key` and `.pub` files, side by side).
 2. **Back up the vault at once:** *Write a backup…* to a USB stick, under a backup passphrase of its
    own. Keep the stick and that passphrase apart, away from this computer. A lost key cannot be made
@@ -46,10 +53,10 @@ Under **Keys and people**:
 
 ## The node (role apps)
 
-The Reserve, Admin, Registrar and Genesis apps talk to one node of the chain: a relay or the beacon.
+The Reserve, Admin, Registrar, Genesis and Token apps talk to one node of the chain: a relay or the beacon.
 Its operator gives you its address (it starts with `/ip4/` or `/dns4/` and ends with `/p2p/` and a
 long id). Paste it under **Network** and press *Check and save*. The Signer never connects to
 anything.
 
 Next: [Signing](signing.md) · [Reserve](reserve.md) · [Admin](admin.md) · [Registrar](registrar.md) ·
-[The genesis ceremony](genesis-ceremony.md)
+[The genesis ceremony](genesis-ceremony.md) · [Token](token.md)

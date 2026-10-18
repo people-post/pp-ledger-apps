@@ -16,6 +16,8 @@ all that, or a shared library repository first.
 
 ## TA002 — Its own package
 
+**Shipped:** [docs/RELEASE.md](../../docs/RELEASE.md) (the packages), superseding this entry.
+
 **Date:** 2026-10-18
 **Decision:** Releases carry two sets of packages: the system apps (Genesis, Admin, Reserve,
 Registrar, Signer) and the token app with the Signer.
