@@ -37,7 +37,7 @@ op::SignerSet feeHolders() {
 }
 
 /** A round of `payees` miners, its fee each the least for its metadata. */
-fees::Round round(size_t payees) {
+fees::Round roundPaying(size_t payees) {
   fees::Round r;
   r.number = 4;
   r.report.period = {10, 500, 20, 990};
@@ -60,7 +60,7 @@ Making making() { return {1'800'000'000, 86400, "round 4"}; }
 } // namespace
 
 TEST(FeeOperationsTest, ARoundIsOneBatchFromTheFeeAccount) {
-  const fees::Round r = round(3);
+  const fees::Round r = roundPaying(3);
   auto made = makePayouts(chain(), feeHolders(), 1'000'000, r, making());
   ASSERT_TRUE(made) << made.error().message;
   EXPECT_EQ(made.value().kind, op::Kind::Batch);
@@ -83,12 +83,12 @@ TEST(FeeOperationsTest, ARoundIsOneBatchFromTheFeeAccount) {
 }
 
 TEST(FeeOperationsTest, OnePayoutIsATransferAndTheBalanceMustCoverAll) {
-  auto single = makePayouts(chain(), feeHolders(), 1'000'000, round(1), making());
+  auto single = makePayouts(chain(), feeHolders(), 1'000'000, roundPaying(1), making());
   ASSERT_TRUE(single) << single.error().message;
   EXPECT_EQ(single.value().kind, op::Kind::Transfer);
   EXPECT_TRUE(fees::parseRoundMeta(pp::utl::binaryUnpack<pp::Ledger::TxDefault>(single.value().record.data).value().meta));
 
-  const fees::Round r = round(3);
+  const fees::Round r = roundPaying(3);
   EXPECT_FALSE(makePayouts(chain(), feeHolders(), r.table.total + r.table.fees - 1, r, making())); // spent meanwhile
   fees::Round changed = r;
   changed.table.payouts[0].amount += 1;
