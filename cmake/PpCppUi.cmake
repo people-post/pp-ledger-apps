@@ -18,7 +18,8 @@ if(PP_CPP_UI_SOURCE_DIR)
 else()
   FetchContent_Declare(pp_cpp_ui
     GIT_REPOSITORY ${PP_CPP_UI_GIT_REPOSITORY}
-    GIT_TAG ${PP_CPP_UI_GIT_TAG})
+    GIT_TAG ${PP_CPP_UI_GIT_TAG}
+    ${PP_FETCH_EXCLUDE_FROM_ALL})
   FetchContent_MakeAvailable(pp_cpp_ui)
 endif()
 

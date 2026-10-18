@@ -14,7 +14,8 @@ if(PP_LEDGER_SOURCE_DIR)
 else()
   FetchContent_Declare(pp_ledger
     GIT_REPOSITORY ${PP_LEDGER_GIT_REPOSITORY}
-    GIT_TAG ${PP_LEDGER_GIT_TAG})
+    GIT_TAG ${PP_LEDGER_GIT_TAG}
+    ${PP_FETCH_EXCLUDE_FROM_ALL})
   FetchContent_MakeAvailable(pp_ledger)
 endif()
 foreach(_target pp::operation pp::client)
