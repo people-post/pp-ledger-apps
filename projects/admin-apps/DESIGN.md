@@ -136,10 +136,9 @@ later, the apps follow it.
 
 ## What it does not do
 
-- Serve the owners of the accounts the registrar creates (token issuers and the like): that is
-  [pp-token-admin](https://github.com/nfsc-brief-web3/pp-token-admin), an app for potentially many
-  account owners, where these apps serve the chain's few system key holders. It may share pieces
-  later (the operation file is pp-ledger's; the vault and review screens could be extracted).
+- Serve the owners of the accounts the registrar creates (token issuers): that is the token app,
+  [projects/token-app](../token-app/DESIGN.md) — in this repository, on this code, with a package of
+  its own (it replaced the planned pp-token-admin).
 - Hold keys of ordinary users or miners (wallets are pp-browser's).
 - Hold keys on hardware tokens: ML-DSA-65 is not common on them yet; keys live in the vault (AD010).
 - Talk to a node from the Signer.
