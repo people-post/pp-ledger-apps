@@ -46,8 +46,8 @@ std::string roleTitle(Role role) {
 }
 
 const std::vector<Role> &vaultRoles() {
-  static const std::vector<Role> roles = {Role::Admin, Role::Recovery, Role::Reserve,
-                                          Role::Registrar, Role::Fee, Role::Recycle};
+  static const std::vector<Role> roles = {Role::Admin, Role::Recovery, Role::Reserve, Role::Registrar,
+                                          Role::Fee,   Role::Recycle,  Role::Owner};
   return roles;
 }
 

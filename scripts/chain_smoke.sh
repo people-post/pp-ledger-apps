@@ -5,6 +5,8 @@
 #   pp-admin-admin: a config update raising the mint cap (the config in force), a mint to the
 #   reserve (the reserve's balance), a rotation of the admin set (2 of 4);
 #   pp-admin-registrar: an issued account for an owner key, funded by the registrar (the account);
+#   pp-admin-token: that account as a token issuer — issues to the registrar (both balances of its
+#   token), replaces its signers (2 of 2), sends native tokens signed by both (the registrar's balance);
 #   pp-admin-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
 #   as it freezes the admin set until it applies.
 # Each made from the chain, signed with the smoke keys (3 of 3), submitted, seen in a block.
@@ -16,7 +18,7 @@ out=${3:-$(mktemp -d)}
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 client="$ledger/build/app/pp-client"
 smoke="$ledger/build/test-smoke"
-amount=$((1000 + RANDOM))
+amount=$((50000 + RANDOM))
 mkdir -p "$out"
 
 "$ledger/scripts/test/pp_ledger_network.sh" stop >/dev/null 2>&1 || true
@@ -30,7 +32,7 @@ balance() { # account $1's native balance
 run_app() { # <app> <home> <script>
   local app=$1 home=$2 script=$3
   sed -e "s|@OUT@|$out|g" -e "s|@NODE@|$node|g" -e "s|@AMOUNT@|$amount|g" -e "s|@MINT@|$mint|g" -e "s|@CAP@|$cap|g" \
-    -e "s|@ACCOUNT@|$account|g" -e "s|@FUND@|$fund|g" \
+    -e "s|@ACCOUNT@|$account|g" -e "s|@FUND@|$fund|g" -e "s|@ISSUE@|$issue|g" -e "s|@SEND@|$send|g" \
     "$here/tests/ui/$script" >"$out/$script"
   PP_LEDGER_ADMIN_HOME="$home" timeout 300 xvfb-run -a -s "-screen 0 1280x900x24" \
     "$build/src/apps/$app/pp-admin-$app" --script "$out/$script" >"$out/$app.log" 2>&1 ||
@@ -38,7 +40,9 @@ run_app() { # <app> <home> <script>
 }
 mint=$((5000 + RANDOM))
 account=$(((1 << 20) + 1000 + RANDOM))
-fund=$((100 + RANDOM % 900))
+fund=$((20000 + RANDOM % 900))
+issue=$((1000 + RANDOM))
+send=$((10 + RANDOM % 90))
 cap=$((700000 + RANDOM))
 
 # 1. Reserve: a transfer to the registrar.
@@ -76,12 +80,30 @@ rm -rf "$out/registrar-home" "$out/owner".*
 "$build/src/apps/devfixture/pp-admin-devfixture" import "$out/registrar-home" "registrar passphrase" registrar \
   "$smoke/keys/registrar1.key" "$smoke/keys/registrar2.key" "$smoke/keys/registrar3.key"
 run_app registrar "$out/registrar-home" registrar-chain.script
-test "$(balance "$account")" = "$fund" || { echo "FAIL: account $account does not hold $fund"; exit 1; }
+# Renewals take their fee (a few units on the smoke chain) from it from then on.
+held=$(balance "$account")
+test -n "$held" && test "$held" -le "$fund" && test "$held" -gt $((fund - 100)) ||
+  { echo "FAIL: account $account holds ${held:-nothing}, expected $fund less renewals"; exit 1; }
 "$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' | grep -qi "$(tr -d ' \n' <"$out/owner.pub")" ||
   { echo "FAIL: account $account is not the owner's key"; exit 1; }
-echo "✓ Registrar: account $account created for the owner's key, holding $fund"
+echo "✓ Registrar: account $account created for the owner's key, holding $held of $fund"
 
-# 4. Genesis: the recovery set announces a new admin set.
+# 4. Token: the new account issues its token, replaces its signers, sends from them both.
+rm -rf "$out/token-home" "$out/owner2".*
+"$client" keygen -o "$out/owner2" >/dev/null
+"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/token-home" "token passphrase" owner \
+  "$out/owner.key" "$out/owner2.key"
+registrarBefore=$(balance 2)
+run_app token "$out/token-home" token-chain.script
+account_json() { "$client" -b --host "$node" account "$1" 2>/dev/null | tr -d ' \n'; }
+account_json 2 | grep -q "\"$account\":$issue[,}]" || { echo "FAIL: the registrar does not hold $issue of token $account"; exit 1; }
+account_json "$account" | grep -q "\"$account\":-$issue[,}]" || { echo "FAIL: token $account's supply is not $issue"; exit 1; }
+account_json "$account" | grep -q '"minSignatures":2' || { echo "FAIL: account $account is not 2 of 2"; exit 1; }
+test "$(balance 2)" -eq $((registrarBefore + send)) ||
+  { echo "FAIL: registrar balance $registrarBefore → $(balance 2), expected +$send"; exit 1; }
+echo "✓ Token: account $account issued $issue to the registrar, is 2 of 2, sent $send signed by both"
+
+# 5. Genesis: the recovery set announces a new admin set.
 rm -rf "$out/genesis-home" "$out/next-admin"*
 for i in 1 2 3; do "$client" keygen -o "$out/next-admin$i" >/dev/null; done
 "$build/src/apps/devfixture/pp-admin-devfixture" import "$out/genesis-home" "genesis passphrase" recovery \

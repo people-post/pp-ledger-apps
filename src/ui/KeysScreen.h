@@ -12,7 +12,8 @@ namespace admin::ui_host {
 
 class KeysScreen : public Screen {
 public:
-  explicit KeysScreen(Session &session) : session_(session) {}
+  /** `role`: the role new keys start with ("admin", "owner", …: Roles.h). */
+  explicit KeysScreen(Session &session, std::string role = "admin") : session_(session), newRole_(std::move(role)) {}
   void willShow() override;
 
   struct KeyRow {
@@ -48,7 +49,7 @@ private:
   std::vector<CardRow> cards_;
   std::vector<std::string> cardKeys_;
   std::string newLabel_;
-  std::string newRole_{"admin"};
+  std::string newRole_;
   std::string backupPassphrase_;
   std::string error_;
   std::string notice_;

@@ -1,0 +1,48 @@
+<rml>
+<head>
+  <title>Overview</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="token">
+    <div class="card">
+      <h1>The issuer</h1>
+      <p class="muted">The issued account you operate: its token is its number. Issuing sends that token out
+        of it; what is out is its supply.</p>
+      <label>Issuer account (its number)</label>
+      <div class="row">
+        <input id="token-account" class="field grow" type="text" data-value="account" data-attrif-disabled="busy"/>
+        <button id="token-save" style="margin-bottom: 12dp;" data-event-click="token_save()" data-attrif-disabled="busy">Check and save</button>
+      </div>
+      <p id="token-warning" class="error" data-if="warning != ''">{{warning}}</p>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+      <div class="facts">
+        <div class="item" data-for="fact : facts">
+          <span class="label">{{fact.label}}</span>
+          <span class="value">{{fact.value}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card" data-if="known">
+      <h2>Its signers</h2>
+      <div class="item" data-for="signer : signers"><span class="grow">{{signer}}</span></div>
+    </div>
+    <div class="card" data-if="known">
+      <h2>Latest</h2>
+      <p class="muted" data-if="recent.size == 0">Nothing yet.</p>
+      <div class="item" data-for="activity : recent">
+        <span class="grow">{{activity.what}}</span>
+        <span class="muted" data-if="activity.fee != ''">fee {{activity.fee}}</span>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>

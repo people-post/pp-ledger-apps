@@ -106,6 +106,19 @@ pp::Roe<op::SignerSet> ChainLink::signersOf(uint64_t id) {
   return signers;
 }
 
+pp::Roe<std::vector<pp::Ledger::Record>> ChainLink::transactions(uint64_t id) {
+  if (!state_) {
+    return pp::Error("Not linked to a node");
+  }
+  pp::Client::TxGetByWalletRequest request;
+  request.walletId = id;
+  auto found = state_->client.fetchTransactionsByWallet(request);
+  if (!found) {
+    return pp::Error("Cannot read the account's transactions: " + found.error().message);
+  }
+  return std::move(found.value().transactions);
+}
+
 pp::Roe<uint64_t> ChainLink::minimumFee(const pp::Ledger::Record &record) {
   auto chain = info();
   if (!chain) {
@@ -179,13 +192,11 @@ pp::Roe<bool> ChainLink::included(const op::Operation &operation) {
   if (!payer) {
     return pp::Error("This kind of operation is not followed into a block");
   }
-  pp::Client::TxGetByWalletRequest request;
-  request.walletId = *payer;
-  auto found = state_->client.fetchTransactionsByWallet(request);
+  auto found = transactions(*payer);
   if (!found) {
-    return pp::Error("Cannot read the account's transactions: " + found.error().message);
+    return found.error();
   }
-  for (const auto &record : found.value().transactions) {
+  for (const auto &record : found.value()) {
     if (record.type == operation.record.type && record.data == operation.record.data) {
       return true;
     }

@@ -16,7 +16,7 @@ enum class Role {
   Recycle,   ///< takes ended accounts' balances
   Beacon,    ///< the beacon's signing key (on key cards only: the beacon holds it)
   Miner,     ///< a genesis miner's key (on key cards only: the miner holds it)
-  Owner,     ///< an account owner's key (on key cards only: the registrar creates their account)
+  Owner,     ///< an account owner's key: the registrar creates their account (a token issuer's operators)
 };
 
 /** The name in files ("admin", "reserve", …). */

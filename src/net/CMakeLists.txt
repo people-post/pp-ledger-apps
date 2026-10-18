@@ -5,6 +5,8 @@ add_library(admin_net STATIC
     AdminOperations.h
     ChainLink.cpp
     ChainLink.h
+    TokenOperations.cpp
+    TokenOperations.h
 )
 target_include_directories(admin_net PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(admin_net PUBLIC admin_core pp::client pp::chain)

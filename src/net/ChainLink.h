@@ -39,6 +39,8 @@ public:
   pp::Roe<pp::UserAccount> account(uint64_t id);
   /** Account `id`'s keys and threshold: who signs for it. */
   pp::Roe<pp::operation::SignerSet> signersOf(uint64_t id);
+  /** Account `id`'s latest transactions (latest first; as many as the node returns in one page). */
+  pp::Roe<std::vector<pp::Ledger::Record>> transactions(uint64_t id);
   /** The least fee `record` may carry under the config in force. */
   pp::Roe<uint64_t> minimumFee(const pp::Ledger::Record &record);
 

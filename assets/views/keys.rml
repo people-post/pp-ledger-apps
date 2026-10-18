@@ -33,6 +33,7 @@
           <option value="registrar">Registrar</option>
           <option value="fee">Fee</option>
           <option value="recycle">Recycle</option>
+          <option value="owner">Account owner</option>
         </select>
       </div>
       <div class="row">

@@ -1,0 +1,101 @@
+# Against a running chain: the issuer the Registrar app created (its owner's key in the vault, 1 of 1)
+# issues its token to the registrar, replaces its signers with its owner and a second key (2 of 2),
+# then sends native tokens signed by both. Each made from the chain, signed, submitted, seen in a block.
+wait 5
+click #unlock-passphrase
+type token passphrase
+click #unlock
+idle
+wait 5
+click #nav-network
+wait 3
+click #network-address
+type @NODE@
+click #network-check
+idle
+wait 3
+click #nav-overview
+idle
+wait 3
+click #token-account
+type @ACCOUNT@
+click #token-save
+idle
+wait 5
+idle
+wait 3
+shot @OUT@/token-1-overview.png
+# Issue to the registrar.
+click #nav-issue
+idle
+wait 5
+click #issue-to
+type 2
+click #issue-amount
+type @ISSUE@
+shot @OUT@/token-2-issue.png
+answer @OUT@/issue.json
+click #issue-make
+idle
+wait 5
+answer @OUT@/issue1.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+# Its signers: the owner in force and the second key, 2 to sign.
+click #nav-signers
+idle
+wait 5
+click #signer-1
+click #signers-threshold
+clear
+type 2
+click #signers-least
+idle
+wait 3
+shot @OUT@/token-3-signers.png
+answer @OUT@/signers.json
+click #signers-make
+idle
+wait 5
+shot @OUT@/token-3-review.png
+answer @OUT@/signers1.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+# Native tokens back to the registrar, signed by both.
+click #nav-send
+idle
+wait 5
+click #send-to
+type 2
+click #send-amount
+type @SEND@
+shot @OUT@/token-4-send.png
+answer @OUT@/send.json
+click #send-make
+idle
+wait 5
+answer @OUT@/send1.json
+click #sign
+wait 5
+answer @OUT@/send2.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+click #nav-overview
+idle
+wait 5
+idle
+wait 3
+shot @OUT@/token-5-overview.png
+quit
