@@ -36,18 +36,20 @@ strong { font-weight: bold; }
   background-color: #1f2937;
   color: #f9fafb;
 }
-.bar .app { font-size: 18dp; margin-right: 16dp; }
+.bar .app { font-size: 18dp; margin-right: 16dp; white-space: nowrap; flex-shrink: 0; }
 .bar .spacer { flex: 1; }
 .tab {
   display: inline-block;
-  padding: 6dp 14dp;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 6dp 12dp;
   border-radius: 6dp;
   color: #d1d5db;
   cursor: pointer;
 }
 .tab:hover { background-color: #374151; }
 .tab.current { background-color: #4b5563; color: #ffffff; }
-.bar .status { color: #9ca3af; font-size: 14dp; margin-right: 8dp; }
+.bar .status { color: #9ca3af; font-size: 14dp; margin-right: 8dp; white-space: nowrap; flex-shrink: 0; }
 
 .page { padding: 24dp 32dp; }
 .card {
@@ -117,3 +119,17 @@ button:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: default; }
 .status-todo { color: #9ca3af; width: 90dp; }
 .done-text { color: #047857; }
 .headline { font-size: 22dp; color: #111827; margin-bottom: 4dp; }
+
+/* Checkboxes: a box, filled when checked. */
+input.checkbox {
+  width: 18dp;
+  height: 18dp;
+  flex-shrink: 0;
+  border-width: 2dp;
+  border-color: #9ca3af;
+  border-radius: 4dp;
+  background-color: #ffffff;
+  cursor: pointer;
+}
+input.checkbox:hover { border-color: #2563eb; }
+input.checkbox:checked { background-color: #2563eb; border-color: #2563eb; }

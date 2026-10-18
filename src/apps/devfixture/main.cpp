@@ -5,7 +5,10 @@
 //     the same, signed by Bob (a copy to merge); <home>/genesis.json: a genesis plan (pp-ledger's
 //     builder) the vault's admin key is one of three admins of, 2 to sign.
 //   pp-admin-devfixture import <home> <passphrase> <role> <name>.key…
-//     Makes <home>/vault (cheap KDF) holding the given pp-client keygen keys (each with its .pub).
+//     Adds the given pp-client keygen keys (each with its .pub) to <home>/vault, made (cheap KDF)
+//     if missing.
+//   pp-admin-devfixture card <home> <passphrase> <role> <name> <name>.pub
+//     Adds a key card to <home>/vault's address book.
 //   pp-admin-devfixture verify <operation file> <signatures>
 //     Exit 0 when the file holds exactly that many valid signatures (and no invalid one).
 #include "core/AddressBook.h"
@@ -44,8 +47,8 @@ int main(int argc, char **argv) {
       return 2;
     }
     Vault vault((home / "vault").string(), KdfLimits::minimum());
-    if (auto created = vault.create(argv[3]); !created) {
-      std::cerr << created.error().message << "\n";
+    if (auto opened = vault.exists() ? vault.unlock(argv[3]) : vault.create(argv[3]); !opened) {
+      std::cerr << opened.error().message << "\n";
       return 1;
     }
     for (int i = 5; i < argc; ++i) {
@@ -63,6 +66,28 @@ int main(int argc, char **argv) {
         std::cerr << keyPath << ": " << key.error().message << "\n";
         return 1;
       }
+    }
+    return 0;
+  }
+  if (argc == 7 && std::string(argv[1]) == "card") {
+    const auto role = roleFromName(argv[4]);
+    Vault vault((std::filesystem::path(argv[2]) / "vault").string(), KdfLimits::minimum());
+    std::ifstream pubFile(argv[6]);
+    std::string pubHex;
+    pubFile >> pubHex;
+    if (!role || !vault.unlock(argv[3])) {
+      std::cerr << "bad role, or the vault does not unlock\n";
+      return 1;
+    }
+    auto book = AddressBook::load(vault);
+    if (!book) {
+      std::cerr << book.error().message << "\n";
+      return 1;
+    }
+    book.value().put({argv[5], *role, pp::utl::hexDecode(pubHex)});
+    if (auto saved = book.value().save(vault); !saved) {
+      std::cerr << saved.error().message << "\n";
+      return 1;
     }
     return 0;
   }

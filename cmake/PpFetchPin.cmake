@@ -23,3 +23,11 @@ function(pp_fetch_git_tag cache_var pin doc)
   set(${_last_pin_var} "${pin}" CACHE INTERNAL
     "Last ${cache_var} pin from CMake source (auto-refresh)" FORCE)
 endfunction()
+
+# Fetched dependencies build only what this project links (CMake 3.28+: FetchContent's
+# EXCLUDE_FROM_ALL), not every target they define (pp-ledger's server, CLI11, …).
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+  set(PP_FETCH_EXCLUDE_FROM_ALL EXCLUDE_FROM_ALL)
+else()
+  set(PP_FETCH_EXCLUDE_FROM_ALL "")
+endif()

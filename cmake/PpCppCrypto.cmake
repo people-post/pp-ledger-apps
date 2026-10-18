@@ -18,7 +18,8 @@ if(PP_CPP_CRYPTO_SOURCE_DIR)
 else()
   FetchContent_Declare(pp_cpp_crypto
     GIT_REPOSITORY ${PP_CPP_CRYPTO_GIT_REPOSITORY}
-    GIT_TAG ${PP_CPP_CRYPTO_GIT_TAG})
+    GIT_TAG ${PP_CPP_CRYPTO_GIT_TAG}
+    ${PP_FETCH_EXCLUDE_FROM_ALL})
   FetchContent_MakeAvailable(pp_cpp_crypto)
 endif()
 foreach(_target pp_crypto sodium mldsa_native)

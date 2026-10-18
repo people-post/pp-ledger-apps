@@ -1,0 +1,40 @@
+<rml>
+<head>
+  <title>Admin keys</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="admins">
+    <div class="card">
+      <h1>The admin set</h1>
+      <p class="muted">In force: {{current}}. Choose the keys of the next set (at least 3) and how many must sign (at least 2). The set in force signs the change; it takes effect at once. Others' admin keys come from their key cards (Keys and people).</p>
+      <div class="item" data-for="candidate : candidates">
+        <input type="checkbox" data-attr-id="'admin-' + it_index" data-checked="candidate.chosen" data-attrif-disabled="busy"/>
+        <span class="grow">{{candidate.name}}</span>
+      </div>
+      <label>Signatures needed</label>
+      <input id="admins-threshold" class="field" type="text" data-value="threshold" data-attrif-disabled="busy"/>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="admins-make" class="primary" data-event-click="admins_make()" data-attrif-disabled="busy">Make the change…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

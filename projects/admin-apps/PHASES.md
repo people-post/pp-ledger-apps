@@ -23,8 +23,8 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
       save — the first app, used by every role (review and signing came with ad3b; ad4 adds merging,
       genesis operations' many records, packaging-ready polish)
 - [x] **ad5** Reserve: transfers; `admin_net` (read chain state, submit, follow inclusion)
-- [ ] **ad6** Admin: minting to the reserve, config updates (shown as a change against the config in
+- [x] **ad6** Admin: minting to the reserve, config updates (shown as a change against the config in
       force), beacon certificates, admin key rotation
-- [ ] **ad7** Registrar: creating and funding issued accounts
-- [ ] **ad8** Genesis: key cards, the genesis plan, recovery operations
+- [x] **ad7** Registrar: creating and funding issued accounts
+- [x] **ad8** Genesis: key cards, the genesis plan, recovery operations
 - [ ] **ad9** Packaging (AppImage / `.deb`, notarized `.dmg`) and operator guides; promote to `docs/`

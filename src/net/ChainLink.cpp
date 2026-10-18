@@ -2,6 +2,7 @@
 
 #include "chain/RecordHandler.h"
 #include "client/Client.h"
+#include "lib/common/BinaryPack.hpp"
 #include "lib/common/Utilities.h"
 #include "network/LedgerAmpRuntime.h"
 #include "network/amp/AmpIdentity.h"
@@ -153,6 +154,26 @@ pp::Roe<void> ChainLink::submit(const op::Operation &operation) {
 pp::Roe<bool> ChainLink::included(const op::Operation &operation) {
   if (!state_) {
     return pp::Error("Not linked to a node");
+  }
+  if (operation.kind == op::Kind::Recovery) {
+    // No account pays it: in a block once the chain holds its announcement, pending or applied.
+    auto tx = pp::utl::binaryUnpack<pp::Ledger::TxRecovery>(operation.record.data);
+    pp::RecoveryAnnouncement announcement;
+    if (!tx || !announcement.ltsFromString(tx.value().meta)) {
+      return pp::Error("The recovery does not decode");
+    }
+    auto chain = info();
+    if (!chain) {
+      return chain.error();
+    }
+    const auto &meta = chain.value().meta;
+    const auto &pending = meta.authority.pendingRecovery.announcement;
+    const bool isPending = meta.authority.hasPendingRecovery &&
+                           pending.adminPublicKeys == announcement.adminPublicKeys &&
+                           pending.adminMinSignatures == announcement.adminMinSignatures;
+    const bool applied = meta.genesis.wallet.publicKeys == announcement.adminPublicKeys &&
+                         meta.genesis.wallet.minSignatures == announcement.adminMinSignatures;
+    return isPending || applied;
   }
   const auto payer = op::signerAccountOf(operation.record);
   if (!payer) {

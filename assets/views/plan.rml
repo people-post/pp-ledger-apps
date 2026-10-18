@@ -1,0 +1,83 @@
+<rml>
+<head>
+  <title>Genesis plan</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="plan">
+    <div class="card">
+      <h1>Plan the chain's start</h1>
+      <p class="muted">Block 0, for the admin set to sign offline. Each holder makes their keys in their vault and hands you their key card;
+        add the cards under Keys and people, then choose who holds what. The beacon's operator starts the chain from the signed plan.</p>
+      <div class="row">
+        <div class="grow">
+          <label>Network name</label>
+          <input id="plan-network" class="field" type="text" data-value="network_id"/>
+        </div>
+        <div class="grow">
+          <label>It starts (date and time, or +hours)</label>
+          <input id="plan-start" class="field" type="text" data-value="start"/>
+        </div>
+      </div>
+    </div>
+    <div class="card" data-for="section : sections">
+      <h2>{{section.title}}</h2>
+      <p class="muted">{{section.help}}</p>
+      <p class="warning" data-if="section.keys.size == 0">No {{section.role}} key cards yet (Keys and people).</p>
+      <div class="item" data-for="key : section.keys">
+        <input type="checkbox" data-attr-id="'plan-' + section.role + '-' + it_index" data-checked="key.chosen"/>
+        <span class="grow">{{key.name}} ({{key.fingerprint}})</span>
+      </div>
+      <div class="row" style="margin-top: 8dp;">
+        <label>Signatures needed</label>
+        <input class="field" style="width: 120dp; margin: 0;" type="text" data-attr-id="'plan-' + section.role + '-min'" data-value="section.min"/>
+      </div>
+    </div>
+    <div class="card">
+      <h2>The beacon</h2>
+      <p class="muted">Its operator's key card (role beacon); the first one chosen certifies generation 1.</p>
+      <p class="warning" data-if="beacons.size == 0">No beacon key card yet (Keys and people).</p>
+      <div class="item" data-for="beacon : beacons">
+        <input type="checkbox" data-attr-id="'plan-beacon-' + it_index" data-checked="beacon.chosen"/>
+        <span class="grow">{{beacon.name}} ({{beacon.fingerprint}})</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Genesis miners</h2>
+      <p class="muted">The chain's first block producers (miner key cards), each with a stake from the supply.</p>
+      <p class="muted" data-if="miners.size == 0">None: no miner key cards.</p>
+      <div class="item" data-for="miner : miners">
+        <input type="checkbox" data-checked="miner.chosen"/>
+        <span class="grow">{{miner.name}} ({{miner.fingerprint}})</span>
+        <input class="field" style="width: 180dp; margin: 0;" type="text" data-value="miner.stake"/>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Settings</h2>
+      <p class="muted">pp-ledger's defaults; slot timing cannot change after the start. The recovery delay: epochs between a recovery's announcement and the new admin set.</p>
+      <div class="facts">
+        <div class="item" data-for="setting : settings">
+          <span class="label">{{setting.title}}</span>
+          <input class="field" style="width: 220dp; margin: 0;" type="text" data-attr-id="'plan-' + setting.name" data-value="setting.value"/>
+        </div>
+        <div class="item">
+          <span class="label">Recovery delay (epochs)</span>
+          <input id="plan-recovery-delay" class="field" style="width: 220dp; margin: 0;" type="text" data-value="recovery_delay"/>
+        </div>
+      </div>
+      <label>Notes for the signers (optional, shown as yours)</label>
+      <input id="plan-notes" class="field" type="text" data-value="notes"/>
+      <button id="plan-make" class="primary" data-event-click="plan_make()">Make the plan…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p id="plan-error" class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

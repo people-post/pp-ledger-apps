@@ -7,14 +7,15 @@ include(PpFetchPin)
 set(PP_LEDGER_SOURCE_DIR "" CACHE PATH "Optional local checkout of pp-ledger")
 set(PP_LEDGER_GIT_REPOSITORY "https://github.com/people-post/pp-ledger.git"
   CACHE STRING "Git remote for pp-ledger")
-pp_fetch_git_tag(PP_LEDGER_GIT_TAG "release/v0.2.1" "pp-ledger release tag")
+pp_fetch_git_tag(PP_LEDGER_GIT_TAG "release/v1.0.0" "pp-ledger release tag")
 
 if(PP_LEDGER_SOURCE_DIR)
   add_subdirectory("${PP_LEDGER_SOURCE_DIR}" "${PROJECT_BINARY_DIR}/_deps/pp_ledger-build" EXCLUDE_FROM_ALL)
 else()
   FetchContent_Declare(pp_ledger
     GIT_REPOSITORY ${PP_LEDGER_GIT_REPOSITORY}
-    GIT_TAG ${PP_LEDGER_GIT_TAG})
+    GIT_TAG ${PP_LEDGER_GIT_TAG}
+    ${PP_FETCH_EXCLUDE_FROM_ALL})
   FetchContent_MakeAvailable(pp_ledger)
 endif()
 foreach(_target pp::operation pp::client)

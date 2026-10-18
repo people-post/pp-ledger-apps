@@ -32,6 +32,17 @@
           <button data-event-click="review_close()">Close</button>
         </div>
         <p class="warning" data-if="expired">This operation has expired and cannot be signed. Ask for a new one.</p>
+        <div data-if="against.size > 0">
+          <h3>What changes, against the chain now</h3>
+          <p class="muted">What a node of the chain says this changes.</p>
+          <div class="facts">
+            <div class="item" data-for="line : against">
+              <span class="label">{{line.label}}</span>
+              <span class="value">{{line.value}}</span>
+            </div>
+          </div>
+        </div>
+        <h3 data-if="against.size > 0">All it sets</h3>
         <div class="facts">
           <div class="item" data-for="line : lines">
             <span class="label">{{line.label}}</span>

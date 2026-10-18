@@ -1,5 +1,8 @@
 add_subdirectory(signer)
 add_subdirectory(reserve)
+add_subdirectory(admin)
+add_subdirectory(registrar)
+add_subdirectory(genesis)
 if(PP_ADMIN_DEV_HOOKS)
   add_subdirectory(devfixture)
   find_program(XVFB_RUN xvfb-run)

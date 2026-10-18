@@ -11,7 +11,8 @@ const std::vector<std::pair<Role, std::pair<const char *, const char *>>> &names
       {Role::Admin, {"admin", "Admin"}},       {Role::Recovery, {"recovery", "Recovery"}},
       {Role::Reserve, {"reserve", "Reserve"}}, {Role::Registrar, {"registrar", "Registrar"}},
       {Role::Fee, {"fee", "Fee"}},             {Role::Recycle, {"recycle", "Recycle"}},
-      {Role::Beacon, {"beacon", "Beacon"}},    {Role::Miner, {"miner", "Miner"}}};
+      {Role::Beacon, {"beacon", "Beacon"}},    {Role::Miner, {"miner", "Miner"}},
+      {Role::Owner, {"owner", "Account owner"}}};
   return table;
 }
 

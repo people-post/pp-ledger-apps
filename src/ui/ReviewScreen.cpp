@@ -57,6 +57,8 @@ void ReviewScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("submitting", &submitting_);
   model.Bind("submit_status", &submitStatus_);
   model.Bind("submitted", &submitted_);
+  model.Bind("against", &against_);
+  model.Bind("comparing", &comparing_);
   model.Bind("error", &error_);
   model.Bind("notice", &notice_);
   model.BindEventCallback("review_open", &ReviewScreen::chooseFile, this);
@@ -157,6 +159,23 @@ void ReviewScreen::show() {
   }
   canSubmit_ = static_cast<bool>(session_.submit) && complete_ && !expired_ && operation.kind != op::Kind::Genesis;
   refresh();
+  if (session_.compare && !comparing_ &&
+      (operation.kind == op::Kind::ConfigUpdate || operation.kind == op::Kind::BeaconCertificate)) {
+    comparing_ = true;
+    against_.clear();
+    const std::string comparedPath = path_;
+    session_.compare(operation, [this, comparedPath](std::vector<std::pair<std::string, std::string>> lines) {
+      comparing_ = false;
+      if (comparedPath != path_) {
+        return; // another file was opened meanwhile
+      }
+      against_.clear();
+      for (auto &[label, value] : lines) {
+        against_.push_back({label, value});
+      }
+      refresh();
+    });
+  }
 }
 
 void ReviewScreen::chooseFile(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {

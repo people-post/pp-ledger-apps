@@ -70,6 +70,9 @@ private:
   bool submitting_{false};
   std::string submitStatus_;
   bool submitted_{false};
+  /** Against the chain now (role apps): label/value lines. */
+  std::vector<Line> against_;
+  bool comparing_{false};
   std::string error_;
   std::string notice_;
 };

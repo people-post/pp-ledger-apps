@@ -1,0 +1,40 @@
+<rml>
+<head>
+  <title>Beacon</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="beacon">
+    <div class="card">
+      <h1>Certify a new beacon key</h1>
+      <p class="muted">In force: {{current}}. The beacon's operator makes the new key and gives you its key card; the certificate makes it generation {{next}}.</p>
+      <div class="row">
+        <button id="beacon-card" style="margin-bottom: 12dp;" data-event-click="beacon_card()" data-attrif-disabled="busy">Choose its key card…</button>
+        <span data-if="chosen != ''">{{chosen}}</span>
+      </div>
+      <label>Where to reach it (optional: node addresses, separated by commas)</label>
+      <input id="beacon-hints" class="field" type="text" data-value="hints" data-attrif-disabled="busy"/>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="beacon-make" class="primary" data-event-click="beacon_make()" data-attrif-disabled="busy">Make the certificate…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

@@ -1,6 +1,8 @@
 # admin_ui: the window host, the app frame, and the screens every app shares — the vault, keys and
 # address book, operation review. No network code (the Signer links it).
 add_library(admin_ui STATIC
+    IdleLock.cpp
+    IdleLock.h
     KeysScreen.cpp
     KeysScreen.h
     Nav.cpp

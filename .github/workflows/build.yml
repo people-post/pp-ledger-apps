@@ -31,7 +31,11 @@ jobs:
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-${{ matrix.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/**/*.cmake', '.github/workflows/build.yml') }}-${{ github.sha }}
-          restore-keys: ccache-${{ matrix.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/**/*.cmake', '.github/workflows/build.yml') }}-
+          # The build files' hash first; failing that, any earlier cache of this OS — most objects
+          # (the dependencies') are unchanged by a pin or CMake edit, and ccache checks each one.
+          restore-keys: |
+            ccache-${{ matrix.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/**/*.cmake', '.github/workflows/build.yml') }}-
+            ccache-${{ matrix.os }}-
 
       - name: Configure
         run: >

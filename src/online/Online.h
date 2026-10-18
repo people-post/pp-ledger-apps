@@ -35,6 +35,10 @@ public:
   void submit(const pp::operation::Operation &operation,
               std::function<void(const ui_host::Session::SubmitProgress &)> report);
 
+  /** Session::compare: a config update or certificate against the chain now. */
+  void compare(const pp::operation::Operation &operation,
+               std::function<void(std::vector<std::pair<std::string, std::string>>)> done);
+
   /** Called on the UI thread with a short status for the bar ("pp-mainnet", "No node set", …). */
   std::function<void(const std::string &)> onStatus;
 

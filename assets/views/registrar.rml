@@ -1,0 +1,63 @@
+<rml>
+<head>
+  <title>New account</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="registrar">
+    <div class="card">
+      <h1>Create an account</h1>
+      <p class="muted">An issued account, created and funded by the registrar: balance {{balance}}, signed by {{signers}} of its holders.</p>
+      <label>Its number</label>
+      <div class="row">
+        <input id="registrar-id" class="field grow" type="text" data-value="id" data-attrif-disabled="busy"/>
+        <button id="registrar-pick" style="margin-bottom: 12dp;" data-event-click="registrar_pick_id()" data-attrif-disabled="busy">Pick a free one</button>
+      </div>
+      <label>Its owner's keys</label>
+      <p class="muted" data-if="keys.size == 0">None yet: add the owner's key card, or the .pub file pp-client keygen made.</p>
+      <div class="item" data-for="key : keys">
+        <span class="grow">{{key.name}} ({{key.fingerprint}})</span>
+        <button class="small" data-event-click="registrar_remove_key(it_index)">Remove</button>
+      </div>
+      <div class="row" style="margin: 8dp 0 12dp 0;">
+        <button id="registrar-card" data-event-click="registrar_add_card()" data-attrif-disabled="busy">Add a key card…</button>
+        <button id="registrar-pub" data-event-click="registrar_add_pub()" data-attrif-disabled="busy">Add a .pub file…</button>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Signatures needed</label>
+          <input id="registrar-min" class="field" type="text" data-value="min_signatures" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>It starts with</label>
+          <input id="registrar-amount" class="field" type="text" data-value="amount" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Fee</label>
+          <input id="registrar-fee" class="field" type="text" data-value="fee" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="registrar-make" class="primary" data-event-click="registrar_make()" data-attrif-disabled="busy">Make the operation…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>
