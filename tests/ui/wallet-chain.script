@@ -1,0 +1,48 @@
+# Against a running chain: the wallet pins the network from a card, checks its node back to block 0,
+# then proves three accounts — two that exist, one that does not.
+wait 5
+click #unlock-passphrase
+type wallet passphrase
+click #unlock
+idle
+wait 5
+answer @OUT@/network-card.json
+click #wnet-import-first
+wait 3
+click #wnet-check
+idle
+wait 5
+idle
+wait 3
+shot @OUT@/wallet-1-network.png
+click #nav-accounts
+idle
+wait 3
+click #account-number
+type @ACCOUNT@
+click #account-label
+type issuer
+click #accounts-add
+idle
+wait 5
+click #account-number
+type 2
+click #account-label
+type registrar
+click #accounts-add
+idle
+wait 5
+click #account-number
+type 1073742823
+click #account-label
+type nobody
+click #accounts-add
+idle
+wait 5
+idle
+wait 5
+expect #account-proven-0
+expect #account-proven-1
+expect #account-proven-2
+shot @OUT@/wallet-2-accounts.png
+quit

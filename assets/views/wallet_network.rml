@@ -1,0 +1,50 @@
+<rml>
+<head>
+  <title>Network</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="wnet">
+    <div class="card" data-if="pinned">
+      <h1>Network {{network}}</h1>
+      <p class="muted">Block 0's hash — everything the wallet shows is checked back to it:</p>
+      <p id="wnet-hash" class="mono">{{genesis}}</p>
+      <h2>Its nodes</h2>
+      <div class="item" data-for="n : nodes">
+        <span class="grow"><span class="mono">{{n.address}}</span><br/><span class="muted">{{n.state}}</span></span>
+        <span class="muted" data-if="n.current">asked</span>
+        <button class="small" data-if="!n.current" data-event-click="wnet_use(it_index)">Ask this one</button>
+      </div>
+      <div class="row">
+        <button id="wnet-check" class="primary" data-event-click="wnet_check()" data-attrif-disabled="busy">Check the nodes</button>
+        <button id="wnet-import" data-event-click="wnet_import()" data-attrif-disabled="busy">Pin another card…</button>
+      </div>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+    <div class="card" data-if="!pinned">
+      <h1>Pin your network</h1>
+      <p class="muted">Its operators publish a network card: its id, block 0's hash and a few nodes. Check the
+        hash against a second source you trust (their site, someone you know): a wrong hash means another chain.</p>
+      <button id="wnet-import-first" class="primary" data-event-click="wnet_import()">Import a network card…</button>
+      <h3>Or type it</h3>
+      <label>Network id</label>
+      <input id="wnet-network" class="field" type="text" data-value="typed_network"/>
+      <label>Block 0's hash (64 hex digits)</label>
+      <input id="wnet-genesis" class="field" type="text" data-value="typed_genesis"/>
+      <label>Node addresses (separated by commas)</label>
+      <input id="wnet-nodes" class="field" type="text" data-value="typed_nodes"/>
+      <button id="wnet-pin" data-event-click="wnet_pin()">Pin it</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

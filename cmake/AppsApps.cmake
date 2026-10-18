@@ -4,7 +4,7 @@
 
 # pp_apps_app(<target> <slug> <title> <comment> <package>): `slug` names the icon
 # (assets/icons/<slug>.png) and ids; `title` is what people see ("PP Ledger Signer"); `package` the
-# install component it ships in (AppsPackaging.cmake): signer, system or token.
+# install component it ships in (AppsPackaging.cmake): signer, system, token or wallet.
 function(pp_apps_app target slug title comment package)
   set(icon ${PROJECT_SOURCE_DIR}/assets/icons/${slug}.png)
   if(APPLE)

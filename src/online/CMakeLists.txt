@@ -14,6 +14,8 @@ add_library(apps_online STATIC
     FeeScreens.h
     TokenScreens.cpp
     TokenScreens.h
+    WalletScreens.cpp
+    WalletScreens.h
     NetworkScreen.h
     Online.cpp
     Online.h

@@ -82,6 +82,9 @@ ICONS = {
     'fees': ((21, 128, 61), union(circle(0.5, 0.31, 0.10), circle(0.27, 0.70, 0.09), circle(0.5, 0.72, 0.09),
                                   circle(0.73, 0.70, 0.09), stroke([(0.5, 0.36), (0.27, 0.66)], 0.05),
                                   stroke([(0.5, 0.36), (0.5, 0.66)], 0.05), stroke([(0.5, 0.36), (0.73, 0.66)], 0.05))),
+    # Wallet: a wallet and its clasp — your own accounts.
+    'wallet': ((15, 118, 110), union(minus(rounded(0.20, 0.30, 0.80, 0.74, 0.08), rounded(0.54, 0.43, 0.84, 0.61, 0.05)),
+                                     circle(0.63, 0.52, 0.035))),
     # Token: a coin with a T — an issuer's token.
     'token': ((190, 18, 60), union(ring(0.5, 0.5, 0.27, 0.06), rounded(0.37, 0.36, 0.63, 0.44, 0.02),
                                    rounded(0.46, 0.36, 0.54, 0.66, 0.02))),
