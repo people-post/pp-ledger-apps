@@ -170,3 +170,70 @@ TEST(TokenOperationsTest, AKeyReplacementIsSignedByTheKeysInForce) {
   EXPECT_FALSE(makeKeyReplacement(info, signers, account, account.wallet.publicKeys, 2, least.value(), making()));
   EXPECT_FALSE(makeKeyReplacement(info, signers, issuer(0), next, 2, least.value(), making())); // cannot pay
 }
+
+TEST(TokenOperationsTest, TheAccountNamesItsFirstRecoverySetThenTheSetActsAndAnAnnouncementFreezes) {
+  ChainInfo info = chain();
+  info.meta.config.slotDuration = 5;
+  info.meta.config.slotsPerEpoch = 720; // an hour: half an hour at least
+  auto week = delaySecondsFor(info, 7);
+  ASSERT_TRUE(week) << week.error().message;
+  EXPECT_EQ(week.value(), 7u * 86400);
+  EXPECT_FALSE(delaySecondsFor(info, 0));
+  info.meta.config.slotsPerEpoch = 100'000; // epochs of almost six days: a day is too short
+  EXPECT_FALSE(delaySecondsFor(info, 1));
+  info.meta.config.slotsPerEpoch = 720;
+
+  pp::UserAccount account = issuer(1000, 300);
+  const auto signers = signersOf(kIssuer, account);
+  const std::vector<std::string> guardians = {key(), key(), key()};
+  auto set = makeRecoverySet(info, signers, account, guardians, 2, week.value(), making());
+  ASSERT_TRUE(set) << set.error().message;
+  EXPECT_EQ(set.value().kind, op::Kind::AccountUpdate);
+  EXPECT_EQ(set.value().signers.publicKeys, account.wallet.publicKeys); // the keys in force name it
+  pp::UserAccount after;
+  ASSERT_TRUE(after.ltsFromString(
+      pp::utl::binaryUnpack<pp::Ledger::TxUserUpdate>(set.value().record.data).value().meta));
+  EXPECT_EQ(after.wallet.recovery.publicKeys, guardians);
+  EXPECT_EQ(after.wallet.recovery.minSignatures, 2u);
+  EXPECT_EQ(after.wallet.recovery.delaySeconds, 7u * 86400);
+  EXPECT_EQ(after.wallet.publicKeys, account.wallet.publicKeys); // its keys stay
+  EXPECT_FALSE(makeRecoverySet(info, signers, account, guardians, 4, week.value(), making()));
+  EXPECT_FALSE(makeRecoverySet(info, signers, account, {account.wallet.publicKeys[0]}, 1, week.value(), making()));
+  EXPECT_FALSE(makeRecoverySet(info, signers, issuer(0), guardians, 2, week.value(), making())); // cannot pay
+  EXPECT_FALSE(makeRecoverySet(info, signersOf(pp::AccountIds::ID_RESERVE, account), account, guardians, 2,
+                               week.value(), making())); // a system account
+
+  // Named, it is the set's: the account's keys do not change it; the set does, signing itself.
+  EXPECT_FALSE(makeRecoveryAnnouncement(info, kIssuer, account, {key()}, 1, making())); // no set yet
+  account.wallet.recovery = after.wallet.recovery;
+  EXPECT_FALSE(makeRecoverySet(info, signers, account, {key()}, 1, week.value(), making()));
+  auto change = makeRecoveryChange(info, kIssuer, account, {key()}, 1, week.value(), making());
+  ASSERT_TRUE(change) << change.error().message;
+  EXPECT_EQ(change.value().kind, op::Kind::AccountRecovery);
+  EXPECT_EQ(change.value().signers.publicKeys, guardians);
+  EXPECT_EQ(change.value().signers.minSignatures, 2u);
+  EXPECT_TRUE(makeRecoveryChange(info, kIssuer, account, {}, 0, 0, making())); // removed
+  EXPECT_FALSE(makeRecoveryWithdrawal(info, kIssuer, account, making()));       // nothing announced
+
+  const std::vector<std::string> next = {key()};
+  auto announce = makeRecoveryAnnouncement(info, kIssuer, account, next, 1, making());
+  ASSERT_TRUE(announce) << announce.error().message;
+  EXPECT_EQ(announce.value().signers.publicKeys, guardians);
+  EXPECT_EQ(announce.value().signers.account, kIssuer);
+  EXPECT_FALSE(makeRecoveryAnnouncement(info, kIssuer, account, next, 2, making())); // 2 of 1
+
+  // Announced: the account is frozen — nothing its keys sign is made; the set withdraws it.
+  account.wallet.recovery.pending = true;
+  account.wallet.recovery.nextPublicKeys = next;
+  account.wallet.recovery.nextMinSignatures = 1;
+  account.wallet.recovery.applyEpoch = 900;
+  EXPECT_FALSE(checkNotFrozen(account));
+  EXPECT_FALSE(makeSend(info, signers, account, kHolder, 0, 10, 10, making()));
+  EXPECT_FALSE(makeIssue(info, signers, account, kHolder, 10, 10, making()));
+  EXPECT_FALSE(makeKeyReplacement(info, signers, account, next, 1, 10, making()));
+  EXPECT_FALSE(makeRecoveryAnnouncement(info, kIssuer, account, next, 1, making())); // one at a time
+  EXPECT_FALSE(makeRecoveryChange(info, kIssuer, account, {key()}, 1, week.value(), making()));
+  auto withdraw = makeRecoveryWithdrawal(info, kIssuer, account, making());
+  ASSERT_TRUE(withdraw) << withdraw.error().message;
+  EXPECT_EQ(withdraw.value().signers.publicKeys, guardians);
+}

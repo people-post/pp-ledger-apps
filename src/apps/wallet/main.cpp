@@ -42,14 +42,17 @@ int main(int argc, char **argv) {
   };
   WalletSendScreen send(online, session, desk, made);
   EvacuateScreen evacuate(online, session, desk, made);
+  AccountRecoveryScreen recovery(online, session, desk, made);
   online.onStatus = [&](const std::string &status) { nav.setStatus(status); };
   const std::map<std::string, Screen *> screens = {{"accounts", &accounts}, {"send", &send},
-                                                   {"evacuate", &evacuate}, {"review", &review},
+                                                   {"evacuate", &evacuate}, {"recovery", &recovery},
+                                                   {"review", &review},
                                                    {"keys", &keys},         {"network", &network}};
   if (!nav.build(app.context(), "Wallet",
                  {{"accounts", "Accounts"},
                   {"send", "Send"},
                   {"evacuate", "Evacuate"},
+                  {"recovery", "Recovery"},
                   {"review", "Review and sign"},
                   {"keys", "Keys"},
                   {"network", "Network"}}) ||

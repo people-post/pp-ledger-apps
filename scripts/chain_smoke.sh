@@ -9,7 +9,9 @@
 #   token), replaces its signers (2 of 2), sends native tokens signed by both (the registrar's balance);
 #   pp-ledger-fees: the first fee round — the period from the chain, a relay paid to that account,
 #   the payouts as one batch from the fee account, signed 3 of 3 (balances, the round file, the mark);
-#   pp-ledger-wallet: the network pinned from a card, accounts proven back to block 0's hash;
+#   pp-ledger-wallet: the network pinned from a card, accounts proven back to block 0's hash; an account
+#   given a recovery set, its recovery announced from a second wallet holding the set (the account shown
+#   frozen), and withdrawn by the set;
 #   pp-ledger-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
 #   as it freezes the admin set until it applies.
 # Each made from the chain, signed with the smoke keys (3 of 3), submitted, seen in a block.
@@ -176,6 +178,40 @@ echo "✓ Wallet: sent 5 from account $account to the registrar, signed with its
 grep -q '"minSignatures":1' "$out/evacuated.json" && test "$(grep -o '"publicKeys":\[[^]]*\]' "$out/evacuated.json" | grep -o '"0x' | wc -l)" -eq 1 ||
   { echo "FAIL: account $account's keys were not replaced by one new key ($out/evacuated.json)"; exit 1; }
 echo "✓ Wallet: account $account evacuated — its keys replaced by a new one made in the wallet"
+
+# 6b. Wallet: account recovery — the account's key names a recovery set (2 of 2, a day); a second
+# wallet holding the set announces a new key; the owner's wallet shows the account frozen and Send makes
+# nothing; the set withdraws it.
+for i in 1 2; do
+  "$client" keygen -o "$out/guardian$i" >/dev/null
+  rm -f "$out/guardian$i.card.json"
+  "$build/src/apps/devfixture/pp-ledger-devfixture" card-file owner "Guardian $i" "$out/guardian$i.pub" \
+    "$out/guardian$i.card.json"
+done
+account_json() { "$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n'; }
+run_app wallet "$out/wallet-home" wallet-recovery-set.script
+account_json >"$out/recovery-set.json"
+grep -q '"recovery":{[^}]*"minSignatures":2' "$out/recovery-set.json" ||
+  { echo "FAIL: account $account has no recovery set of 2 ($out/recovery-set.json)"; exit 1; }
+echo "✓ Wallet: account $account's key named its recovery set (2 of 2) and a day's delay"
+rm -rf "$out/guardian-home"
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/guardian-home" "guardian passphrase" owner \
+  "$out/guardian1.key" "$out/guardian2.key"
+run_app wallet "$out/guardian-home" wallet-recover.script
+account_json >"$out/recovery-announced.json"
+grep -q '"pending":{' "$out/recovery-announced.json" ||
+  { echo "FAIL: no recovery announced for account $account ($out/recovery-announced.json)"; exit 1; }
+echo "✓ Wallet: account $account's recovery set announced a new key"
+frozenBalance=$(balance "$account")
+run_app wallet "$out/wallet-home" wallet-recovery-frozen.script
+test "$(balance "$account")" -le "$frozenBalance" ||
+  { echo "FAIL: account $account's balance rose while frozen"; exit 1; }
+echo "✓ Wallet: the owner's wallet shows account $account frozen, proven; Send makes nothing"
+run_app wallet "$out/guardian-home" wallet-recover-withdraw.script
+account_json >"$out/recovery-withdrawn.json"
+! grep -q '"pending"' "$out/recovery-withdrawn.json" && grep -q '"recovery":{' "$out/recovery-withdrawn.json" ||
+  { echo "FAIL: account $account's recovery was not withdrawn ($out/recovery-withdrawn.json)"; exit 1; }
+echo "✓ Wallet: the recovery set withdrew it; the set stays"
 
 # 7. Genesis: the recovery set announces a new admin set.
 rm -rf "$out/genesis-home" "$out/next-admin"*

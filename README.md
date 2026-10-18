@@ -39,7 +39,9 @@ under Xvfb (a ctest when `xvfb-run` is present). `scripts/chain_smoke.sh <build>
 drives the role apps against pp-ledger's local smoke network (a built pp-ledger with its apps), each
 operation made from the chain, signed with the smoke keys, submitted, and checked on chain: a
 reserve → registrar transfer; a config update raising the mint cap, a mint, an admin-set rotation;
-an issued account for an owner's key, funded by the registrar; a recovery naming a new admin set.
+an issued account for an owner's key, funded by the registrar; a token issuer's issue, signers and send;
+a fee round; the wallet's proven accounts, a send, an evacuation and an account recovery set, announced
+(the account shown frozen) and withdrawn; a recovery naming a new admin set.
 `scripts/genesis_smoke.sh <build> <pp-ledger checkout>` runs the offline genesis ceremony: the
 Genesis app plans block 0 from key cards, its admin keys sign it, and `pp-beacon --init --genesis-op`
 writes block 0 from it.
@@ -47,7 +49,7 @@ writes block 0 from it.
 | Piece | What |
 |-------|------|
 | `src/core` (`apps_core`) | The vault, key cards and the address book, the operation workflow, the fee rounds (rules, payouts, round files) — no network code |
-| `src/net` (`apps_net`) | The link to a node: chain info and the config in force (`CONFIG_GET`), accounts and their signers, the minimum fee, submitting, finding a transaction in a block; the admin set's, a token issuer's and the fee account's operations built and checked by pp-ledger's rules (`AdminOperations`, `TokenOperations`, `FeeOperations`) |
+| `src/net` (`apps_net`) | The link to a node: chain info and the config in force (`CONFIG_GET`), accounts and their signers, the minimum fee, submitting, finding a transaction in a block; the admin set's, an account's (a token issuer's, the wallet's: recovery included) and the fee account's operations built and checked by pp-ledger's rules (`AdminOperations`, `TokenOperations`, `FeeOperations`) |
 | `src/ui` (`apps_ui`) | The window host (SDL3 + OpenGL 3, pp-cpp-ui), the app frame, the shared screens: vault, keys and people, operation review |
 | `src/online` (`apps_online`) | What role apps add: the node setting (kept in the vault), chain work off the UI thread, submitting and following an operation, the transfer form |
 | `src/apps/signer` | `pp-ledger-signer`: review, sign and merge operations (genesis plans included), offline; locks itself after 10 minutes without use |
@@ -56,6 +58,6 @@ writes block 0 from it.
 | `src/apps/registrar` | `pp-ledger-registrar`: issued accounts (2^20 … 2^30) for their owners' keys, funded by the registrar |
 | `src/apps/reserve` | `pp-ledger-reserve`: transfers out of the reserve — made from the chain, signed, merged, submitted, followed into a block |
 | `src/apps/fees` | `pp-ledger-fees`: fee rounds — a period read from the chain, the relays' measures, the rules, the payouts as one batch from the fee account; round files checked by their digest |
-| `src/apps/token` | `pp-ledger-token`: a token issuer's overview, issuing its token, sending, replacing its signers |
-| `src/apps/wallet` | `pp-ledger-wallet`: everyone's last resort — the network pinned from a card, accounts proven (no node believed), send, receive, evacuate, key backups |
+| `src/apps/token` | `pp-ledger-token`: a token issuer's overview, issuing its token, sending, replacing its signers, its recovery set |
+| `src/apps/wallet` | `pp-ledger-wallet`: everyone's last resort — the network pinned from a card, accounts proven (no node believed), send, receive, evacuate, recovery (an account's set; acting as a set: announce, withdraw, change), key backups |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

@@ -39,3 +39,18 @@ sign. *Work it out* fills in the fee. The keys in force sign the change; once it
 new keys sign everything from then on.
 
 A lost key cannot sign: replace it while enough of the others can still sign.
+
+## Its recovery
+
+If too many of the keys are lost or stolen, the account is lost — unless it has a **recovery set**:
+keys above the keys in force, kept apart (in another office, with a trusted party), which can give it
+new keys. Under *Its recovery* on Signers: add each recovery key's card, choose how many must sign and
+the days the account waits for new keys, then *Set the recovery…* — an operation the keys in force
+sign. After that only the recovery keys change it: *Change the recovery set…* and *Remove the
+recovery…* make operations for them to sign.
+
+To recover, the recovery keys' holders use the wallet (Recovery → *As an account's recovery set*):
+they name the issuer's new keys. **The account is frozen at once** — no issuing, no sending — and the
+new keys take over at the first epoch start after the delay. Overview warns of it; if the issuer did
+not ask for it, its recovery keys' holders withdraw it (*Withdraw the recovery…* on Signers, or the
+wallet).

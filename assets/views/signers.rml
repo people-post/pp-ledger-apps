@@ -50,6 +50,38 @@
       <p class="notice" data-if="notice != ''">{{notice}}</p>
       <p class="error" data-if="error != ''">{{error}}</p>
     </div>
+    <div class="card">
+      <h2>Its recovery</h2>
+      <p class="muted">Recovery keys stand above the keys in force: they can give the issuer new keys — when
+        these are lost or stolen — freezing the account until then, at least the delay. The keys in force
+        name the first set; after that only the set changes it, and its holders sign what this makes. The
+        hours and notes above apply here too.</p>
+      <p id="recovery-now" data-if="recovery_now != ''">{{recovery_now}}</p>
+      <div data-if="is_announced">
+        <p id="recovery-announced" class="warning">{{announced}}</p>
+        <button id="recovery-withdraw" data-event-click="recovery_withdraw()" data-attrif-disabled="busy">Withdraw the recovery… (its recovery keys sign)</button>
+      </div>
+      <div class="item" data-for="k : recovery_keys">
+        <span class="grow">{{k.name}} <span class="muted">{{k.fingerprint}}</span></span>
+        <button class="small" data-event-click="recovery_drop(it_index)">Remove</button>
+      </div>
+      <button id="recovery-card" data-event-click="recovery_card()" data-attrif-disabled="busy">Add a recovery key card…</button>
+      <div class="row">
+        <div class="grow">
+          <label>Recovery keys that must sign</label>
+          <input id="recovery-needed" class="field" type="text" data-value="recovery_needed" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Days the account waits, frozen, for new keys</label>
+          <input id="recovery-days" class="field" type="text" data-value="recovery_days" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <button id="recovery-set" class="primary" data-if="!has_recovery" data-event-click="recovery_set()" data-attrif-disabled="busy">Set the recovery… (the keys in force sign)</button>
+        <button id="recovery-change" class="primary" data-if="has_recovery" data-event-click="recovery_set()" data-attrif-disabled="busy">Change the recovery set… (its recovery keys sign)</button>
+        <button id="recovery-remove" data-if="has_recovery" data-event-click="recovery_remove()" data-attrif-disabled="busy">Remove the recovery… (its recovery keys sign)</button>
+      </div>
+    </div>
   </div>
 </body>
 </rml>

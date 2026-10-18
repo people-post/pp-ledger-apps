@@ -51,6 +51,29 @@ If a key of an account may have leaked, act at once (Evacuate… on the account)
 Either way the wallet proves the result when it is in a block. **Back the vault up afterwards**: the new
 key exists nowhere else.
 
+## A way back: Recovery
+
+If every key of an account is lost — a dead disk, a forgotten passphrase — or stolen, the account is
+lost with them. Give it a **recovery set** before that happens (Recovery… on the account): keys that
+stand above the account's own.
+
+- **Recovery keys**: people you trust, or a backup key you keep apart from this wallet (another
+  wallet on another computer, kept offline). Each gives you their key's card (Keys → *Save key
+  card…*); *Add a key card…* for each.
+- **How many must sign**, and **the days the account waits** for new keys.
+- *Set the recovery*: the account's keys sign it. After that **only the recovery keys change it** —
+  whoever steals the account's keys cannot.
+
+If you lose your keys, or they may be stolen: make a new vault and key, send its card to your
+recovery keys' holders. In their wallets, Recovery → *As an account's recovery set*: the account's
+number, your key card (or *Make a new key here*, if the recovery key is your own backup), and
+*Announce its new keys*. **The account is frozen at once** — its old keys sign nothing — and your new
+key takes over at the first epoch start after the days you chose.
+
+Accounts shows an announcement, proven, in yellow, with the account frozen. If you did not ask for
+it, ask your recovery keys' holders to *Withdraw an announcement*. They can also change the set or
+remove it. Choose them with care: together, they can take the account.
+
 ## Keys in and out
 
 - **Save key backup…** (Keys) writes one key to a `.ppkey` file under the backup passphrase: any wallet

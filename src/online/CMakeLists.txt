@@ -8,6 +8,8 @@ add_library(apps_online STATIC
     NetworkScreen.cpp
     OperationForm.cpp
     OperationForm.h
+    RecoveryParts.cpp
+    RecoveryParts.h
     RegistrarScreen.cpp
     RegistrarScreen.h
     FeeScreens.cpp

@@ -1,5 +1,6 @@
 #include "net/TokenOperations.h"
 
+#include "chain/AccountPolicy.h"
 #include "chain/RecordHandler.h"
 #include "client/AccountIds.h"
 
@@ -123,7 +124,10 @@ TokenActivity describe(uint64_t account, const pp::Ledger::Record &record) {
             t->fromWalletId == account ? grouped(t->fee) : ""};
   }
   if (const auto *t = std::get_if<pp::Ledger::TxUserUpdate>(&tx)) {
-    return {"Its keys replaced", grouped(t->fee)};
+    return {"Updated: its keys or its recovery", grouped(t->fee)};
+  }
+  if (const auto *t = std::get_if<pp::Ledger::TxAccountRecovery>(&tx)) {
+    return {"Its recovery set announced new keys", grouped(t->fee)};
   }
   if (const auto *t = std::get_if<pp::Ledger::TxRenewal>(&tx)) {
     return {"Renewed", grouped(t->fee)};
@@ -169,6 +173,7 @@ pp::Roe<TokenOverview> tokenOverview(const ChainInfo &chain, uint64_t account, c
   overview.low = overview.native < 0 || static_cast<uint64_t>(overview.native) < keep;
   overview.minSignatures = state.wallet.minSignatures;
   overview.publicKeys = state.wallet.publicKeys;
+  overview.recovery = state.wallet.recovery;
   for (const auto &[token, balance] : state.wallet.mBalances) {
     if (token != account && token != pp::AccountIds::ID_GENESIS && balance != 0) {
       overview.otherTokens.emplace_back(token, balance);
@@ -191,6 +196,9 @@ pp::Roe<op::Operation> makeIssue(const ChainInfo &chain, const op::SignerSet &is
   const uint64_t account = *issuer.account;
   if (!isIssuedId(account)) {
     return pp::Error("Only an issued account issues a token");
+  }
+  if (auto ok = checkNotFrozen(state); !ok) {
+    return ok.error();
   }
   if (to == account) {
     return pp::Error("Tokens are issued to another account");
@@ -218,6 +226,9 @@ pp::Roe<op::Operation> makeSend(const ChainInfo &chain, const op::SignerSet &fro
   const uint64_t account = *from.account;
   if (token == account) {
     return makeIssue(chain, from, state, to, amount, fee, making);
+  }
+  if (auto ok = checkNotFrozen(state); !ok) {
+    return ok.error();
   }
   if (to == account) {
     return pp::Error("It cannot go to the account it comes from");
@@ -263,6 +274,9 @@ pp::Roe<op::Operation> makeKeyReplacement(const ChainInfo &chain, const op::Sign
   if (*current.account < pp::AccountIds::ID_FIRST_ISSUED) {
     return pp::Error("A system account's keys are not replaced this way");
   }
+  if (auto ok = checkNotFrozen(state); !ok) {
+    return ok.error();
+  }
   if (keys.empty()) {
     return pp::Error("Choose the keys from then on");
   }
@@ -280,6 +294,194 @@ pp::Roe<op::Operation> makeKeyReplacement(const ChainInfo &chain, const op::Sign
     return ok.error();
   }
   return withFee(chain, op::replaceKeys(commonFor(chain, current, making), state, keys, minSignatures, fee), fee);
+}
+
+namespace {
+
+/** `make(fee)` built with the least fee it needs, within the account's native balance. */
+template <typename Make>
+pp::Roe<op::Operation> withLeastFee(const ChainInfo &chain, const pp::UserAccount &state, Make make) {
+  auto probe = make(0);
+  if (!probe) {
+    return probe;
+  }
+  auto least = leastFee(chain, probe.value());
+  if (!least) {
+    return least.error();
+  }
+  if (auto ok = checkNative(state, least.value(), "the fee"); !ok) {
+    return ok.error();
+  }
+  return make(least.value());
+}
+
+pp::Roe<void> checkRecoverable(uint64_t account) {
+  if (account < pp::AccountIds::ID_FIRST_ISSUED) {
+    return pp::Error("A system account's recovery is the genesis recovery set's");
+  }
+  return {};
+}
+
+/** A recovery key is none of the account's own: lost with them, it would recover nothing. */
+pp::Roe<void> checkNotOwnKeys(const pp::UserAccount &state, const std::vector<std::string> &keys) {
+  for (const auto &key : keys) {
+    if (std::find(state.wallet.publicKeys.begin(), state.wallet.publicKeys.end(), key) !=
+        state.wallet.publicKeys.end()) {
+      return pp::Error("A recovery key is one of the account's own keys: lost or stolen with them, it recovers "
+                       "nothing");
+    }
+  }
+  return {};
+}
+
+/** The recovery set's signers for `account`, checked for making. */
+pp::Roe<op::SignerSet> setSigners(const ChainInfo &chain, uint64_t account, const pp::UserAccount &state,
+                                  const Making &making);
+
+pp::Roe<op::SignerSet> setSigners(const ChainInfo &chain, uint64_t account, const pp::UserAccount &state,
+                                  const Making &making) {
+  if (auto ok = checkRecoverable(account); !ok) {
+    return ok.error();
+  }
+  auto signers = recoverySignersOf(account, state);
+  if (!signers) {
+    return signers.error();
+  }
+  if (auto ok = checkMaking(chain, signers.value(), making); !ok) {
+    return ok.error();
+  }
+  return signers;
+}
+
+} // namespace
+
+pp::Roe<void> checkNotFrozen(const pp::UserAccount &state) {
+  if (state.wallet.recovery.pending) {
+    return pp::Error("The account is frozen: its recovery set announced new keys, taking over at epoch " +
+                     grouped(state.wallet.recovery.applyEpoch) + "; only that set can withdraw it");
+  }
+  return {};
+}
+
+uint64_t epochSeconds(const ChainInfo &chain) {
+  const auto &c = chain.meta.config;
+  if (c.slotDuration == 0 || c.slotsPerEpoch > std::numeric_limits<uint64_t>::max() / c.slotDuration) {
+    return 0;
+  }
+  return c.slotDuration * c.slotsPerEpoch;
+}
+
+uint64_t epochAt(const ChainInfo &chain, int64_t now) {
+  const uint64_t epoch = epochSeconds(chain);
+  const int64_t since = now - chain.meta.config.genesisTime;
+  return epoch == 0 || since <= 0 ? 0 : static_cast<uint64_t>(since) / epoch;
+}
+
+pp::Roe<uint64_t> delaySecondsFor(const ChainInfo &chain, uint64_t days) {
+  if (days == 0 || days > 3650) {
+    return pp::Error("The delay: between 1 and 3,650 days");
+  }
+  const uint64_t seconds = days * 86400;
+  const uint64_t least = pp::chain_tx::minRecoveryDelaySeconds(chain.meta.config);
+  if (seconds < least) {
+    return pp::Error("The chain's least delay is half an epoch: " + grouped(least) + " seconds");
+  }
+  return seconds;
+}
+
+pp::Roe<op::Operation> makeRecoverySet(const ChainInfo &chain, const op::SignerSet &current,
+                                       const pp::UserAccount &state, const std::vector<std::string> &keys,
+                                       uint32_t minSignatures, uint64_t delaySeconds, const Making &making) {
+  if (auto ok = checkMaking(chain, current, making); !ok) {
+    return ok.error();
+  }
+  if (auto ok = checkRecoverable(*current.account); !ok) {
+    return ok.error();
+  }
+  if (auto ok = checkNotFrozen(state); !ok) {
+    return ok.error();
+  }
+  if (state.wallet.recovery.hasSet()) {
+    return pp::Error("The account has a recovery set: only that set changes it now");
+  }
+  if (keys.empty() || minSignatures == 0 || minSignatures > keys.size()) {
+    return pp::Error("The recovery keys: at least one, and between 1 and that many to sign");
+  }
+  if (auto ok = checkNotOwnKeys(state, keys); !ok) {
+    return ok.error();
+  }
+  return withLeastFee(chain, state, [&](uint64_t fee) {
+    return op::setRecovery(commonFor(chain, current, making), state, keys, minSignatures, delaySeconds, fee);
+  });
+}
+
+pp::Roe<op::SignerSet> recoverySignersOf(uint64_t account, const pp::UserAccount &state) {
+  const auto &recovery = state.wallet.recovery;
+  if (!recovery.hasSet()) {
+    return pp::Error("Account " + grouped(account) + " has no recovery set");
+  }
+  op::SignerSet signers;
+  signers.account = account;
+  signers.publicKeys = recovery.publicKeys;
+  signers.minSignatures = recovery.minSignatures;
+  return signers;
+}
+
+pp::Roe<op::Operation> makeRecoveryAnnouncement(const ChainInfo &chain, uint64_t account, const pp::UserAccount &state,
+                                                const std::vector<std::string> &keys, uint32_t minSignatures,
+                                                const Making &making) {
+  auto signers = setSigners(chain, account, state, making);
+  if (!signers) {
+    return signers.error();
+  }
+  if (state.wallet.recovery.pending) {
+    return pp::Error("A recovery is announced already: it takes over at epoch " +
+                     grouped(state.wallet.recovery.applyEpoch) + ", unless the set withdraws it");
+  }
+  if (keys.empty() || minSignatures == 0 || minSignatures > keys.size()) {
+    return pp::Error("The new keys: at least one, and between 1 and that many to sign");
+  }
+  return withLeastFee(chain, state, [&](uint64_t fee) {
+    return op::announceRecovery(commonFor(chain, signers.value(), making), account, keys, minSignatures, fee);
+  });
+}
+
+pp::Roe<op::Operation> makeRecoveryWithdrawal(const ChainInfo &chain, uint64_t account, const pp::UserAccount &state,
+                                              const Making &making) {
+  auto signers = setSigners(chain, account, state, making);
+  if (!signers) {
+    return signers.error();
+  }
+  if (!state.wallet.recovery.pending) {
+    return pp::Error("No recovery is announced for account " + grouped(account));
+  }
+  return withLeastFee(chain, state, [&](uint64_t fee) {
+    return op::withdrawRecovery(commonFor(chain, signers.value(), making), account, fee);
+  });
+}
+
+pp::Roe<op::Operation> makeRecoveryChange(const ChainInfo &chain, uint64_t account, const pp::UserAccount &state,
+                                          const std::vector<std::string> &keys, uint32_t minSignatures,
+                                          uint64_t delaySeconds, const Making &making) {
+  auto signers = setSigners(chain, account, state, making);
+  if (!signers) {
+    return signers.error();
+  }
+  if (state.wallet.recovery.pending) {
+    return pp::Error("A recovery is announced: withdraw it before changing the set");
+  }
+  if (!keys.empty()) {
+    if (minSignatures == 0 || minSignatures > keys.size()) {
+      return pp::Error("Signatures to act: between 1 and the recovery keys chosen");
+    }
+    if (auto ok = checkNotOwnKeys(state, keys); !ok) {
+      return ok.error();
+    }
+  }
+  return withLeastFee(chain, state, [&](uint64_t fee) {
+    return op::changeRecovery(commonFor(chain, signers.value(), making), account, keys, minSignatures, delaySeconds,
+                              fee);
+  });
 }
 
 } // namespace apps::net

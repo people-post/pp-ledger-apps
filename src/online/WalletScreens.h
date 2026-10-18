@@ -3,6 +3,7 @@
 // each node says; the person's accounts, each proven from the pinned genesis hash (WL003).
 
 #include "online/Online.h"
+#include "online/RecoveryParts.h"
 #include "net/WalletChain.h"
 #include "core/WalletBook.h"
 #include "ui/Screen.h"
@@ -88,6 +89,10 @@ public:
     std::string keys;
     std::string renewal;
     std::string state;
+    /** Its recovery set, or "" (none). */
+    std::string recovery;
+    /** A recovery announced: what and when, for the owner to cancel if not theirs. */
+    std::string alert;
     bool proven{false};
   };
 
@@ -102,6 +107,7 @@ private:
   void refreshAll(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void sendFrom(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
   void evacuate(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
+  void recovery(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
   void choose(const ui::VariantList &args, const std::string &screen);
   void read();
   void say(const std::string &error, const std::string &notice = "");
@@ -145,6 +151,8 @@ protected:
   virtual void afterSent() {}
   /** The account chosen (Accounts), or say so; none when none. */
   std::optional<uint64_t> fromAccount();
+  /** Whose keys sign, in what the action says of them ("the account's", "its recovery set's"). */
+  std::string signersAre_{"the account's"};
 
   Online &online_;
   ui_host::Session &session_;
@@ -204,6 +212,78 @@ private:
 
   std::string holds_;
   std::string moveTo_;
+};
+
+/**
+ * An account's way back (pp-ledger projects/account-recovery): its recovery set stands above its keys.
+ * For the chosen account: its recovery, proven — frozen while an announcement waits — and naming its
+ * first set (its keys sign). For whoever holds an account's recovery keys: announcing its new keys,
+ * withdrawing that, changing or removing the set (the set signs).
+ */
+class AccountRecoveryScreen : public WalletAction {
+public:
+  using WalletAction::WalletAction;
+  void willShow() override;
+
+protected:
+  std::string modelName() const override { return "wrecov"; }
+  std::string viewName() const override { return "wallet_recovery.rml"; }
+  void bind(ui::DataModelConstructor &model) override;
+  void afterSent() override;
+
+private:
+  // The chosen account's first set.
+  void addSetCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void dropSetKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
+  void setIt(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  // The recovery set's acts on account `target_`.
+  void addNewCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void makeNewKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void dropNewKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
+  void announce(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void withdraw(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void addChangeCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void dropChangeKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
+  void change(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void remove(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  /**
+   * Prove account `id` and read its whole state and the chain, then `then` (on the UI thread) with them;
+   * or say why not.
+   */
+  void withProven(uint64_t id, std::function<void(const net::VerifiedAccount &, const pp::UserAccount &,
+                                                  const net::ChainInfo &)> then);
+  /**
+   * The recovery set's act on account `target_`: `build` from its proven state, shown for the set's
+   * holders to sign.
+   */
+  void bySet(const std::string &making,
+             std::function<pp::Roe<pp::operation::Operation>(uint64_t, const pp::UserAccount &, const net::ChainInfo &)>
+                 build,
+             std::function<std::string(const net::VerifiedAccount &, const net::ChainInfo &)> notice);
+  /** A key card's key into `into`. */
+  void addCard(ChosenKeys &into);
+  void read();
+
+  /** The account chosen under Accounts (none: only acting as a recovery set is offered). */
+  bool hasChosen_{false};
+  std::string chosen_;
+  /** The chosen account's recovery now, proven; "" until read. */
+  std::string now_;
+  std::string announced_;
+  bool hasSet_{false};
+  bool isAnnounced_{false};
+  ChosenKeys setKeys_;
+  std::string setNeeded_{"1"};
+  std::string days_{"7"};
+  /** Acting as an account's recovery set: the account, its new keys, a new set. */
+  std::string target_;
+  ChosenKeys newKeys_;
+  std::string newNeeded_{"1"};
+  ChosenKeys changeKeys_;
+  std::string changeNeeded_{"1"};
+  std::string changeDays_{"7"};
+  /** The operation shown is the set's, on this account (not the chosen account's own). */
+  std::optional<uint64_t> actedOn_;
 };
 
 } // namespace apps::online

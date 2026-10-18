@@ -126,13 +126,16 @@ void TokenOverviewScreen::willShow() {
   account_ = std::to_string(*account);
   say("", "Reading the account…");
   auto overview = std::make_shared<net::TokenOverview>();
+  // The epoch's length and the epoch now, by the chain's clock: when an announced recovery applies.
+  auto epochs = std::make_shared<std::pair<uint64_t, uint64_t>>(0, 0);
   const uint64_t id = *account;
   online_.withChain(
-      [overview, id](net::ChainLink &link) -> std::string {
+      [overview, epochs, id](net::ChainLink &link) -> std::string {
         auto chain = link.info();
         if (!chain) {
           return chain.error().message;
         }
+        *epochs = {net::epochSeconds(chain.value()), net::epochAt(chain.value(), nowSeconds())};
         auto state = link.account(id);
         if (!state) {
           return state.error().message;
@@ -146,7 +149,7 @@ void TokenOverviewScreen::willShow() {
         *overview = std::move(read.value());
         return "";
       },
-      [this, overview](const std::string &error) {
+      [this, overview, epochs](const std::string &error) {
         if (!error.empty()) {
           say(error + ".");
           return;
@@ -158,6 +161,7 @@ void TokenOverviewScreen::willShow() {
                   {"Native balance", formatAmount(native)},
                   {"A renewal costs about", formatAmount(o.renewalFee)},
                   {"Signed by", std::to_string(o.minSignatures) + " of " + std::to_string(o.publicKeys.size())}};
+        facts_.push_back({"Recovery", o.recovery.hasSet() ? recoveryText(o.recovery) : "none"});
         for (const auto &[token, balance] : o.otherTokens) {
           facts_.push_back({"Holds token " + formatAmount(token), signed64(balance)});
         }
@@ -166,6 +170,12 @@ void TokenOverviewScreen::willShow() {
           warning_ = "The native balance covers about " + std::to_string(left) +
                      " renewals. An account that cannot pay its renewal is ended, and its token's book with it: "
                      "ask the registrar (or anyone) to send it native tokens.";
+        }
+        if (const std::string announced =
+                announcedText(o.recovery, epochs->second, epochs->first,
+                              "If the issuer did not ask for it, its recovery keys' holders withdraw it (Signers).");
+            !announced.empty()) {
+          warning_ += (warning_.empty() ? "" : " ") + announced;
         }
         for (const auto &key : o.publicKeys) {
           signers_.push_back(nameOf(key, session_));
@@ -450,9 +460,29 @@ void SignersScreen::bind(ui::DataModelConstructor &model) {
   model.BindEventCallback("signers_card", &SignersScreen::addCard, this);
   model.BindEventCallback("signers_fee", &SignersScreen::updateFee, this);
   model.BindEventCallback("signers_make", &SignersScreen::makeReplacement, this);
+  if (auto row = model.RegisterStruct<ChosenKeys::Row>()) {
+    row.RegisterMember("name", &ChosenKeys::Row::name);
+    row.RegisterMember("fingerprint", &ChosenKeys::Row::fingerprint);
+  }
+  model.RegisterArray<std::vector<ChosenKeys::Row>>();
+  model.Bind("recovery_now", &recoveryNow_);
+  model.Bind("announced", &announced_);
+  model.Bind("has_recovery", &hasRecovery_);
+  model.Bind("is_announced", &isAnnounced_);
+  model.Bind("recovery_keys", &recoveryKeys_.rows);
+  model.Bind("recovery_needed", &recoveryNeeded_);
+  model.Bind("recovery_days", &recoveryDays_);
+  model.BindEventCallback("recovery_card", &SignersScreen::addRecoveryCard, this);
+  model.BindEventCallback("recovery_drop", &SignersScreen::dropRecoveryKey, this);
+  model.BindEventCallback("recovery_set", &SignersScreen::makeRecoverySet, this);
+  model.BindEventCallback("recovery_remove", &SignersScreen::makeRecoveryRemoval, this);
+  model.BindEventCallback("recovery_withdraw", &SignersScreen::makeRecoveryWithdrawal, this);
 }
 
-void SignersScreen::clearForm() { fee_.clear(); }
+void SignersScreen::clearForm() {
+  fee_.clear();
+  recoveryKeys_.clear();
+}
 
 void SignersScreen::addCandidate(const std::string &publicKey, bool chosen) {
   if (std::find(candidateKeys_.begin(), candidateKeys_.end(), publicKey) != candidateKeys_.end()) {
@@ -483,17 +513,32 @@ void SignersScreen::willShow() {
   }
   say("", "Reading the keys in force…");
   auto wallet = std::make_shared<pp::Wallet>();
+  // The epoch's length and the epoch now, by the chain's clock: when an announced recovery applies.
+  auto epochs = std::make_shared<std::pair<uint64_t, uint64_t>>(0, 0);
   const uint64_t id = *account;
   online_.withChain(
-      [id, wallet](net::ChainLink &link) -> std::string {
+      [id, wallet, epochs](net::ChainLink &link) -> std::string {
         auto held = readIssuer(link, id);
         if (!held) {
           return held.error().message;
         }
         *wallet = held.value().state.wallet;
+        if (auto chain = link.info()) {
+          *epochs = {net::epochSeconds(chain.value()), net::epochAt(chain.value(), nowSeconds())};
+        }
         return "";
       },
-      [this, wallet](const std::string &error) {
+      [this, wallet, epochs](const std::string &error) {
+        const auto &r = wallet->recovery;
+        hasRecovery_ = r.hasSet();
+        isAnnounced_ = r.pending;
+        recoveryNow_ = error.empty() ? (hasRecovery_ ? "Recovery: " + recoveryText(r) +
+                                                           ". Its recovery keys: " + fingerprintsText(r.publicKeys) +
+                                                           ". Only they change it now."
+                                                     : "No recovery: if every key in force is lost, so is the account.")
+                                     : "";
+        announced_ = announcedText(r, epochs->second, epochs->first,
+                                   "If the issuer did not ask for it, its recovery keys' holders withdraw it.");
         // The keys in force, chosen; then the owners' keys in the vault and the address book.
         for (const auto &publicKey : wallet->publicKeys) {
           addCandidate(publicKey, true);
@@ -602,6 +647,112 @@ void SignersScreen::makeReplacement(ui::DataModelHandle, ui::Event &, const ui::
                                        making(validFor, notes));
       },
       "keys-" + std::to_string(id) + ".json");
+}
+
+// ---- Its recovery ----
+
+void SignersScreen::addRecoveryCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  app_->chooseFileToOpen(kKeyCards, [this](std::optional<std::string> path) {
+    if (!path) {
+      return;
+    }
+    auto card = loadKeyCard(*path);
+    if (!card) {
+      say(card.error().message);
+      return;
+    }
+    const std::string why = recoveryKeys_.add(card.value().name, card.value().publicKey);
+    say(why, why.empty() ? "Check " + card.value().name + "'s fingerprint with them." : "");
+  });
+}
+
+void SignersScreen::dropRecoveryKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &args) {
+  recoveryKeys_.drop(args.empty() ? -1 : args[0].Get<int>(-1));
+  refresh();
+}
+
+void SignersScreen::makeRecoverySet(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  const auto account = issuer_.account();
+  if (!account) {
+    say(kNoIssuer);
+    return;
+  }
+  const auto keys = recoveryKeys_.keys;
+  auto needed = parseAmount(recoveryNeeded_);
+  auto days = parseAmount(recoveryDays_);
+  if (keys.empty()) {
+    say("Add the recovery keys' cards: people the issuer trusts, or backup keys kept apart from these.");
+    return;
+  }
+  if (!needed || needed.value() == 0 || needed.value() > keys.size()) {
+    say("How many recovery keys must sign: between 1 and the keys chosen.");
+    return;
+  }
+  if (!days) {
+    say("Type the delay in days.");
+    return;
+  }
+  const uint64_t id = *account;
+  const auto min = static_cast<uint32_t>(needed.value());
+  const uint64_t d = days.value();
+  // The keys in force name the first set; a change after that is the set's to sign.
+  make(
+      [=](net::ChainLink &link, const net::ChainInfo &chain, int64_t validFor,
+          const std::string &notes) -> pp::Roe<op::Operation> {
+        auto held = readIssuer(link, id);
+        if (!held) {
+          return held.error();
+        }
+        auto delay = net::delaySecondsFor(chain, d);
+        if (!delay) {
+          return delay.error();
+        }
+        const auto &state = held.value().state;
+        if (state.wallet.recovery.hasSet()) {
+          return net::makeRecoveryChange(chain, id, state, keys, min, delay.value(), making(validFor, notes));
+        }
+        return net::makeRecoverySet(chain, held.value().signers, state, keys, min, delay.value(),
+                                    making(validFor, notes));
+      },
+      "recovery-" + std::to_string(id) + ".json");
+}
+
+void SignersScreen::makeRecoveryRemoval(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  const auto account = issuer_.account();
+  if (!account) {
+    say(kNoIssuer);
+    return;
+  }
+  const uint64_t id = *account;
+  make(
+      [=](net::ChainLink &link, const net::ChainInfo &chain, int64_t validFor,
+          const std::string &notes) -> pp::Roe<op::Operation> {
+        auto held = readIssuer(link, id);
+        if (!held) {
+          return held.error();
+        }
+        return net::makeRecoveryChange(chain, id, held.value().state, {}, 0, 0, making(validFor, notes));
+      },
+      "no-recovery-" + std::to_string(id) + ".json");
+}
+
+void SignersScreen::makeRecoveryWithdrawal(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  const auto account = issuer_.account();
+  if (!account) {
+    say(kNoIssuer);
+    return;
+  }
+  const uint64_t id = *account;
+  make(
+      [=](net::ChainLink &link, const net::ChainInfo &chain, int64_t validFor,
+          const std::string &notes) -> pp::Roe<op::Operation> {
+        auto held = readIssuer(link, id);
+        if (!held) {
+          return held.error();
+        }
+        return net::makeRecoveryWithdrawal(chain, id, held.value().state, making(validFor, notes));
+      },
+      "withdraw-recovery-" + std::to_string(id) + ".json");
 }
 
 } // namespace apps::online
