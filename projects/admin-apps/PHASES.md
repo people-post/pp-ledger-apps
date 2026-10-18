@@ -17,6 +17,8 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
 - [ ] **ad3** This repo's skeleton: CMake (pp-ledger, pp-cpp-ui, pp-cpp-crypto), `admin_core`
       (vault, key cards / address book), `admin_ui` (unlock, keys, operation review), CI on Linux and
       macOS
+  - [ ] **ad3a** CMake (pp-ledger, pp-cpp-common, pp-cpp-crypto, GoogleTest), `admin_core`, CI
+  - [ ] **ad3b** pp-cpp-ui, the window host, `admin_ui`
 - [ ] **ad4** Signer (offline): open an operation, review it, sign with a vault key, merge copies,
       save — the first app, used by every role
 - [ ] **ad5** Reserve: transfers; `admin_net` (read chain state, submit, follow inclusion)
