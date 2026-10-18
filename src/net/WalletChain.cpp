@@ -1,6 +1,9 @@
 #include "net/WalletChain.h"
 
+#include "chain/AccountBuffer.h"
 #include "chain/ClientVerify.h"
+#include "chain/RecordHandler.h"
+#include "client/AccountIds.h"
 #include "lib/common/BinaryPack.hpp"
 
 namespace apps::net {
@@ -116,11 +119,76 @@ pp::Roe<VerifiedAccount> Verifier::account(ChainLink &link, uint64_t id) {
     if (out.exists) {
       out.wallet = *proven.value().wallet;
     }
+    out.attachmentHash = proven.value().attachmentHash;
     out.provenAtBlock = proven.value().blockId;
     out.tip = checked.value().first;
     return out;
   }
   return pp::Error(why);
+}
+
+pp::operation::SignerSet signersOf(const VerifiedAccount &account) {
+  pp::operation::SignerSet signers;
+  signers.account = account.id;
+  signers.publicKeys = account.wallet.publicKeys;
+  signers.minSignatures = account.wallet.minSignatures;
+  return signers;
+}
+
+pp::Roe<pp::UserAccount> provenState(ChainLink &link, const VerifiedAccount &account) {
+  if (!account.exists) {
+    return pp::Error("Account " + std::to_string(account.id) + " does not exist");
+  }
+  auto state = link.account(account.id);
+  if (!state) {
+    return state.error();
+  }
+  if (pp::AccountBuffer::attachmentHashOf(state.value().meta) != account.attachmentHash) {
+    return pp::Error("The node's copy of the account's attachment is not the proven one");
+  }
+  pp::UserAccount out;
+  out.wallet = account.wallet;
+  out.meta = state.value().meta;
+  return out;
+}
+
+pp::Roe<pp::operation::Operation> makeMoveAll(const ChainInfo &chain, const pp::operation::SignerSet &from,
+                                              const pp::UserAccount &state, uint64_t to, const Making &making) {
+  if (!from.account || *from.account == to) {
+    return pp::Error("Move it to another account");
+  }
+  pp::Ledger::TxDefault probe;
+  probe.fromWalletId = *from.account;
+  auto least = pp::minimumFeeFor(chain.meta.config, pp::Ledger::TypedTx(probe));
+  if (!least) {
+    return pp::Error("Cannot work out the fee: " + least.error().message);
+  }
+  const uint64_t fee = least.value();
+  std::vector<pp::operation::Payment> payments;
+  for (const auto &[token, amount] : state.wallet.mBalances) {
+    if (token != pp::AccountIds::ID_GENESIS && token != *from.account && amount > 0) {
+      payments.push_back({to, static_cast<uint64_t>(amount), token});
+    }
+  }
+  const auto native = state.wallet.mBalances.find(pp::AccountIds::ID_GENESIS);
+  const uint64_t held = native == state.wallet.mBalances.end() || native->second < 0 ? 0 : static_cast<uint64_t>(native->second);
+  const uint64_t fees = fee * (payments.size() + 1);
+  if (held <= fees) {
+    return pp::Error("The account holds " + pp::operation::groupDigits(held) + " of the native token: not enough for " +
+                     std::to_string(payments.size() + 1) + " transfers' fees (" + pp::operation::groupDigits(fees) + ")");
+  }
+  payments.push_back({to, held - fees, 0});
+  pp::operation::Common common;
+  common.networkId = chain.networkId;
+  common.genesisHash = chain.genesisHash;
+  common.signers = from;
+  common.window = pp::operation::windowFrom(making.now, making.validForSeconds);
+  common.notes = making.notes;
+  common.createdAt = making.now;
+  if (payments.size() == 1) {
+    return pp::operation::transfer(common, to, payments.front().amount, fee);
+  }
+  return pp::operation::transfers(common, payments, fee);
 }
 
 std::vector<NodeView> checkNodes(const wallet::NetworkCard &card) {

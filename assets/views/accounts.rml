@@ -17,6 +17,7 @@
       <p class="muted">Each proven from block 0's hash: the beacon's signed tip, the blocks under it, the
         account in the block's state. Tip: {{tip}}.</p>
       <p class="muted" data-if="rows.size == 0">No accounts yet: add your account's number below.</p>
+      <p class="muted" data-if="rows.size > 0">To receive, give the payer your account's number.</p>
       <div class="item" data-for="r : rows">
         <span class="grow"><strong>{{r.label}}</strong> account {{r.account}}<br/>
           <span class="muted">{{r.state}}</span><br/>
@@ -24,6 +25,8 @@
           <span class="muted" data-if="r.tokens != ''"><br/>{{r.tokens}}</span></span>
         <span style="width: 160dp;"><strong>{{r.balance}}</strong></span>
         <span data-if="r.proven" data-attr-id="'account-proven-' + it_index" class="muted">proven</span>
+        <button class="small" data-attr-id="'account-send-' + it_index" data-event-click="accounts_send(it_index)">Send…</button>
+        <button class="small" data-attr-id="'account-evacuate-' + it_index" data-event-click="accounts_evacuate(it_index)">Evacuate…</button>
         <button class="small" data-event-click="accounts_remove(it_index)">Remove</button>
       </div>
       <button id="accounts-refresh" data-event-click="accounts_refresh()" data-attrif-disabled="busy">Read again</button>

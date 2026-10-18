@@ -1,6 +1,9 @@
 #include "online/WalletScreens.h"
 
 #include "net/TokenOperations.h"
+#include "core/Operations.h"
+#include "core/Roles.h"
+#include "lib/common/BinaryPack.hpp"
 #include "core/AtomicFile.h"
 #include "core/Amounts.h"
 #include "client/AccountIds.h"
@@ -251,6 +254,8 @@ void AccountsScreen::bind(ui::DataModelConstructor &model) {
   model.BindEventCallback("accounts_add", &AccountsScreen::add, this);
   model.BindEventCallback("accounts_remove", &AccountsScreen::remove, this);
   model.BindEventCallback("accounts_refresh", &AccountsScreen::refreshAll, this);
+  model.BindEventCallback("accounts_send", &AccountsScreen::sendFrom, this);
+  model.BindEventCallback("accounts_evacuate", &AccountsScreen::evacuate, this);
 }
 
 void AccountsScreen::say(const std::string &error, const std::string &notice) {
@@ -392,5 +397,430 @@ void AccountsScreen::remove(ui::DataModelHandle, ui::Event &, const ui::VariantL
 }
 
 void AccountsScreen::refreshAll(ui::DataModelHandle, ui::Event &, const ui::VariantList &) { read(); }
+
+void AccountsScreen::choose(const ui::VariantList &args, const std::string &screen) {
+  const int index = indexArg(args);
+  const auto &accounts = desk_.book().accounts;
+  if (index < 0 || index >= static_cast<int>(accounts.size())) {
+    return;
+  }
+  desk_.selected = accounts[static_cast<size_t>(index)].id;
+  session_.navigate(screen);
+}
+
+void AccountsScreen::sendFrom(ui::DataModelHandle, ui::Event &, const ui::VariantList &args) { choose(args, "send"); }
+
+void AccountsScreen::evacuate(ui::DataModelHandle, ui::Event &, const ui::VariantList &args) {
+  choose(args, "evacuate");
+}
+
+// ---- What Send and Evacuate share ----
+
+void WalletAction::bindAction(ui::DataModelConstructor &model) {
+  if (auto line = model.RegisterStruct<Line>()) {
+    line.RegisterMember("label", &Line::label);
+    line.RegisterMember("value", &Line::value);
+  }
+  model.RegisterArray<std::vector<Line>>();
+  model.Bind("from", &from_);
+  model.Bind("lines", &lines_);
+  model.Bind("signers", &signers_);
+  model.Bind("can_send", &canSend_);
+  model.Bind("has_pending", &hasPending_);
+  model.Bind("error", &error_);
+  model.Bind("notice", &notice_);
+  model.Bind("busy", &busy_);
+  model.BindEventCallback("action_send", &WalletAction::sendIt, this);
+  model.BindEventCallback("action_file", &WalletAction::saveFile, this);
+  model.BindEventCallback("action_cancel", &WalletAction::cancel, this);
+}
+
+void WalletAction::say(const std::string &error, const std::string &notice) {
+  error_ = error;
+  notice_ = notice;
+  refresh();
+}
+
+std::optional<uint64_t> WalletAction::fromAccount() {
+  if (!desk_.selected) {
+    from_ = "none chosen";
+    say("Choose the account under Accounts.");
+    return std::nullopt;
+  }
+  from_ = formatAmount(*desk_.selected);
+  for (const auto &a : desk_.book().accounts) {
+    if (a.id == *desk_.selected && !a.label.empty()) {
+      from_ = a.label + " (" + from_ + ")";
+    }
+  }
+  return desk_.selected;
+}
+
+void WalletAction::clearPending() {
+  pending_.reset();
+  hasPending_ = false;
+  canSend_ = false;
+  lines_.clear();
+  signers_.clear();
+}
+
+void WalletAction::present(pp::operation::Operation operation) {
+  lines_.clear();
+  if (auto summary = pp::operation::summarize(operation)) {
+    lines_.push_back({"What", summary.value().title});
+    for (const auto &[label, value] : summary.value().lines) {
+      lines_.push_back({label, value});
+    }
+  }
+  const auto keys = session_.vault.keys();
+  const auto mine = apps::keysToSign(operation, keys ? keys.value() : std::vector<KeyInfo>{});
+  const uint32_t needed = operation.signers.minSignatures;
+  canSend_ = mine.size() >= needed;
+  signers_ = "It needs " + std::to_string(needed) + " of the account's " +
+             std::to_string(operation.signers.publicKeys.size()) + " keys; this wallet holds " +
+             std::to_string(mine.size()) + "." +
+             (canSend_ ? "" : " Save it as an operation file for the account's other holders to sign.");
+  pending_ = std::move(operation);
+  hasPending_ = true;
+  refresh();
+}
+
+void WalletAction::sendIt(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  if (!pending_ || !canSend_ || busy_) {
+    return;
+  }
+  pp::operation::Operation operation = *pending_;
+  const auto keys = session_.vault.keys();
+  const auto mine = apps::keysToSign(operation, keys ? keys.value() : std::vector<KeyInfo>{});
+  for (size_t i = 0; i < mine.size() && i < operation.signers.minSignatures; ++i) {
+    if (auto signedIt = apps::signWithVault(session_.vault, mine[i].id, operation); !signedIt) {
+      say(signedIt.error().message);
+      return;
+    }
+  }
+  busy_ = true;
+  say("", "Sending…");
+  session_.submit(operation, [this](const ui_host::Session::SubmitProgress &progress) {
+    if (progress.failed) {
+      busy_ = false;
+      say(progress.status);
+      return;
+    }
+    if (!progress.done) {
+      say("", progress.status);
+      return;
+    }
+    busy_ = false;
+    clearPending();
+    say("", "In a block. Proving the account again…");
+    afterSent();
+  });
+}
+
+void WalletAction::saveFile(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  if (!pending_) {
+    return;
+  }
+  const pp::operation::Operation operation = *pending_;
+  app_->chooseFileToSave({{"Operation files", "json"}}, "operation.json", [this, operation](std::optional<std::string> path) {
+    if (!path) {
+      return;
+    }
+    if (auto saved = pp::operation::save(operation, *path); !saved) {
+      say(saved.error().message);
+      return;
+    }
+    clearPending();
+    say("", "Saved: sign it, and hand a copy to each of the account's other holders.");
+    made_(*path);
+  });
+}
+
+void WalletAction::cancel(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  clearPending();
+  say("", "Nothing sent.");
+}
+
+// ---- Send ----
+
+void WalletSendScreen::bind(ui::DataModelConstructor &model) {
+  bindAction(model);
+  model.Bind("balance", &balance_);
+  model.Bind("to", &to_);
+  model.Bind("amount", &amount_);
+  model.Bind("token", &token_);
+  model.BindEventCallback("send_prepare", &WalletSendScreen::prepare, this);
+}
+
+void WalletSendScreen::willShow() {
+  clearPending();
+  balance_.clear();
+  if (fromAccount()) {
+    say("", "Who it goes to, and how much: the wallet checks both against the chain, proven, before you send.");
+  }
+}
+
+void WalletSendScreen::prepare(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  const auto from = fromAccount();
+  auto verifier = desk_.verifier();
+  if (!from || !verifier || busy_) {
+    return;
+  }
+  auto to = parseAmount(to_);
+  auto amount = parseAmount(amount_);
+  uint64_t token = pp::AccountIds::ID_GENESIS;
+  if (!trimmed(token_).empty()) {
+    auto typed = parseAmount(token_);
+    if (!typed) {
+      say("Type the token's number, or leave it empty for the native token.");
+      return;
+    }
+    token = typed.value();
+  }
+  if (!to || !amount || amount.value() == 0) {
+    say("Type the account it goes to and an amount above 0.");
+    return;
+  }
+  busy_ = true;
+  say("", "Proving both accounts, and making the transfer…");
+  auto made = std::make_shared<pp::operation::Operation>();
+  auto balance = std::make_shared<std::string>();
+  const uint64_t fromId = *from;
+  const uint64_t toId = to.value();
+  const uint64_t value = amount.value();
+  online_.withChain(
+      [verifier, made, balance, fromId, toId, value, token](net::ChainLink &link) -> std::string {
+        auto source = verifier->account(link, fromId);
+        if (!source) {
+          return "Your account could not be proven: " + source.error().message;
+        }
+        if (!source.value().exists) {
+          return "Your account does not exist (proven)";
+        }
+        *balance = formatAmount(native(source.value().wallet));
+        auto target = verifier->account(link, toId);
+        if (!target) {
+          return "The account it goes to could not be proven: " + target.error().message;
+        }
+        if (!target.value().exists) {
+          return "Account " + formatAmount(toId) + " does not exist (proven): check the number";
+        }
+        auto state = net::provenState(link, source.value());
+        auto chain = link.info();
+        if (!state || !chain) {
+          return state ? chain.error().message : state.error().message;
+        }
+        pp::Ledger::TxDefault probe;
+        probe.fromWalletId = fromId;
+        pp::Ledger::Record record;
+        record.type = pp::Ledger::T_DEFAULT;
+        record.data = pp::utl::binaryPack(probe);
+        auto fee = link.minimumFee(record);
+        if (!fee) {
+          return fee.error().message;
+        }
+        auto op = net::makeSend(chain.value(), net::signersOf(source.value()), state.value(), toId, token, value,
+                                fee.value(), {now(), 3600, ""});
+        if (!op) {
+          return op.error().message;
+        }
+        *made = std::move(op.value());
+        return "";
+      },
+      [this, made, balance](const std::string &error) {
+        busy_ = false;
+        balance_ = *balance;
+        if (!error.empty()) {
+          say(error + ".");
+          return;
+        }
+        present(*made);
+        say("", "Check it. It is valid for an hour.");
+      });
+}
+
+void WalletSendScreen::afterSent() {
+  const auto from = fromAccount();
+  auto verifier = desk_.verifier();
+  if (!from || !verifier) {
+    return;
+  }
+  auto proven = std::make_shared<std::optional<net::VerifiedAccount>>();
+  const uint64_t id = *from;
+  online_.withChain(
+      [verifier, proven, id](net::ChainLink &link) -> std::string {
+        auto account = verifier->account(link, id);
+        if (!account) {
+          return account.error().message;
+        }
+        *proven = account.value();
+        return "";
+      },
+      [this, proven](const std::string &error) {
+        if (!error.empty() || !*proven) {
+          say("", "Sent and in a block. Reading it back, proven, failed for now: " + error + ".");
+          return;
+        }
+        balance_ = formatAmount(native((*proven)->wallet));
+        to_.clear();
+        amount_.clear();
+        say("", "Sent. Proven at block " + formatAmount((*proven)->provenAtBlock) + ": the account holds " + balance_ +
+                    ".");
+      });
+}
+
+// ---- Evacuate ----
+
+void EvacuateScreen::bind(ui::DataModelConstructor &model) {
+  bindAction(model);
+  model.Bind("holds", &holds_);
+  model.Bind("move_to", &moveTo_);
+  model.BindEventCallback("evac_keys", &EvacuateScreen::replaceKeys, this);
+  model.BindEventCallback("evac_move", &EvacuateScreen::moveAll, this);
+}
+
+void EvacuateScreen::willShow() {
+  clearPending();
+  holds_.clear();
+  if (fromAccount()) {
+    say("", "If a key of this account may have leaked — through a plugin, a lost device — act before anyone else "
+            "does: replace its keys, or move everything it holds to another account of yours.");
+  }
+}
+
+void EvacuateScreen::replaceKeys(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  const auto from = fromAccount();
+  auto verifier = desk_.verifier();
+  if (!from || !verifier || busy_) {
+    return;
+  }
+  // The new key, made here: whoever has the old ones never sees it.
+  auto key = session_.vault.generateKey("account " + std::to_string(*from) + ", new key (evacuation)", Role::Owner);
+  if (!key) {
+    say(key.error().message);
+    return;
+  }
+  busy_ = true;
+  say("", "Proving the account, and making the key replacement…");
+  auto made = std::make_shared<pp::operation::Operation>();
+  const uint64_t id = *from;
+  const std::string newKey = key.value().publicKey;
+  online_.withChain(
+      [verifier, made, id, newKey](net::ChainLink &link) -> std::string {
+        auto account = verifier->account(link, id);
+        if (!account || !account.value().exists) {
+          return account ? "The account does not exist (proven)" : account.error().message;
+        }
+        auto state = net::provenState(link, account.value());
+        auto chain = link.info();
+        if (!state || !chain) {
+          return state ? chain.error().message : state.error().message;
+        }
+        const auto signers = net::signersOf(account.value());
+        auto fee = net::keyReplacementFee(chain.value(), signers, state.value(), {newKey}, 1);
+        if (!fee) {
+          return fee.error().message;
+        }
+        auto op = net::makeKeyReplacement(chain.value(), signers, state.value(), {newKey}, 1, fee.value(),
+                                          {now(), 3600, "evacuation: a new key"});
+        if (!op) {
+          return op.error().message;
+        }
+        *made = std::move(op.value());
+        return "";
+      },
+      [this, made, newKey](const std::string &error) {
+        busy_ = false;
+        if (!error.empty()) {
+          say(error + ". The new key stays in the vault, unused.");
+          return;
+        }
+        present(*made);
+        say("", "From now on only the new key (" + pp::operation::fingerprint(newKey) +
+                    ", in this wallet) signs for the account. Back the vault up once it is done.");
+      });
+}
+
+void EvacuateScreen::moveAll(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  const auto from = fromAccount();
+  auto verifier = desk_.verifier();
+  if (!from || !verifier || busy_) {
+    return;
+  }
+  auto to = parseAmount(moveTo_);
+  if (!to || to.value() == *from) {
+    say("Type the number of another account of yours, whose keys never were where the leak was.");
+    return;
+  }
+  busy_ = true;
+  say("", "Proving both accounts, and making the transfers…");
+  auto made = std::make_shared<pp::operation::Operation>();
+  const uint64_t id = *from;
+  const uint64_t toId = to.value();
+  online_.withChain(
+      [verifier, made, id, toId](net::ChainLink &link) -> std::string {
+        auto account = verifier->account(link, id);
+        if (!account || !account.value().exists) {
+          return account ? "The account does not exist (proven)" : account.error().message;
+        }
+        auto target = verifier->account(link, toId);
+        if (!target || !target.value().exists) {
+          return target ? "Account " + formatAmount(toId) + " does not exist (proven)" : target.error().message;
+        }
+        auto state = net::provenState(link, account.value());
+        auto chain = link.info();
+        if (!state || !chain) {
+          return state ? chain.error().message : state.error().message;
+        }
+        auto op = net::makeMoveAll(chain.value(), net::signersOf(account.value()), state.value(), toId,
+                                   {now(), 3600, "evacuation: everything moved"});
+        if (!op) {
+          return op.error().message;
+        }
+        *made = std::move(op.value());
+        return "";
+      },
+      [this, made](const std::string &error) {
+        busy_ = false;
+        if (!error.empty()) {
+          say(error + ".");
+          return;
+        }
+        present(*made);
+        say("", "Everything it holds goes, the native token last less the fees. With nothing left for its "
+                "renewal, the account ends at its next one.");
+      });
+}
+
+void EvacuateScreen::afterSent() {
+  const auto from = fromAccount();
+  auto verifier = desk_.verifier();
+  if (!from || !verifier) {
+    return;
+  }
+  auto proven = std::make_shared<std::optional<net::VerifiedAccount>>();
+  const uint64_t id = *from;
+  online_.withChain(
+      [verifier, proven, id](net::ChainLink &link) -> std::string {
+        auto account = verifier->account(link, id);
+        if (!account) {
+          return account.error().message;
+        }
+        *proven = account.value();
+        return "";
+      },
+      [this, proven](const std::string &error) {
+        if (!error.empty() || !*proven) {
+          say("", "Done and in a block. Reading it back, proven, failed for now: " + error + ".");
+          return;
+        }
+        const auto &w = (*proven)->wallet;
+        holds_ = formatAmount(native(w)) + " native; " + std::to_string(w.minSignatures) + " of " +
+                 std::to_string(w.publicKeys.size()) + " keys";
+        moveTo_.clear();
+        say("", "Done. Proven at block " + formatAmount((*proven)->provenAtBlock) + ": the account holds " + holds_ +
+                    ". Back the vault up now.");
+      });
+}
 
 } // namespace apps::online

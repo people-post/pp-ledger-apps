@@ -164,9 +164,18 @@ cat >"$out/network-card.json" <<CARD
  "nodes": ["$node"], "notes": "the chain smoke"}
 CARD
 rm -rf "$out/wallet-home"
-"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/wallet-home" "wallet passphrase" owner "$out/owner.key"
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/wallet-home" "wallet passphrase" owner \
+  "$out/owner.key" "$out/owner2.key"
+registrarBefore=$(balance 2)
 run_app wallet "$out/wallet-home" wallet-chain.script
 echo "✓ Wallet: network $networkId pinned from its card; accounts $account and 2 proven, an absent one proven absent"
+test "$(balance 2)" -eq $((registrarBefore + 5)) ||
+  { echo "FAIL: registrar balance $registrarBefore → $(balance 2), expected +5 from the wallet"; exit 1; }
+echo "✓ Wallet: sent 5 from account $account to the registrar, signed with its two keys"
+"$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' >"$out/evacuated.json"
+grep -q '"minSignatures":1' "$out/evacuated.json" && test "$(grep -o '"publicKeys":\[[^]]*\]' "$out/evacuated.json" | grep -o '"0x' | wc -l)" -eq 1 ||
+  { echo "FAIL: account $account's keys were not replaced by one new key ($out/evacuated.json)"; exit 1; }
+echo "✓ Wallet: account $account evacuated — its keys replaced by a new one made in the wallet"
 
 # 7. Genesis: the recovery set announces a new admin set.
 rm -rf "$out/genesis-home" "$out/next-admin"*

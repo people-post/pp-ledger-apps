@@ -4,6 +4,7 @@
 // tip, the blocks under it, an account's Merkle path (pp-ledger's verify::). A node can refuse to
 // answer, or answer with an older tip; it cannot make the wallet show what the chain does not hold.
 
+#include "net/AdminOperations.h"
 #include "net/ChainLink.h"
 #include "core/WalletBook.h"
 
@@ -28,9 +29,28 @@ struct VerifiedAccount {
   uint64_t id{0};
   bool exists{false};
   pp::Client::Wallet wallet;
+  /** The hash of the account's attachment, as its last write recorded it (proven with it). */
+  std::string attachmentHash;
   uint64_t provenAtBlock{0};
   VerifiedTip tip;
 };
+
+/** Who signs for a proven account: its keys and threshold as the proof shows them. */
+pp::operation::SignerSet signersOf(const VerifiedAccount &account);
+
+/**
+ * The whole account an operation is built from: the proven wallet, and its attachment from the node,
+ * believed only if it hashes to the proven attachment hash.
+ */
+pp::Roe<pp::UserAccount> provenState(ChainLink &link, const VerifiedAccount &account);
+
+/**
+ * Everything account `state` (signed by `from`) holds, to account `to`: a transfer per token it holds
+ * (not its own token, if it issues one), the native balance last less every transfer's fee. A batch, or
+ * a transfer when it holds the native token only. Each pays the least fee for a plain transfer.
+ */
+pp::Roe<pp::operation::Operation> makeMoveAll(const ChainInfo &chain, const pp::operation::SignerSet &from,
+                                              const pp::UserAccount &state, uint64_t to, const Making &making);
 
 /**
  * Verified reads through one node, from `card`'s anchor. Keeps block 0 once checked; everything else

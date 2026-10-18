@@ -1,0 +1,49 @@
+<rml>
+<head>
+  <title>Evacuate</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="wevac">
+    <div class="card">
+      <h1>Evacuate {{from}}</h1>
+      <p class="muted" data-if="holds != ''">Now: {{holds}} (proven).</p>
+      <div data-if="!has_pending">
+        <h2>Replace its keys</h2>
+        <p class="muted">A new key, made in this wallet, becomes the account's only key; the keys in force sign
+          the change, and can sign nothing after it.</p>
+        <button id="evac-keys" class="primary" data-event-click="evac_keys()" data-attrif-disabled="busy">Replace its keys with a new one</button>
+        <h2>Or move everything it holds</h2>
+        <p class="muted">To another account of yours, whose keys were never where the leak was.</p>
+        <label>To account (its number)</label>
+        <input id="evac-to" class="field" type="text" data-value="move_to" data-attrif-disabled="busy"/>
+        <button id="evac-move" data-event-click="evac_move()" data-attrif-disabled="busy">Move everything</button>
+      </div>
+      <div data-if="has_pending">
+        <h2>Check it</h2>
+        <div class="facts">
+          <div class="item" data-for="line : lines">
+            <span class="label">{{line.label}}</span>
+            <span class="value">{{line.value}}</span>
+          </div>
+        </div>
+        <p class="muted">{{signers}}</p>
+        <div class="row">
+          <button id="action-send" class="primary" data-if="can_send" data-event-click="action_send()" data-attrif-disabled="busy">Sign and send</button>
+          <button id="action-file" data-event-click="action_file()" data-attrif-disabled="busy">Save as an operation file…</button>
+          <button id="action-cancel" data-event-click="action_cancel()" data-attrif-disabled="busy">Cancel</button>
+        </div>
+      </div>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

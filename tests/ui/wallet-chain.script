@@ -1,5 +1,6 @@
 # Against a running chain: the wallet pins the network from a card, checks its node back to block 0,
-# then proves three accounts — two that exist, one that does not.
+# proves three accounts — two that exist, one that does not — then sends from the first (its two keys
+# in this vault) and evacuates it: its keys replaced with a new one made here.
 wait 5
 click #unlock-passphrase
 type wallet passphrase
@@ -45,4 +46,47 @@ expect #account-proven-0
 expect #account-proven-1
 expect #account-proven-2
 shot @OUT@/wallet-2-accounts.png
+click #account-send-0
+idle
+wait 3
+click #send-to
+type 2
+click #send-amount
+type 5
+click #send-prepare
+idle
+wait 5
+idle
+wait 3
+expect #action-send
+shot @OUT@/wallet-3-send.png
+click #action-send
+idle
+wait 5
+idle
+wait 5
+idle
+wait 5
+shot @OUT@/wallet-4-sent.png
+click #nav-accounts
+idle
+wait 5
+click #account-evacuate-0
+idle
+wait 3
+click #evac-keys
+idle
+wait 5
+idle
+wait 3
+expect #action-send
+shot @OUT@/wallet-5-evacuate.png
+click #action-send
+idle
+wait 5
+idle
+wait 5
+idle
+wait 5
+shot @OUT@/wallet-6-evacuated.png
 quit

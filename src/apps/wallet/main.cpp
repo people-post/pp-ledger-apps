@@ -35,12 +35,24 @@ int main(int argc, char **argv) {
   ReviewScreen review(session);
   KeysScreen keys(session, "owner");
   WalletNetworkScreen network(online, desk);
-  AccountsScreen accounts(online, desk);
+  AccountsScreen accounts(online, session, desk);
+  auto made = [&](const std::string &path) {
+    review.open(path);
+    session.navigate("review");
+  };
+  WalletSendScreen send(online, session, desk, made);
+  EvacuateScreen evacuate(online, session, desk, made);
   online.onStatus = [&](const std::string &status) { nav.setStatus(status); };
-  const std::map<std::string, Screen *> screens = {
-      {"accounts", &accounts}, {"review", &review}, {"keys", &keys}, {"network", &network}};
+  const std::map<std::string, Screen *> screens = {{"accounts", &accounts}, {"send", &send},
+                                                   {"evacuate", &evacuate}, {"review", &review},
+                                                   {"keys", &keys},         {"network", &network}};
   if (!nav.build(app.context(), "Wallet",
-                 {{"accounts", "Accounts"}, {"review", "Review and sign"}, {"keys", "Keys"}, {"network", "Network"}}) ||
+                 {{"accounts", "Accounts"},
+                  {"send", "Send"},
+                  {"evacuate", "Evacuate"},
+                  {"review", "Review and sign"},
+                  {"keys", "Keys"},
+                  {"network", "Network"}}) ||
       !vault.build(app)) {
     return 1;
   }
