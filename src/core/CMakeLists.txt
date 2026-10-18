@@ -11,6 +11,8 @@ add_library(apps_core STATIC
     FeeRounds.h
     KeyCard.cpp
     KeyCard.h
+    KeyBackups.cpp
+    KeyBackups.h
     Operations.cpp
     Operations.h
     Roles.cpp
