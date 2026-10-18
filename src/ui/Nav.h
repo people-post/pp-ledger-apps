@@ -13,7 +13,7 @@ namespace ui {
 class Context;
 }
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 class Nav {
 public:
@@ -38,4 +38,4 @@ private:
   ui::DataModelHandle model_;
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

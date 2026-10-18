@@ -4,7 +4,7 @@
 
 #include <ui/dom/Context.h>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 bool Screen::build(UiApp &app) {
   app_ = &app;
@@ -18,4 +18,4 @@ bool Screen::build(UiApp &app) {
   return document_ != nullptr;
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

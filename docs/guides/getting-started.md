@@ -15,14 +15,14 @@ make.
 
 ## Install
 
-Each release has two sets: **pp-ledger-admin** (the Signer, Reserve, Admin, Registrar and Genesis
+Each release has two sets: **pp-ledger-system** (the Signer, Reserve, Admin, Registrar and Genesis
 apps) for the system key holders, and **pp-ledger-token** (the Signer and the Token app) for token
 issuers.
 
 - **macOS (Apple silicon, macOS 13 or later):** open your set's disk image and drag the apps you need
   to Applications.
 - **Linux (Ubuntu 24.04 or later, and similar):** install your set's `.deb` with the Signer's, in one
-  command: `sudo apt install ./pp-ledger-admin_…_amd64.deb ./pp-ledger-signer_…_amd64.deb` (token
+  command: `sudo apt install ./pp-ledger-system_…_amd64.deb ./pp-ledger-signer_…_amd64.deb` (token
   issuers: `./pp-ledger-token_…_amd64.deb ./pp-ledger-signer_…_amd64.deb`). Or download the AppImage
   of one app, make it executable (`chmod +x`), and run it.
 

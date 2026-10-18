@@ -3,12 +3,12 @@
 #include <cstdlib>
 #include <string>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 void installIdleLock(UiApp &app, Session &session) {
   int idleSeconds = Session::kIdleLockMinutes * 60;
-#ifdef PP_ADMIN_DEV_HOOKS
-  if (const char *seconds = std::getenv("PP_ADMIN_DEV_IDLE_SECONDS")) {
+#ifdef PP_APPS_DEV_HOOKS
+  if (const char *seconds = std::getenv("PP_APPS_DEV_IDLE_SECONDS")) {
     idleSeconds = std::atoi(seconds);
   }
 #endif
@@ -25,4 +25,4 @@ void installIdleLock(UiApp &app, Session &session) {
   });
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

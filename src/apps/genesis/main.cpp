@@ -1,6 +1,6 @@
-// pp-admin-genesis: for the people who start the chain and hold its recovery keys. Plan block 0
+// pp-ledger-genesis: for the people who start the chain and hold its recovery keys. Plan block 0
 // from everyone's key cards, sign it (offline) for the beacon to start from; later, announce a new
-// admin set from the recovery set. Usage: pp-admin-genesis [operation file]
+// admin set from the recovery set. Usage: pp-ledger-genesis [operation file]
 #include "online/GenesisScreens.h"
 #include "online/NetworkScreen.h"
 #include "online/Online.h"
@@ -17,13 +17,13 @@
 
 #include <map>
 
-using namespace admin;
-using namespace admin::ui_host;
-using namespace admin::online;
+using namespace apps;
+using namespace apps::ui_host;
+using namespace apps::online;
 
 int main(int argc, char **argv) {
   std::vector<std::string> args;
-  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Genesis — pp-ledger admin", .width = 1100}, args);
+  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Genesis — PP Ledger", .width = 1100}, args);
   UiApp app(options);
   if (!app.start()) {
     return 1;

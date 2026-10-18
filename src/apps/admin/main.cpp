@@ -1,6 +1,6 @@
-// pp-admin-admin: for the holders of the admin (genesis account) keys. Mint to the reserve, change
+// pp-ledger-admin: for the holders of the admin (genesis account) keys. Mint to the reserve, change
 // the config, rotate the admin set, certify a new beacon key; sign, collect, submit.
-// Usage: pp-admin-admin [operation file]
+// Usage: pp-ledger-admin [operation file]
 #include "online/AdminScreens.h"
 #include "online/NetworkScreen.h"
 #include "online/Online.h"
@@ -17,13 +17,13 @@
 
 #include <map>
 
-using namespace admin;
-using namespace admin::ui_host;
-using namespace admin::online;
+using namespace apps;
+using namespace apps::ui_host;
+using namespace apps::online;
 
 int main(int argc, char **argv) {
   std::vector<std::string> args;
-  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Admin — pp-ledger admin", .width = 1200}, args);
+  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Admin — PP Ledger", .width = 1200}, args);
   UiApp app(options);
   if (!app.start()) {
     return 1;

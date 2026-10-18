@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace admin {
+namespace apps {
 
 enum class Role {
   Admin,     ///< the genesis account: minting, config updates, beacon certificates
@@ -27,4 +27,4 @@ std::string roleTitle(Role role);
 /** The roles a vault holds keys for (not the beacon's nor a miner's). */
 const std::vector<Role> &vaultRoles();
 
-} // namespace admin
+} // namespace apps

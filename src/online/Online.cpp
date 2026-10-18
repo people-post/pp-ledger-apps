@@ -8,7 +8,7 @@
 #include <memory>
 #include <thread>
 
-namespace admin::online {
+namespace apps::online {
 
 namespace op = pp::operation;
 
@@ -179,4 +179,4 @@ void Online::submit(const op::Operation &operation,
       [] {});
 }
 
-} // namespace admin::online
+} // namespace apps::online

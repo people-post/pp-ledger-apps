@@ -101,8 +101,8 @@ The key cards double as the **address book**: apps show names, not account ids o
 From pp-browser's at-rest encryption ([AT_REST_ENCRYPTION.md](https://github.com/people-post/pp-browser/blob/main/docs/contracts/AT_REST_ENCRYPTION.md)),
 for keys of higher value:
 
-- **One vault per person per machine**, shared by the apps (`~/.pp-ledger-admin/` on Linux,
-  `~/Library/Application Support/pp-ledger-admin/` on macOS). Each key carries a label and a role;
+- **One vault per person per machine**, shared by the apps (`~/.pp-ledger-apps/` on Linux,
+  `~/Library/Application Support/pp-ledger-apps/` on macOS). Each key carries a label and a role;
   an app lists the keys of its role, the Signer any.
 - **A passphrase, always** — no default PIN. Argon2id derives the key that wraps a random 32-byte
   data key; XChaCha20-Poly1305 encrypts each key file under it; writes are atomic (temp, fsync,
@@ -118,11 +118,11 @@ One repo, one CMake build, five executables:
 
 | Piece | What | Depends on |
 |-------|------|-----------|
-| `admin_core` | Vault, key cards / address book, operation workflow (open, verify, sign, merge), app settings | pp-ledger operation library, pp-cpp-crypto |
-| `admin_net` | Reading chain state, submitting, following inclusion | pp-ledger `pp::client` |
-| `admin_ui` | Shared screens: vault unlock, key list, operation review (the same view in every app), file open/save | pp-cpp-ui (SDL3 + OpenGL, RML documents) |
-| `pp-admin-genesis`, `pp-admin-admin`, `pp-admin-reserve`, `pp-admin-registrar` | Their forms | core, net, ui |
-| `pp-admin-signer` | Review, sign, merge | core, ui — **not** `admin_net`: the Signer has no network code at all |
+| `apps_core` | Vault, key cards / address book, operation workflow (open, verify, sign, merge), app settings | pp-ledger operation library, pp-cpp-crypto |
+| `apps_net` | Reading chain state, submitting, following inclusion | pp-ledger `pp::client` |
+| `apps_ui` | Shared screens: vault unlock, key list, operation review (the same view in every app), file open/save | pp-cpp-ui (SDL3 + OpenGL, RML documents) |
+| `pp-ledger-genesis`, `pp-ledger-admin`, `pp-ledger-reserve`, `pp-ledger-registrar` | Their forms | core, net, ui |
+| `pp-ledger-signer` | Review, sign, merge | core, ui — **not** `apps_net`: the Signer has no network code at all |
 
 The stack follows pp-browser (C++, pp-cpp-ui, pp-cpp-crypto); pp-ledger comes in as a library
 (`PP_LEDGER_BUILD_APPS=OFF`), so every transaction is built and checked by the chain's own code.

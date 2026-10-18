@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace admin::online {
+namespace apps::online {
 
 class NetworkScreen : public ui_host::Screen {
 public:
@@ -35,4 +35,4 @@ private:
   bool busy_{false};
 };
 
-} // namespace admin::online
+} // namespace apps::online

@@ -7,7 +7,7 @@
 #include "network/LedgerAmpRuntime.h"
 #include "network/amp/AmpIdentity.h"
 
-namespace admin::net {
+namespace apps::net {
 
 namespace op = pp::operation;
 
@@ -204,4 +204,4 @@ pp::Roe<bool> ChainLink::included(const op::Operation &operation) {
   return false;
 }
 
-} // namespace admin::net
+} // namespace apps::net

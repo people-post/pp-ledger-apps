@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <limits>
 
-namespace admin::net {
+namespace apps::net {
 
 namespace op = pp::operation;
 
@@ -282,4 +282,4 @@ pp::Roe<op::Operation> makeKeyReplacement(const ChainInfo &chain, const op::Sign
   return withFee(chain, op::replaceKeys(commonFor(chain, current, making), state, keys, minSignatures, fee), fee);
 }
 
-} // namespace admin::net
+} // namespace apps::net

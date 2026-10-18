@@ -10,7 +10,7 @@
 #include <fstream>
 #include <sys/stat.h>
 
-using namespace admin;
+using namespace apps;
 
 namespace {
 

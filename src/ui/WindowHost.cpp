@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 struct WindowHost::State {
   SystemInterface_SDL system;
@@ -163,4 +163,4 @@ bool WindowHost::saveFrame(const std::string &path) const {
   return saved;
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

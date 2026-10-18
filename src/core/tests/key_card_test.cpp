@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace admin;
+using namespace apps;
 
 TEST(KeyCardTest, ACardReadsBackAndAChangedOneIsRefused) {
   test::TempDir dir;

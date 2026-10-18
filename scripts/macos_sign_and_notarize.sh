@@ -8,7 +8,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PRODUCT_BUNDLE_NAME="PP Ledger Signer"
-PRODUCT_SLUG="pp-ledger-admin"
+PRODUCT_SLUG="pp-ledger-apps"
 DEFAULT_ENTITLEMENTS="${ROOT}/packaging/macos/${PRODUCT_SLUG}.entitlements"
 
 usage() {
@@ -36,7 +36,7 @@ Environment (notarization — App Store Connect API key):
   APPLE_NOTARY_P8_PATH           Path to AuthKey_*.p8 (local)
 
 Optional:
-  MACOS_ENTITLEMENTS             Default: packaging/macos/pp-ledger-admin.entitlements
+  MACOS_ENTITLEMENTS             Default: packaging/macos/pp-ledger-apps.entitlements
   MACOS_SKIP_SIGNING=1           Force skip (unsigned)
 
 Local example:
@@ -44,7 +44,7 @@ Local example:
   cmake --install build --prefix install
   $(basename "$0") sign-app install/${PRODUCT_BUNDLE_NAME}.app
   ./scripts/macos_dmg.sh install 0.1.0 .
-  $(basename "$0") notarize pp-ledger-admin-0.1.0-macos-arm64.dmg
+  $(basename "$0") notarize pp-ledger-system-0.1.0-macos-arm64.dmg
 EOF
 }
 

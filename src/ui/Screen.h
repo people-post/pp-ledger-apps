@@ -10,7 +10,7 @@ class Context;
 class ElementDocument;
 } // namespace ui
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 class UiApp;
 
@@ -42,4 +42,4 @@ private:
   ui::DataModelHandle model_;
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

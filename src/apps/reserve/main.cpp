@@ -1,5 +1,5 @@
-// pp-admin-reserve: for the reserve's holders. Make a transfer out of the treasury, sign it, collect
-// the others' signatures, submit it and see it land. Usage: pp-admin-reserve [operation file]
+// pp-ledger-reserve: for the reserve's holders. Make a transfer out of the treasury, sign it, collect
+// the others' signatures, submit it and see it land. Usage: pp-ledger-reserve [operation file]
 #include "online/NetworkScreen.h"
 #include "online/Online.h"
 #include "online/TransferScreen.h"
@@ -17,13 +17,13 @@
 
 #include <cstdlib>
 
-using namespace admin;
-using namespace admin::ui_host;
-using namespace admin::online;
+using namespace apps;
+using namespace apps::ui_host;
+using namespace apps::online;
 
 int main(int argc, char **argv) {
   std::vector<std::string> args;
-  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Reserve — pp-ledger admin"}, args);
+  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Reserve — PP Ledger"}, args);
   UiApp app(options);
   if (!app.start()) {
     return 1;

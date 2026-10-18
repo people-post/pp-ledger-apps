@@ -15,7 +15,7 @@
 #include <filesystem>
 #include <memory>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 namespace {
 
@@ -224,7 +224,7 @@ void KeysScreen::backup(ui::DataModelHandle, ui::Event &, const ui::VariantList 
         " characters, and keep it apart from the backup.");
     return;
   }
-  app_->chooseFileToSave(kBackups, "pp-ledger-admin.ppbackup", [this](std::optional<std::string> path) {
+  app_->chooseFileToSave(kBackups, "pp-ledger-apps.ppbackup", [this](std::optional<std::string> path) {
     if (!path) {
       return;
     }
@@ -281,4 +281,4 @@ void KeysScreen::restore(ui::DataModelHandle, ui::Event &, const ui::VariantList
   });
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

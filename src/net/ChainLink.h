@@ -1,5 +1,5 @@
 #pragma once
-// A role app's link to the chain (DESIGN.md § Shape of the code: admin_net): one node — a relay or
+// A role app's link to the chain (DESIGN.md § Shape of the code: apps_net): one node — a relay or
 // the beacon — read for what forms show and operations need, and sent complete operations.
 // Calls block on the network: run them off the UI thread, one at a time.
 
@@ -11,7 +11,7 @@
 #include <optional>
 #include <string>
 
-namespace admin::net {
+namespace apps::net {
 
 /** What a node says of its chain. */
 struct ChainInfo {
@@ -58,4 +58,4 @@ private:
   std::string address_;
 };
 
-} // namespace admin::net
+} // namespace apps::net

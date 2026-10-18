@@ -17,7 +17,7 @@ class Context;
 class ElementDocument;
 } // namespace ui
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 class Screen;
 
@@ -29,7 +29,7 @@ struct AppOptions {
   std::string screenshot;
   int screenshotFrames{30};
   /**
-   * Development (PP_ADMIN_DEV_HOOKS): steps to drive the app, one per line — `click #id`,
+   * Development (PP_APPS_DEV_HOOKS): steps to drive the app, one per line — `click #id`,
    * `type <text>`, `clear` (the focused field), `wait <frames>`, `idle` (background work done), `answer <path>[|<path>…]` (the
    * next file dialog's choice), `sleep <ms>`, `scroll #id`, `expect #id` (fails the run unless the screen shown
    * has it), `shot <png>`, `quit`. A failed step ends the run with exit code 1.
@@ -58,7 +58,7 @@ public:
   ui::Context *context() { return context_; }
 
   /**
-   * A file under the app's assets: $PP_ADMIN_ASSETS, else the bundle's (packaged builds), else the
+   * A file under the app's assets: $PP_APPS_ASSETS, else the bundle's (packaged builds), else the
    * source tree's (development builds).
    */
   std::string assetPath(const std::string &relative) const;
@@ -116,4 +116,4 @@ private:
   bool idleFired_{false};
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

@@ -14,7 +14,7 @@
 #include <filesystem>
 #include <memory>
 
-namespace admin::online {
+namespace apps::online {
 
 namespace op = pp::operation;
 
@@ -240,4 +240,4 @@ void RegistrarScreen::makeAccount(ui::DataModelHandle, ui::Event &, const ui::Va
       "new-account-" + std::to_string(idValue) + ".json");
 }
 
-} // namespace admin::online
+} // namespace apps::online

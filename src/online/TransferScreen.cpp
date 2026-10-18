@@ -7,7 +7,7 @@
 
 #include <memory>
 
-namespace admin::online {
+namespace apps::online {
 
 namespace op = pp::operation;
 
@@ -123,4 +123,4 @@ void TransferScreen::makeTransfer(ui::DataModelHandle, ui::Event &, const ui::Va
       "transfer-" + std::to_string(amountValue) + "-to-" + std::to_string(toId) + ".json");
 }
 
-} // namespace admin::online
+} // namespace apps::online

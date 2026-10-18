@@ -21,17 +21,17 @@ if [[ -z "$tool" ]]; then
 fi
 export APPIMAGE_EXTRACT_AND_RUN=1 # no FUSE needed (CI)
 
-for desktop in "$root"/usr/share/applications/pp-ledger-admin-*.desktop; do
+for desktop in "$root"/usr/share/applications/pp-ledger-apps-*.desktop; do
   slug=$(basename "$desktop" .desktop)
-  slug=${slug#pp-ledger-admin-}
+  slug=${slug#pp-ledger-apps-}
   exe=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' "$desktop")
   title=$(sed -n 's/^Name=//p' "$desktop")
   dir="$work/$slug.AppDir"
-  mkdir -p "$dir/usr/bin" "$dir/usr/share/pp-ledger-admin"
+  mkdir -p "$dir/usr/bin" "$dir/usr/share/pp-ledger-apps"
   cp "$root/usr/bin/$exe" "$dir/usr/bin/"
-  cp -r "$root/usr/share/pp-ledger-admin/assets" "$dir/usr/share/pp-ledger-admin/"
+  cp -r "$root/usr/share/pp-ledger-apps/assets" "$dir/usr/share/pp-ledger-apps/"
   cp "$desktop" "$dir/"
-  cp "$root/usr/share/icons/hicolor/512x512/apps/pp-ledger-admin-$slug.png" "$dir/"
+  cp "$root/usr/share/icons/hicolor/512x512/apps/pp-ledger-apps-$slug.png" "$dir/"
   ln -s "usr/bin/$exe" "$dir/AppRun"
   name="${title// /_}-${version}-x86_64.AppImage"
   ARCH=x86_64 "$tool" --no-appstream "$dir" "$out/$name" >"$work/$slug.log" 2>&1 || { cat "$work/$slug.log"; exit 1; }

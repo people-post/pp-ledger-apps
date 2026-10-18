@@ -7,9 +7,9 @@
 
 #include <string>
 
-namespace admin {
+namespace apps {
 
-inline constexpr const char *kKeyCardFormat = "pp-ledger-admin-keycard";
+inline constexpr const char *kKeyCardFormat = "pp-ledger-apps-keycard";
 inline constexpr uint32_t kKeyCardVersion = 1;
 
 struct KeyCard {
@@ -29,4 +29,4 @@ pp::Roe<KeyCard> loadKeyCard(const std::string &path);
 /** Writes a new file (refuses an existing one). */
 pp::Roe<void> saveKeyCard(const KeyCard &card, const std::string &path);
 
-} // namespace admin
+} // namespace apps

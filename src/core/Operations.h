@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace admin {
+namespace apps {
 
 /** An operation as a reviewer sees it. */
 struct Review {
@@ -50,4 +50,4 @@ bool expired(const pp::operation::Summary &summary, int64_t now);
 /** Where a signed copy goes by default: next to `path`, named for the key ("x.json" → "x.signed-abcd….json"). */
 std::string signedCopyPath(const std::string &path, const std::string &publicKey);
 
-} // namespace admin
+} // namespace apps

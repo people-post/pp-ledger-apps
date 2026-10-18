@@ -13,7 +13,7 @@
 #include <string_view>
 #include <vector>
 
-namespace admin {
+namespace apps {
 
 /** What deriving the key from the passphrase costs (Argon2id). Stored with the vault. */
 struct KdfLimits {
@@ -45,8 +45,8 @@ public:
   Vault &operator=(const Vault &) = delete;
 
   /**
-   * This machine's vault directory: $PP_LEDGER_ADMIN_HOME/vault, else ~/.pp-ledger-admin/vault
-   * (Linux) or ~/Library/Application Support/pp-ledger-admin/vault (macOS).
+   * This machine's vault directory: $PP_LEDGER_APPS_HOME/vault, else ~/.pp-ledger-apps/vault
+   * (Linux) or ~/Library/Application Support/pp-ledger-apps/vault (macOS).
    */
   static std::string defaultDir();
   /** Shortest passphrase a vault takes. */
@@ -98,4 +98,4 @@ private:
   std::string dataKey_;
 };
 
-} // namespace admin
+} // namespace apps

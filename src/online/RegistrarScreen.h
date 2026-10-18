@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace admin::online {
+namespace apps::online {
 
 class RegistrarScreen : public OperationForm {
 public:
@@ -46,4 +46,4 @@ private:
   std::string fee_;
 };
 
-} // namespace admin::online
+} // namespace apps::online

@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace admin::online {
+namespace apps::online {
 
 class MintScreen : public OperationForm {
 public:
@@ -101,4 +101,4 @@ private:
   std::string hints_;
 };
 
-} // namespace admin::online
+} // namespace apps::online

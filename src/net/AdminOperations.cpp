@@ -13,7 +13,7 @@
 
 #include <algorithm>
 
-namespace admin::net {
+namespace apps::net {
 
 namespace op = pp::operation;
 
@@ -399,4 +399,4 @@ pp::Roe<op::Operation> makeGenesisPlan(const GenesisForm &form, const std::strin
   return op::genesis(records.value(), notes, now);
 }
 
-} // namespace admin::net
+} // namespace apps::net

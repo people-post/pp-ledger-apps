@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <memory>
 
-namespace admin::online {
+namespace apps::online {
 
 namespace op = pp::operation;
 
@@ -604,4 +604,4 @@ void SignersScreen::makeReplacement(ui::DataModelHandle, ui::Event &, const ui::
       "keys-" + std::to_string(id) + ".json");
 }
 
-} // namespace admin::online
+} // namespace apps::online

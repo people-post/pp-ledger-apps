@@ -7,7 +7,7 @@
 #include <cctype>
 #include <memory>
 
-namespace admin::online {
+namespace apps::online {
 
 void NetworkScreen::bind(ui::DataModelConstructor &model) {
   if (auto fact = model.RegisterStruct<Fact>()) {
@@ -82,4 +82,4 @@ void NetworkScreen::check(ui::DataModelHandle, ui::Event &, const ui::VariantLis
       });
 }
 
-} // namespace admin::online
+} // namespace apps::online

@@ -53,9 +53,9 @@ issuer's own transactions). Added when needed.
 
 | Piece | Change |
 |-------|--------|
-| `admin_net` | Token operations: issue, send, key replacement, built and checked like the admin set's (`AdminOperations`); the account's overview (balances, supply, renewal fee) |
-| `admin_online` | The overview, issue, send and keys screens |
-| `src/apps/token` | `pp-admin-token` (`PP Ledger Token`) |
+| `apps_net` | Token operations: issue, send, key replacement, built and checked like the admin set's (`AdminOperations`); the account's overview (balances, supply, renewal fee) |
+| `apps_online` | The overview, issue, send and keys screens |
+| `src/apps/token` | `pp-ledger-token` (`PP Ledger Token`) |
 | Packaging | A second set of packages: the Token app and the Signer (TA002) |
 
 ## Related: fee distribution (later)

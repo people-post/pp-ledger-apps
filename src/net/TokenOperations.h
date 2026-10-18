@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace admin::net {
+namespace apps::net {
 
 /** One of the issuer's transactions, as the overview lists it. */
 struct TokenActivity {
@@ -80,4 +80,4 @@ pp::Roe<uint64_t> keyReplacementFee(const ChainInfo &chain, const pp::operation:
                                     const pp::UserAccount &state, const std::vector<std::string> &keys,
                                     uint32_t minSignatures);
 
-} // namespace admin::net
+} // namespace apps::net

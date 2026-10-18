@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# UI smoke (development builds, PP_ADMIN_DEV_HOOKS=ON): drive pp-admin-signer under a virtual X
+# UI smoke (development builds, PP_APPS_DEV_HOOKS=ON): drive pp-ledger-signer under a virtual X
 # display — create a vault and a key; unlock a fixture vault, sign its transfer, merge a copy signed
 # apart, sign its genesis plan, lock when left alone — and check the results. Usage: ui_smoke.sh <build dir> [<output dir>]
 set -euo pipefail
 build=$(cd "$1" && pwd)
 out=${2:-$(mktemp -d)}
 mkdir -p "$out"
-signer="$build/src/apps/signer/pp-admin-signer"
-fixture="$build/src/apps/devfixture/pp-admin-devfixture"
+signer="$build/src/apps/signer/pp-ledger-signer"
+fixture="$build/src/apps/devfixture/pp-ledger-devfixture"
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
 run() { # <home> <script> [args...]
   local home=$1 script=$2
   shift 2
   sed -e "s|@OUT@|$out|g" -e "s|@FIXTURE@|$out/fixture|g" "$script" >"$out/$(basename "$script")"
-  PP_LEDGER_ADMIN_HOME="$home" timeout 180 xvfb-run -a -s "-screen 0 1280x900x24" \
+  PP_LEDGER_APPS_HOME="$home" timeout 180 xvfb-run -a -s "-screen 0 1280x900x24" \
     "$signer" --script "$out/$(basename "$script")" "$@"
 }
 
@@ -39,7 +39,7 @@ run "$out/fixture" "$here/tests/ui/genesis.script" "$out/fixture/genesis.json"
 "$fixture" verify "$out/genesis.signed.json" 2 || { echo "FAIL: the signed genesis is not 2 of 2"; exit 1; }
 
 # 5. Left alone, the app locks the vault (the idle timeout shortened for the run).
-PP_ADMIN_DEV_IDLE_SECONDS=2 run "$out/fixture" "$here/tests/ui/lock.script" ||
+PP_APPS_DEV_IDLE_SECONDS=2 run "$out/fixture" "$here/tests/ui/lock.script" ||
   { echo "FAIL: the app did not lock itself"; exit 1; }
 
 echo "UI smoke passed (screenshots in $out)"

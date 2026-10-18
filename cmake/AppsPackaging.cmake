@@ -1,22 +1,22 @@
 # Packages (cpack; projects/token-app TA002). Three install components:
 #   signer — the Signer and the shared assets;
-#   admin  — Genesis, Admin, Reserve, Registrar: the chain's system key holders;
+#   system — Genesis, Admin, Reserve, Registrar: the chain's system key holders;
 #   token  — the Token app: token issuers' operators.
-# Linux: a .deb per component (pp-ledger-signer, pp-ledger-admin, pp-ledger-token); the other two
+# Linux: a .deb per component (pp-ledger-signer, pp-ledger-system, pp-ledger-token); the other two
 # depend on pp-ledger-signer. macOS: the release's disk images are made per set by
 # scripts/macos_dmg.sh; `cpack` here makes one of every bundle (local use).
-set(CPACK_PACKAGE_NAME "pp-ledger-admin")
+set(CPACK_PACKAGE_NAME "pp-ledger-apps")
 set(CPACK_PACKAGE_VENDOR "People Post")
-set(CPACK_PACKAGE_CONTACT "pp-ledger-admin maintainers <noreply@github.com>")
+set(CPACK_PACKAGE_CONTACT "pp-ledger-apps maintainers <noreply@github.com>")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Desktop apps for the key holders of a pp-ledger chain")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_COMPONENTS_ALL signer admin token)
+set(CPACK_COMPONENTS_ALL signer system token)
 set(CPACK_STRIP_FILES ON)
 if(APPLE)
   set(CPACK_GENERATOR "DragNDrop")
-  set(CPACK_DMG_VOLUME_NAME "PP Ledger Admin")
+  set(CPACK_DMG_VOLUME_NAME "PP Ledger Apps")
   set(CPACK_DMG_FORMAT "UDZO")
-  set(CPACK_PACKAGE_FILE_NAME "pp-ledger-admin-${PROJECT_VERSION}-macos-${CMAKE_SYSTEM_PROCESSOR}")
+  set(CPACK_PACKAGE_FILE_NAME "pp-ledger-apps-${PROJECT_VERSION}-macos-${CMAKE_SYSTEM_PROCESSOR}")
   set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 else()
   set(CPACK_GENERATOR "DEB")
@@ -25,13 +25,13 @@ else()
   set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
   set(CPACK_DEB_COMPONENT_INSTALL ON)
   set(CPACK_DEBIAN_SIGNER_PACKAGE_NAME "pp-ledger-signer")
-  set(CPACK_DEBIAN_ADMIN_PACKAGE_NAME "pp-ledger-admin")
+  set(CPACK_DEBIAN_SYSTEM_PACKAGE_NAME "pp-ledger-system")
   set(CPACK_DEBIAN_TOKEN_PACKAGE_NAME "pp-ledger-token")
   set(CPACK_COMPONENT_SIGNER_DESCRIPTION "PP Ledger Signer: review and sign pp-ledger operations, offline")
-  set(CPACK_COMPONENT_ADMIN_DESCRIPTION
+  set(CPACK_COMPONENT_SYSTEM_DESCRIPTION
       "PP Ledger Genesis, Admin, Reserve and Registrar: the apps of a pp-ledger chain's system key holders")
   set(CPACK_COMPONENT_TOKEN_DESCRIPTION "PP Ledger Token: issue and manage a pp-ledger token")
-  set(CPACK_COMPONENT_ADMIN_DEPENDS signer)
+  set(CPACK_COMPONENT_SYSTEM_DEPENDS signer)
   set(CPACK_COMPONENT_TOKEN_DEPENDS signer)
   set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS ON)
   # SDL loads the display and GL libraries at run time: name them; the rest dpkg-shlibdeps finds.

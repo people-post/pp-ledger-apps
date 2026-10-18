@@ -15,7 +15,7 @@
 #include <fstream>
 #include <thread>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 namespace {
 
@@ -70,7 +70,7 @@ AppOptions UiApp::parseArgs(int argc, char **argv, AppOptions defaults, std::vec
       defaults.screenshot = argv[++i];
     } else if (arg == "--frames" && i + 1 < argc) {
       defaults.screenshotFrames = std::atoi(argv[++i]);
-#ifdef PP_ADMIN_DEV_HOOKS
+#ifdef PP_APPS_DEV_HOOKS
     } else if (arg == "--script" && i + 1 < argc) {
       defaults.script = argv[++i];
 #endif
@@ -105,7 +105,7 @@ bool UiApp::start() {
     return false;
   }
   context_->SetDensityIndependentPixelRatio(host_.densityRatio());
-#ifdef PP_ADMIN_DEV_HOOKS
+#ifdef PP_APPS_DEV_HOOKS
   if (!options_.script.empty()) {
     std::ifstream in(options_.script);
     for (std::string line; std::getline(in, line);) {
@@ -120,21 +120,21 @@ bool UiApp::start() {
 
 std::string UiApp::assetPath(const std::string &relative) const {
   namespace fs = std::filesystem;
-  if (const char *dir = std::getenv("PP_ADMIN_ASSETS"); dir && *dir) {
+  if (const char *dir = std::getenv("PP_APPS_ASSETS"); dir && *dir) {
     return (fs::path(dir) / relative).string();
   }
   if (const char *base = SDL_GetBasePath()) {
 #ifdef __APPLE__
     const fs::path bundled = fs::path(base) / "assets"; // <app>.app/Contents/Resources/
 #else
-    const fs::path bundled = fs::path(base) / ".." / "share" / "pp-ledger-admin" / "assets";
+    const fs::path bundled = fs::path(base) / ".." / "share" / "pp-ledger-apps" / "assets";
 #endif
     std::error_code ec;
     if (fs::exists(bundled / relative, ec)) {
       return (bundled / relative).string();
     }
   }
-  return (fs::path(PP_ADMIN_ASSETS_DIR) / relative).string();
+  return (fs::path(PP_APPS_ASSETS_DIR) / relative).string();
 }
 
 ui::ElementDocument *UiApp::loadView(const std::string &view) {
@@ -398,4 +398,4 @@ int UiApp::run() {
   return 0;
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

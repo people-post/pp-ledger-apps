@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 
-namespace admin {
+namespace apps {
 
 namespace op = pp::operation;
 
@@ -92,4 +92,4 @@ std::string signedCopyPath(const std::string &path, const std::string &publicKey
   return (p.parent_path() / (stem + ".signed-" + fingerprint.substr(0, 8) + p.extension().string())).string();
 }
 
-} // namespace admin
+} // namespace apps

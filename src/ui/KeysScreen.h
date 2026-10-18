@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 class KeysScreen : public Screen {
 public:
@@ -56,4 +56,4 @@ private:
   bool busy_{false};
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

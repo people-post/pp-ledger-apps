@@ -12,7 +12,7 @@
 #include <memory>
 #include <sstream>
 
-namespace admin::online {
+namespace apps::online {
 
 namespace op = pp::operation;
 
@@ -342,4 +342,4 @@ void BeaconScreen::makeCertificate(ui::DataModelHandle, ui::Event &, const ui::V
       "beacon-certificate.json");
 }
 
-} // namespace admin::online
+} // namespace apps::online

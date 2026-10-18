@@ -3,6 +3,6 @@ Type=Application
 Name=@PP_APP_TITLE@
 Comment=@PP_APP_COMMENT@
 Exec=@PP_APP_EXEC@ %f
-Icon=pp-ledger-admin-@PP_APP_SLUG@
+Icon=pp-ledger-apps-@PP_APP_SLUG@
 Terminal=false
 Categories=Office;Finance;
