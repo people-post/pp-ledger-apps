@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   };
   RoundsScreen rounds(online, session, desk);
   PeriodScreen period(online, desk);
-  RelaysScreen relays(session, desk);
+  RelaysScreen relays(desk);
   RulesScreen rules(online, desk);
   PayoutsScreen payouts(online, desk, made);
   online.onStatus = [&](const std::string &status) { nav.setStatus(status); };

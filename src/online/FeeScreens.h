@@ -109,7 +109,7 @@ private:
 
 class RelaysScreen : public ui_host::Screen {
 public:
-  RelaysScreen(ui_host::Session &session, FeeDesk &desk) : session_(session), desk_(desk) {}
+  explicit RelaysScreen(FeeDesk &desk) : desk_(desk) {}
   void willShow() override;
 
   struct RelayRow {
@@ -133,7 +133,6 @@ private:
   bool apply();
   void say(const std::string &error, const std::string &notice = "");
 
-  ui_host::Session &session_;
   FeeDesk &desk_;
   std::vector<RelayRow> rows_;
   std::string newName_;
