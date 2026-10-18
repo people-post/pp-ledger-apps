@@ -58,8 +58,7 @@ issuer's own transactions). Added when needed.
 | `src/apps/token` | `pp-ledger-token` (`PP Ledger Token`) |
 | Packaging | A second set of packages: the Token app and the Signer (TA002) |
 
-## Related: fee distribution (later)
+## Related: fee distribution
 
-The fee account collects every fee. A later app will manage it so the fees are redistributed to node
-operators, with helper tools to analyze operators' contributions (blocks produced, uptime, …). Its
-details are not settled; it will be a project of its own, on the same code, when they are.
+The fee account collects every fee; its holders hand it on to the network's miners and relays in
+rounds. That app is a project of its own: [fee-app](../fee-app/DESIGN.md).
