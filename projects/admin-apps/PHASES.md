@@ -4,12 +4,12 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
 
 ## Foundations (pp-ledger)
 
-- [ ] **ad0** Design: roles, apps, operation file, ceremony, vault (this folder)
-- [ ] **ad1** pp-ledger: the operation file — contract (`docs/contracts/OPERATION_FILE.md`) and
+- [x] **ad0** Design: roles, apps, operation file, ceremony, vault (this folder)
+- [x] **ad1** pp-ledger: the operation file — contract (`docs/contracts/OPERATION_FILE.md`) and
       library: build each kind (transfer, mint, config update, beacon certificate, recovery, new
       account, genesis), recompute its summary, verify signatures against the signer set, merge
       copies; `pp-client` commands to show, sign, merge and submit operation files (AD004)
-- [ ] **ad2** pp-ledger: `pp-beacon --init` from a signed genesis operation (AD003); the smoke
+- [x] **ad2** pp-ledger: `pp-beacon --init` from a signed genesis operation (AD003); the smoke
       fixture starts from one
 
 ## Apps
