@@ -7,6 +7,8 @@
 #include "network/LedgerAmpRuntime.h"
 #include "network/amp/AmpIdentity.h"
 
+#include <algorithm>
+
 namespace apps::net {
 
 namespace op = pp::operation;
@@ -106,6 +108,28 @@ pp::Roe<op::SignerSet> ChainLink::signersOf(uint64_t id) {
   return signers;
 }
 
+pp::Roe<pp::Ledger::ChainNode> ChainLink::block(uint64_t id) {
+  if (!state_) {
+    return pp::Error("Not linked to a node");
+  }
+  auto found = state_->client.fetchBlock(id);
+  if (!found) {
+    return pp::Error("Cannot read block " + std::to_string(id) + ": " + found.error().message);
+  }
+  return found.value();
+}
+
+pp::Roe<pp::Client::ProducerStatsResponse> ChainLink::producerStats(uint64_t from, uint64_t to) {
+  if (!state_) {
+    return pp::Error("Not linked to a node");
+  }
+  auto stats = state_->client.fetchProducerStats({from, to});
+  if (!stats) {
+    return pp::Error("Cannot count the blocks' producers: " + stats.error().message);
+  }
+  return stats.value();
+}
+
 pp::Roe<std::vector<pp::Ledger::Record>> ChainLink::transactions(uint64_t id) {
   if (!state_) {
     return pp::Error("Not linked to a node");
@@ -142,9 +166,9 @@ pp::Roe<void> ChainLink::submit(const op::Operation &operation) {
   if (operation.kind == op::Kind::Genesis) {
     return pp::Error("A genesis is not submitted: it starts the beacon");
   }
-  auto record = op::signedRecord(operation);
-  if (!record) {
-    return record.error();
+  auto records = op::signedRecords(operation);
+  if (!records) {
+    return records.error();
   }
   auto chain = info();
   if (!chain) {
@@ -157,9 +181,20 @@ pp::Roe<void> ChainLink::submit(const op::Operation &operation) {
   if (!operation.genesisHash.empty() && chain.value().genesisHash != operation.genesisHash) {
     return pp::Error("This operation is for another chain of network " + operation.networkId);
   }
-  auto sent = state_->client.submitTransaction(record.value());
-  if (!sent) {
-    return pp::Error("The node refused it: " + sent.error().message);
+  size_t refused = 0;
+  std::string why;
+  for (const auto &record : records.value()) {
+    if (auto sent = state_->client.submitTransaction(record); !sent) {
+      ++refused;
+      why = sent.error().message;
+    }
+  }
+  if (refused == records.value().size() && refused == 1) {
+    return pp::Error("The node refused it: " + why);
+  }
+  if (refused > 0) {
+    return pp::Error("The node refused " + std::to_string(refused) + " of its " +
+                     std::to_string(records.value().size()) + " transfers (the others were sent): " + why);
   }
   return {};
 }
@@ -192,16 +227,29 @@ pp::Roe<bool> ChainLink::included(const op::Operation &operation) {
   if (!payer) {
     return pp::Error("This kind of operation is not followed into a block");
   }
-  auto found = transactions(*payer);
-  if (!found) {
-    return found.error();
+  std::vector<const pp::Ledger::Record *> wanted{&operation.record};
+  for (const auto &more : operation.moreRecords) {
+    wanted.push_back(&more);
   }
-  for (const auto &record : found.value()) {
-    if (record.type == operation.record.type && record.data == operation.record.data) {
-      return true;
+  // The payer's latest transactions, page by page back (a page is a few dozen blocks): a batch's
+  // transfers may spread over several.
+  pp::Client::TxGetByWalletRequest request;
+  request.walletId = *payer;
+  for (int page = 0; page < kIncludedPages && !wanted.empty(); ++page) {
+    auto found = state_->client.fetchTransactionsByWallet(request);
+    if (!found) {
+      return pp::Error("Cannot read the account's transactions: " + found.error().message);
     }
+    std::erase_if(wanted, [&found](const pp::Ledger::Record *record) {
+      return std::any_of(found.value().transactions.begin(), found.value().transactions.end(),
+                         [record](const pp::Ledger::Record &r) { return r.type == record->type && r.data == record->data; });
+    });
+    if (found.value().nextBlockId == 0 || found.value().nextBlockId == request.beforeBlockId) {
+      break; // the start of the chain
+    }
+    request.beforeBlockId = found.value().nextBlockId;
   }
-  return false;
+  return wanted.empty();
 }
 
 } // namespace apps::net

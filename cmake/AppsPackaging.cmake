@@ -1,6 +1,6 @@
 # Packages (cpack; projects/token-app TA002). Three install components:
 #   signer — the Signer and the shared assets;
-#   system — Genesis, Admin, Reserve, Registrar: the chain's system key holders;
+#   system — Genesis, Admin, Reserve, Registrar, Fees: the chain's system key holders;
 #   token  — the Token app: token issuers' operators.
 # Linux: a .deb per component (pp-ledger-signer, pp-ledger-system, pp-ledger-token); the other two
 # depend on pp-ledger-signer. macOS: the release's disk images are made per set by
@@ -29,7 +29,7 @@ else()
   set(CPACK_DEBIAN_TOKEN_PACKAGE_NAME "pp-ledger-token")
   set(CPACK_COMPONENT_SIGNER_DESCRIPTION "PP Ledger Signer: review and sign pp-ledger operations, offline")
   set(CPACK_COMPONENT_SYSTEM_DESCRIPTION
-      "PP Ledger Genesis, Admin, Reserve and Registrar: the apps of a pp-ledger chain's system key holders")
+      "PP Ledger Genesis, Admin, Reserve, Registrar and Fees: the apps of a pp-ledger chain's system key holders")
   set(CPACK_COMPONENT_TOKEN_DESCRIPTION "PP Ledger Token: issue and manage a pp-ledger token")
   set(CPACK_COMPONENT_SYSTEM_DEPENDS signer)
   set(CPACK_COMPONENT_TOKEN_DEPENDS signer)

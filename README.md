@@ -43,8 +43,8 @@ writes block 0 from it.
 
 | Piece | What |
 |-------|------|
-| `src/core` (`apps_core`) | The vault, key cards and the address book, the operation workflow — no network code |
-| `src/net` (`apps_net`) | The link to a node: chain info and the config in force (`CONFIG_GET`), accounts and their signers, the minimum fee, submitting, finding a transaction in a block; the admin set's operations built and checked by pp-ledger's rules (`AdminOperations`) |
+| `src/core` (`apps_core`) | The vault, key cards and the address book, the operation workflow, the fee rounds (rules, payouts, round files) — no network code |
+| `src/net` (`apps_net`) | The link to a node: chain info and the config in force (`CONFIG_GET`), accounts and their signers, the minimum fee, submitting, finding a transaction in a block; the admin set's, a token issuer's and the fee account's operations built and checked by pp-ledger's rules (`AdminOperations`, `TokenOperations`, `FeeOperations`) |
 | `src/ui` (`apps_ui`) | The window host (SDL3 + OpenGL 3, pp-cpp-ui), the app frame, the shared screens: vault, keys and people, operation review |
 | `src/online` (`apps_online`) | What role apps add: the node setting (kept in the vault), chain work off the UI thread, submitting and following an operation, the transfer form |
 | `src/apps/signer` | `pp-ledger-signer`: review, sign and merge operations (genesis plans included), offline; locks itself after 10 minutes without use |
@@ -52,4 +52,6 @@ writes block 0 from it.
 | `src/apps/genesis` | `pp-ledger-genesis`: the genesis plan (block 0 from everyone's key cards, pp-ledger's defaults, signed offline for `pp-beacon --init --genesis-op`) and recovery announcements |
 | `src/apps/registrar` | `pp-ledger-registrar`: issued accounts (2^20 … 2^30) for their owners' keys, funded by the registrar |
 | `src/apps/reserve` | `pp-ledger-reserve`: transfers out of the reserve — made from the chain, signed, merged, submitted, followed into a block |
+| `src/apps/fees` | `pp-ledger-fees`: fee rounds — a period read from the chain, the relays' measures, the rules, the payouts as one batch from the fee account; round files checked by their digest |
+| `src/apps/token` | `pp-ledger-token`: a token issuer's overview, issuing its token, sending, replacing its signers |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

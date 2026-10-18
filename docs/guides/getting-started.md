@@ -11,12 +11,13 @@ make.
 | **PP Ledger Admin** | The admin set: minting, config changes, the admin set itself, beacon keys |
 | **PP Ledger Registrar** | The registrar's holders: creating accounts for their owners |
 | **PP Ledger Genesis** | The people who start the chain and hold its recovery keys |
+| **PP Ledger Fees** | The fee account's holders: handing the collected fees on to miners and relays ([Fees](fees.md)) |
 | **PP Ledger Token** | A token issuer's operators: issuing its token, its balance, its signers ([Token](token.md)) |
 
 ## Install
 
-Each release has two sets: **pp-ledger-system** (the Signer, Reserve, Admin, Registrar and Genesis
-apps) for the system key holders, and **pp-ledger-token** (the Signer and the Token app) for token
+Each release has two sets: **pp-ledger-system** (the Signer, Reserve, Admin, Registrar, Fees and
+Genesis apps) for the system key holders, and **pp-ledger-token** (the Signer and the Token app) for token
 issuers.
 
 - **macOS (Apple silicon, macOS 13 or later):** open your set's disk image and drag the apps you need
@@ -53,10 +54,10 @@ Under **Keys and people**:
 
 ## The node (role apps)
 
-The Reserve, Admin, Registrar, Genesis and Token apps talk to one node of the chain: a relay or the beacon.
+The Reserve, Admin, Registrar, Genesis, Fees and Token apps talk to one node of the chain: a relay or the beacon.
 Its operator gives you its address (it starts with `/ip4/` or `/dns4/` and ends with `/p2p/` and a
 long id). Paste it under **Network** and press *Check and save*. The Signer never connects to
 anything.
 
 Next: [Signing](signing.md) · [Reserve](reserve.md) · [Admin](admin.md) · [Registrar](registrar.md) ·
-[The genesis ceremony](genesis-ceremony.md) · [Token](token.md)
+[The genesis ceremony](genesis-ceremony.md) · [Fees](fees.md) · [Token](token.md)

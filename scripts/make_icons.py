@@ -78,6 +78,10 @@ ICONS = {
                                         rounded(0.70, 0.40, 0.79, 0.68, 0.02), rounded(0.61, 0.49, 0.88, 0.58, 0.02))),
     # Genesis: a star — the start.
     'genesis': ((180, 83, 9), star(0.5, 0.52, 0.27, 0.11, 5)),
+    # Fees: one split three ways — fees handed on.
+    'fees': ((21, 128, 61), union(circle(0.5, 0.31, 0.10), circle(0.27, 0.70, 0.09), circle(0.5, 0.72, 0.09),
+                                  circle(0.73, 0.70, 0.09), stroke([(0.5, 0.36), (0.27, 0.66)], 0.05),
+                                  stroke([(0.5, 0.36), (0.5, 0.66)], 0.05), stroke([(0.5, 0.36), (0.73, 0.66)], 0.05))),
     # Token: a coin with a T — an issuer's token.
     'token': ((190, 18, 60), union(ring(0.5, 0.5, 0.27, 0.06), rounded(0.37, 0.36, 0.63, 0.44, 0.02),
                                    rounded(0.46, 0.36, 0.54, 0.66, 0.02))),

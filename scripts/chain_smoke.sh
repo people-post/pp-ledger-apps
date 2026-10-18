@@ -7,6 +7,8 @@
 #   pp-ledger-registrar: an issued account for an owner key, funded by the registrar (the account);
 #   pp-ledger-token: that account as a token issuer — issues to the registrar (both balances of its
 #   token), replaces its signers (2 of 2), sends native tokens signed by both (the registrar's balance);
+#   pp-ledger-fees: the first fee round — the period from the chain, a relay paid to that account,
+#   the payouts as one batch from the fee account, signed 3 of 3 (balances, the round file, the mark);
 #   pp-ledger-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
 #   as it freezes the admin set until it applies.
 # Each made from the chain, signed with the smoke keys (3 of 3), submitted, seen in a block.
@@ -103,7 +105,56 @@ test "$(balance 2)" -eq $((registrarBefore + send)) ||
   { echo "FAIL: registrar balance $registrarBefore → $(balance 2), expected +$send"; exit 1; }
 echo "✓ Token: account $account issued $issue to the registrar, is 2 of 2, sent $send signed by both"
 
-# 5. Genesis: the recovery set announces a new admin set.
+# 5. Fees: the first round. The fee account is topped up from the reserve first (the smoke chain's fees
+# are few), with pp-client's operation files.
+op_flow() { # <name> <keys…> -- <op args…>: make, sign apart, merge, submit
+  local name=$1 keys=() i=0 copies=()
+  shift
+  while [[ $1 != "--" ]]; do keys+=("$1"); shift; done
+  shift
+  rm -f "$out/$name".*
+  "$client" -b --host "$node" op "$@" -o "$out/$name.json" >/dev/null || { echo "FAIL: op $1 ($name)"; exit 1; }
+  for key in "${keys[@]}"; do
+    i=$((i + 1))
+    cp "$out/$name.json" "$out/$name.copy$i.json"
+    "$client" op sign "$out/$name.copy$i.json" -k "$key" >/dev/null || { echo "FAIL: op sign ($name)"; exit 1; }
+    copies+=("$out/$name.copy$i.json")
+  done
+  "$client" op merge "${copies[@]}" -o "$out/$name.signed.json" >/dev/null || { echo "FAIL: op merge ($name)"; exit 1; }
+  "$client" -b --host "$node" op submit "$out/$name.signed.json" >/dev/null || { echo "FAIL: op submit ($name)"; exit 1; }
+}
+feeBefore=$(balance 3)
+op_flow fee-top-up "$smoke/keys/reserve1.key" "$smoke/keys/reserve2.key" "$smoke/keys/reserve3.key" -- \
+  transfer --from 1 --to 3 --amount 200000 -f 1
+for _ in $(seq 60); do
+  [[ "$(balance 3)" -ge $((feeBefore + 200000)) ]] && break
+  sleep 1
+done
+[[ "$(balance 3)" -ge $((feeBefore + 200000)) ]] || { echo "FAIL: the fee account was not topped up"; exit 1; }
+rm -rf "$out/fees-home"
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/fees-home" "fees passphrase" fee \
+  "$smoke/keys/fee1.key" "$smoke/keys/fee2.key" "$smoke/keys/fee3.key"
+relayBefore=$(balance "$account")
+feeBefore=$(balance 3)
+run_app fees "$out/fees-home" fees-chain.script
+test -f "$out/payouts.round.json" || { echo "FAIL: no round file beside the payouts"; exit 1; }
+relayPaid=$(tr -d ' \n' <"$out/payouts.round.json" | grep -o "\"account\":$account,\"who\":\"relay-smoke\",\"amount\":[0-9]*" |
+  sed 's/.*"amount"://')
+test -n "$relayPaid" && test "$relayPaid" -gt 0 || { echo "FAIL: the round pays the relay nothing"; exit 1; }
+relayAfter=$(balance "$account")
+# The relay's account renews meanwhile (a fee or two on the smoke chain).
+test "$relayAfter" -gt $((relayBefore + relayPaid - 10)) ||
+  { echo "FAIL: relay account $account $relayBefore → $relayAfter, expected +$relayPaid"; exit 1; }
+total=$(tr -d ' \n' <"$out/payouts.round.json" | sed -n 's/.*"total":\([0-9]*\),"fees".*/\1/p')
+# Fees keep coming in meanwhile (a few units each on the smoke chain).
+test "$(balance 3)" -le $((feeBefore - total + 1000)) ||
+  { echo "FAIL: the fee account paid less than the round's $total"; exit 1; }
+"$client" -b --host "$node" transactions 3 >"$out/fee-transactions.json" 2>&1 || true
+grep -q "pp-fee-round/1 1 " "$out/fee-transactions.json" ||
+  { echo "FAIL: the payouts do not carry the round's mark ($out/fee-transactions.json)"; exit 1; }
+echo "✓ Fees: round 1 paid $total (the relay $relayPaid), one batch signed 3 of 3, each payout marked"
+
+# 6. Genesis: the recovery set announces a new admin set.
 rm -rf "$out/genesis-home" "$out/next-admin"*
 for i in 1 2 3; do "$client" keygen -o "$out/next-admin$i" >/dev/null; done
 "$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/genesis-home" "genesis passphrase" recovery \

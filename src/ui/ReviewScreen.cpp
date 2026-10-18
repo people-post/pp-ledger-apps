@@ -58,6 +58,7 @@ void ReviewScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("submit_status", &submitStatus_);
   model.Bind("submitted", &submitted_);
   model.Bind("against", &against_);
+  model.Bind("against_title", &againstTitle_);
   model.Bind("comparing", &comparing_);
   model.Bind("error", &error_);
   model.Bind("notice", &notice_);
@@ -132,9 +133,9 @@ void ReviewScreen::show() {
   std::string starts;
   if (operation.kind == op::Kind::Genesis) {
     // Who holds the chain first (keys, accounts: "2 of 3: …"), then its settings.
-    static const std::regex keys(R"(\d+ of \d+:)");
+    static const std::regex keySet(R"(\d+ of \d+:)");
     std::stable_partition(lines_.begin(), lines_.end(), [](const Line &line) {
-      return line.label == "Network" || line.label == "Starts" || std::regex_search(line.value, keys);
+      return line.label == "Network" || line.label == "Starts" || std::regex_search(line.value, keySet);
     });
     for (const auto &line : lines_) {
       if (line.label == "Starts") {
@@ -159,10 +160,14 @@ void ReviewScreen::show() {
   }
   canSubmit_ = static_cast<bool>(session_.submit) && complete_ && !expired_ && operation.kind != op::Kind::Genesis;
   refresh();
+  // What the app can check it against: the chain (config, certificates), its own records (the fee
+  // app's rounds, for its payouts). A transfer elsewhere compares to nothing: the section stays hidden.
+  const bool settings = operation.kind == op::Kind::ConfigUpdate || operation.kind == op::Kind::BeaconCertificate;
   if (session_.compare && !comparing_ &&
-      (operation.kind == op::Kind::ConfigUpdate || operation.kind == op::Kind::BeaconCertificate)) {
+      (settings || operation.kind == op::Kind::Transfer || operation.kind == op::Kind::Batch)) {
     comparing_ = true;
     against_.clear();
+    againstTitle_ = settings ? "What changes, against the chain now" : "Checked against your records";
     const std::string comparedPath = path_;
     session_.compare(operation, [this, comparedPath](std::vector<std::pair<std::string, std::string>> lines) {
       comparing_ = false;

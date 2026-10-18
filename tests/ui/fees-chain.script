@@ -1,0 +1,92 @@
+# Against a running chain: the first fee round — the period read from the chain, a relay and its
+# uptime, the rules kept, the payouts made into one operation from the fee account, signed by its
+# three holders, submitted, seen in blocks.
+wait 5
+click #unlock-passphrase
+type fees passphrase
+click #unlock
+idle
+wait 5
+click #nav-network
+wait 3
+click #network-address
+type @NODE@
+click #network-check
+idle
+wait 3
+click #nav-rounds
+idle
+wait 3
+click #rounds-next
+idle
+wait 3
+click #period-read
+idle
+wait 5
+idle
+wait 3
+shot @OUT@/fees-1-period.png
+click #nav-relays
+idle
+wait 3
+click #relay-name
+type relay-smoke
+click #relay-peer
+type QmSmokeRelay
+click #relay-account
+type @ACCOUNT@
+click #relay-add
+wait 3
+click #relay-uptime-0
+type 99.5
+click #relays-by
+type the chain smoke
+click #relays-source
+type smoke monitoring
+click #relays-keep
+wait 3
+shot @OUT@/fees-2-relays.png
+click #nav-rules
+idle
+wait 3
+click #rules-name
+clear
+type smoke rules
+click #rules-preview
+idle
+wait 5
+click #rules-keep-them
+wait 3
+shot @OUT@/fees-3-rules.png
+click #nav-payouts
+idle
+wait 5
+idle
+wait 3
+shot @OUT@/fees-4-payouts.png
+answer @OUT@/payouts.json
+click #payouts-make
+idle
+wait 5
+idle
+wait 3
+expect #review-against
+shot @OUT@/fees-5-review.png
+answer @OUT@/payouts1.json
+click #sign
+wait 5
+answer @OUT@/payouts2.json
+click #sign
+wait 5
+answer @OUT@/payouts3.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+click #nav-rounds
+idle
+wait 5
+shot @OUT@/fees-6-rounds.png
+quit

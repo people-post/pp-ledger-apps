@@ -1,0 +1,60 @@
+<rml>
+<head>
+  <title>Period</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="period">
+    <div class="card">
+      <h1>Round {{number}}: its period</h1>
+      <p class="muted">The blocks the round pays for: from where the last round ended, to the end you choose.
+        The chain says who produced them, the fees in them, and the misses charged to miners due to produce.</p>
+      <div class="row">
+        <div class="grow">
+          <label>From block</label>
+          <input id="period-from" class="field" type="text" data-value="from" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Ends at (2026-10-31 or 2026-10-31 18:00, UTC; empty: now)</label>
+          <input id="period-end" class="field" type="text" data-value="ends_at" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="period-read" class="primary" data-event-click="period_read()" data-attrif-disabled="busy">Read the chain</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+      <div class="facts">
+        <div class="item" data-for="fact : facts">
+          <span class="label">{{fact.label}}</span>
+          <span class="value">{{fact.value}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card" data-if="miners.size > 0">
+      <h2>Miners</h2>
+      <div class="facts">
+        <div class="item">
+          <span class="label"><strong>Account</strong></span>
+          <span class="grow"><strong>Blocks</strong></span>
+          <span style="width: 140dp;"><strong>Fees in them</strong></span>
+          <span style="width: 120dp;"><strong>Misses</strong></span>
+          <span style="width: 110dp;"><strong>Registered</strong></span>
+        </div>
+        <div class="item" data-for="m : miners">
+          <span class="label">{{m.account}}</span>
+          <span class="grow">{{m.blocks}}</span>
+          <span style="width: 140dp;">{{m.fees}}</span>
+          <span style="width: 120dp;">{{m.misses}}</span>
+          <span style="width: 110dp;">{{m.registered}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>

@@ -5,6 +5,8 @@ add_library(apps_net STATIC
     AdminOperations.h
     ChainLink.cpp
     ChainLink.h
+    FeeOperations.cpp
+    FeeOperations.h
     TokenOperations.cpp
     TokenOperations.h
 )
