@@ -4,6 +4,7 @@
 
 #include "core/AddressBook.h"
 #include "core/AtomicFile.h"
+#include "core/KeyBackups.h"
 #include "core/KeyCard.h"
 #include "lib/common/Utilities.h"
 #include "operation/Operation.h"
@@ -18,6 +19,8 @@
 namespace apps::ui_host {
 
 namespace {
+
+const std::vector<FileFilter> kKeyBackups = {{"Key backups", "ppkey"}};
 
 const std::vector<FileFilter> kKeyCards = {{"Key cards", "json"}};
 const std::vector<FileFilter> kKeyFiles = {{"Private keys (pp-client keygen)", "key"}};
@@ -58,6 +61,8 @@ void KeysScreen::bind(ui::DataModelConstructor &model) {
   model.BindEventCallback("keys_import", &KeysScreen::importKey, this);
   model.BindEventCallback("keys_export_card", &KeysScreen::exportCard, this);
   model.BindEventCallback("keys_add_card", &KeysScreen::addCard, this);
+  model.BindEventCallback("keys_export_backup", &KeysScreen::exportKeyBackup, this);
+  model.BindEventCallback("keys_import_backup", &KeysScreen::importKeyBackup, this);
   model.BindEventCallback("keys_remove_card", &KeysScreen::removeCard, this);
   model.BindEventCallback("keys_backup", &KeysScreen::backup, this);
   model.BindEventCallback("keys_restore", &KeysScreen::restore, this);
@@ -244,6 +249,82 @@ void KeysScreen::backup(ui::DataModelHandle, ui::Event &, const ui::VariantList 
           sodium_memzero(backupPassphrase_.data(), backupPassphrase_.size());
           backupPassphrase_.clear();
           say(*result, result->empty() ? "Backup written. Keep it on a stick, away from this machine." : "");
+        });
+  });
+}
+
+void KeysScreen::exportKeyBackup(ui::DataModelHandle, ui::Event &, const ui::VariantList &args) {
+  const int index = indexArg(args);
+  if (index < 0 || index >= static_cast<int>(keys_.size())) {
+    return;
+  }
+  if (backupPassphrase_.size() < pp::operation::kKeyBackupMinPassphrase) {
+    say("Type a passphrase for the key backup (at least " + std::to_string(pp::operation::kKeyBackupMinPassphrase) +
+        " characters) under Backup first, and keep it apart from the file.");
+    return;
+  }
+  const KeyRow row = keys_[static_cast<size_t>(index)];
+  std::string suggested = row.label;
+  std::replace_if(suggested.begin(), suggested.end(), [](unsigned char c) { return !std::isalnum(c); }, '-');
+  app_->chooseFileToSave(kKeyBackups, suggested + ".ppkey", [this, row](std::optional<std::string> path) {
+    if (!path) {
+      return;
+    }
+    busy_ = true;
+    say("", "Sealing the key…");
+    auto passphrase = std::make_shared<std::string>(backupPassphrase_);
+    auto result = std::make_shared<std::string>();
+    app_->runInBackground(
+        [this, passphrase, result, id = row.id, path = *path] {
+          auto json = apps::exportKeyBackup(session_.vault, id, *passphrase);
+          sodium_memzero(passphrase->data(), passphrase->size());
+          if (!json) {
+            *result = json.error().message;
+            return;
+          }
+          if (auto written = writeFileAtomic(path, json.value()); !written) {
+            *result = written.error().message;
+          }
+        },
+        [this, result, label = row.label] {
+          busy_ = false;
+          say(*result, result->empty() ? "Key backup of " + label +
+                                             " written: any wallet that reads key backups takes it, with its passphrase."
+                                       : "");
+        });
+  });
+}
+
+void KeysScreen::importKeyBackup(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  const auto role = roleFromName(newRole_);
+  if (backupPassphrase_.empty() || !role) {
+    say("Choose the key's role (Add a key), and type the key backup's passphrase (Backup) first.");
+    return;
+  }
+  app_->chooseFileToOpen(kKeyBackups, [this, role = *role](std::optional<std::string> path) {
+    if (!path) {
+      return;
+    }
+    auto text = readFile(*path);
+    if (!text) {
+      say(text.error().message);
+      return;
+    }
+    busy_ = true;
+    say("", "Opening the key backup…");
+    auto passphrase = std::make_shared<std::string>(backupPassphrase_);
+    auto result = std::make_shared<std::string>();
+    auto json = std::make_shared<std::string>(text.value());
+    app_->runInBackground(
+        [this, passphrase, result, json, role] {
+          auto key = apps::importKeyBackup(session_.vault, *json, *passphrase, role);
+          sodium_memzero(passphrase->data(), passphrase->size());
+          *result = key ? "" : key.error().message;
+        },
+        [this, result] {
+          busy_ = false;
+          reload();
+          say(*result, result->empty() ? "Key imported. Back the vault up." : "");
         });
   });
 }

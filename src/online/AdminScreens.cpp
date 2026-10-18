@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include <cctype>
 
 namespace apps::online {
 

@@ -2,15 +2,16 @@
 #   signer — the Signer and the shared assets;
 #   system — Genesis, Admin, Reserve, Registrar, Fees: the chain's system key holders;
 #   token  — the Token app: token issuers' operators.
-# Linux: a .deb per component (pp-ledger-signer, pp-ledger-system, pp-ledger-token); the other two
-# depend on pp-ledger-signer. macOS: the release's disk images are made per set by
+#   wallet — the Wallet: everyone's, standing alone (projects/wallet-app).
+# Linux: a .deb per component (pp-ledger-signer, pp-ledger-system, pp-ledger-token, pp-ledger-wallet);
+# system and token depend on pp-ledger-signer. macOS: the release's disk images are made per set by
 # scripts/macos_dmg.sh; `cpack` here makes one of every bundle (local use).
 set(CPACK_PACKAGE_NAME "pp-ledger-apps")
 set(CPACK_PACKAGE_VENDOR "People Post")
 set(CPACK_PACKAGE_CONTACT "pp-ledger-apps maintainers <noreply@github.com>")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Desktop apps for the key holders of a pp-ledger chain")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_COMPONENTS_ALL signer system token)
+set(CPACK_COMPONENTS_ALL signer system token wallet)
 set(CPACK_STRIP_FILES ON)
 if(APPLE)
   set(CPACK_GENERATOR "DragNDrop")
@@ -27,10 +28,12 @@ else()
   set(CPACK_DEBIAN_SIGNER_PACKAGE_NAME "pp-ledger-signer")
   set(CPACK_DEBIAN_SYSTEM_PACKAGE_NAME "pp-ledger-system")
   set(CPACK_DEBIAN_TOKEN_PACKAGE_NAME "pp-ledger-token")
+  set(CPACK_DEBIAN_WALLET_PACKAGE_NAME "pp-ledger-wallet")
   set(CPACK_COMPONENT_SIGNER_DESCRIPTION "PP Ledger Signer: review and sign pp-ledger operations, offline")
   set(CPACK_COMPONENT_SYSTEM_DESCRIPTION
       "PP Ledger Genesis, Admin, Reserve, Registrar and Fees: the apps of a pp-ledger chain's system key holders")
   set(CPACK_COMPONENT_TOKEN_DESCRIPTION "PP Ledger Token: issue and manage a pp-ledger token")
+  set(CPACK_COMPONENT_WALLET_DESCRIPTION "PP Ledger Wallet: your accounts, proven; move them when keys may have leaked")
   set(CPACK_COMPONENT_SYSTEM_DEPENDS signer)
   set(CPACK_COMPONENT_TOKEN_DEPENDS signer)
   set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS ON)

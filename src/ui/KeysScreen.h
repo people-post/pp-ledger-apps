@@ -40,6 +40,8 @@ private:
   void addCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void removeCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
   void backup(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void exportKeyBackup(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
+  void importKeyBackup(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void restore(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void reload();
   void say(const std::string &error, const std::string &notice = "");

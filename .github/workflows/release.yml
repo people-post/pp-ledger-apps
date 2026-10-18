@@ -49,7 +49,7 @@ jobs:
           libxrender-dev libxss-dev libgl-dev
       - name: Build
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_APPS_BUILD_TESTS=OFF \
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_APPS_BUILD_TESTS=OFF -DPP_APPS_RELEASE=ON \
             -DPP_APPS_VERSION=${{ needs.version.outputs.version }}
           cmake --build build -j 4
       - name: Package (.debs, AppImages)
@@ -73,7 +73,7 @@ jobs:
         run: brew install ninja
       - name: Build
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_APPS_BUILD_TESTS=OFF \
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_APPS_BUILD_TESTS=OFF -DPP_APPS_RELEASE=ON \
             -DPP_APPS_VERSION=${{ needs.version.outputs.version }}
           cmake --build build -j 3
           # A folder per disk image: the Signer and the system apps; the Signer and the Token app.
@@ -81,6 +81,8 @@ jobs:
             cmake --install build --prefix "install/$set" --component signer
             cmake --install build --prefix "install/$set" --component "$set"
           done
+          # The wallet stands alone: its own disk image, the wallet only.
+          cmake --install build --prefix "install/wallet" --component wallet
       - name: Sign the apps
         env:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
@@ -92,7 +94,7 @@ jobs:
       - name: Disk image
         run: |
           mkdir -p dist
-          for set in system token; do
+          for set in system token wallet; do
             ./scripts/macos_dmg.sh "install/$set" ${{ needs.version.outputs.version }} dist "$set"
           done
       - name: Notarize
@@ -121,10 +123,12 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+      - name: Checksums
+        run: (cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS)
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
             --title "pp-ledger-apps ${{ needs.version.outputs.version }}" \
-            --notes "System key holders: pp-ledger-system and pp-ledger-signer (.deb, Ubuntu 24.04 and later), or the pp-ledger-system disk image (macOS, Apple silicon). Token issuers: pp-ledger-token and pp-ledger-signer, or the pp-ledger-token disk image. Linux also has an AppImage per app. Guides: docs/guides."
+            --notes "Everyone: the wallet — pp-ledger-wallet (.deb, Ubuntu 24.04 and later; AppImage), its disk image (macOS, Apple silicon). System key holders: pp-ledger-system and pp-ledger-signer, or the pp-ledger-system disk image. Token issuers: pp-ledger-token and pp-ledger-signer, or the pp-ledger-token disk image. Linux also has an AppImage per app. SHA256SUMS lists every file's checksum; docs/REPRODUCIBLE.md says how to rebuild them. Guides: docs/guides."

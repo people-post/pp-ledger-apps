@@ -2,12 +2,15 @@
 
 Desktop apps for the people who hold a [pp-ledger](https://github.com/people-post/pp-ledger) chain's
 system keys — kick-starting the chain and holding its restore keys, administering it (minting, config
-updates), operating its reserve and creating accounts — and for token issuers' operators. For
-non-technical operators: every step is a form or a file. Linux and macOS.
+updates), operating its reserve and creating accounts — for token issuers' operators and the fee
+account's holders, and **everyone's last-resort wallet**: accounts proven from a pinned network, believing
+no node, and evacuated from leaked keys. For non-technical people: every step is a form or a file. Linux
+and macOS.
 
 Guides for key holders: [docs/guides](docs/guides/getting-started.md). Packages: the repository's
-releases (`.deb`s and AppImages for Linux, disk images for macOS; [docs/RELEASE.md](docs/RELEASE.md)).
-Design: [projects/admin-apps](projects/admin-apps/DESIGN.md), [projects/token-app](projects/token-app/DESIGN.md).
+releases (`.deb`s and AppImages for Linux, disk images for macOS, with checksums; [docs/RELEASE.md](docs/RELEASE.md)).
+Design: [projects/admin-apps](projects/admin-apps/DESIGN.md), [projects/token-app](projects/token-app/DESIGN.md),
+[projects/fee-app](projects/fee-app/DESIGN.md), [projects/wallet-app](projects/wallet-app/DESIGN.md).
 
 ## Build
 
@@ -54,4 +57,5 @@ writes block 0 from it.
 | `src/apps/reserve` | `pp-ledger-reserve`: transfers out of the reserve — made from the chain, signed, merged, submitted, followed into a block |
 | `src/apps/fees` | `pp-ledger-fees`: fee rounds — a period read from the chain, the relays' measures, the rules, the payouts as one batch from the fee account; round files checked by their digest |
 | `src/apps/token` | `pp-ledger-token`: a token issuer's overview, issuing its token, sending, replacing its signers |
+| `src/apps/wallet` | `pp-ledger-wallet`: everyone's last resort — the network pinned from a card, accounts proven (no node believed), send, receive, evacuate, key backups |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

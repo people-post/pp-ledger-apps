@@ -8,11 +8,17 @@ publishes them as a GitHub release.
 | `pp-ledger-signer_<v>_amd64.deb`: the Signer and the shared assets, under `/usr` | ubuntu-24.04: needs glibc 2.38+ (the C++ runtime is linked in) |
 | `pp-ledger-system_<v>_amd64.deb`: Genesis, Admin, Reserve, Registrar, Fees; depends on `pp-ledger-signer` | Same |
 | `pp-ledger-token_<v>_amd64.deb`: the Token app; depends on `pp-ledger-signer` | Same |
+| `pp-ledger-wallet_<v>_amd64.deb`: the Wallet, standing alone (its own copy of the assets) | Same |
 | `PP_Ledger_<App>-<v>-x86_64.AppImage`, one per app | ubuntu-24.04 (`scripts/linux_appimages.sh`) |
 | `pp-ledger-system-<v>-macos-arm64.dmg`: the Signer and the five system apps | macos-14: Apple silicon, macOS 13+ (`scripts/macos_dmg.sh`) |
 | `pp-ledger-token-<v>-macos-arm64.dmg`: the Signer and the Token app | Same |
+| `pp-ledger-wallet-<v>-macos-arm64.dmg`: the Wallet alone | Same |
+| `SHA256SUMS`: every file's SHA-256 | The publish job |
 
-The sets are CMake install components (`cmake/AppsPackaging.cmake`: `signer`, `system`, `token`;
+Release builds set `PP_APPS_RELEASE`: no path of the build machine goes into the binaries, so they can
+be rebuilt and compared ([REPRODUCIBLE.md](REPRODUCIBLE.md)).
+
+The sets are CMake install components (`cmake/AppsPackaging.cmake`: `signer`, `system`, `token`, `wallet`;
 each app names its own in `pp_apps_app`).
 
 A pull request touching packaging builds them too, without publishing.

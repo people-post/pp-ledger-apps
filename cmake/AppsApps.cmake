@@ -1,10 +1,10 @@
-# The apps as installed: a bundle each on macOS (its icon, the shared assets in Resources), a binary,
-# desktop entry and icon each on Linux (the assets under share/pp-ledger-apps). UiApp::assetPath
-# finds the assets either way.
+# The apps as installed: a bundle each on macOS (its icon, the shared assets in Resources); a binary,
+# desktop entry and icon each on Linux (the assets under share/pp-ledger-apps, and a copy of the wallet's
+# own under share/pp-ledger-wallet: its package stands alone). UiApp::assetPath finds the assets either way.
 
 # pp_apps_app(<target> <slug> <title> <comment> <package>): `slug` names the icon
 # (assets/icons/<slug>.png) and ids; `title` is what people see ("PP Ledger Signer"); `package` the
-# install component it ships in (AppsPackaging.cmake): signer, system or token.
+# install component it ships in (AppsPackaging.cmake): signer, system, token or wallet.
 function(pp_apps_app target slug title comment package)
   set(icon ${PROJECT_SOURCE_DIR}/assets/icons/${slug}.png)
   if(APPLE)
@@ -42,7 +42,9 @@ function(pp_apps_app target slug title comment package)
   endif()
 endfunction()
 
-# The assets ship with the Signer, which both other packages depend on.
+# The assets ship with the Signer, which the system and token packages depend on; the wallet's package
+# carries its own copy (it stands alone).
 if(NOT APPLE)
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION share/pp-ledger-apps/assets COMPONENT signer)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION share/pp-ledger-wallet/assets COMPONENT wallet)
 endif()

@@ -1,0 +1,52 @@
+<rml>
+<head>
+  <title>Accounts</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="accounts">
+    <div class="card">
+      <h1>Your accounts</h1>
+      <p class="muted">Each proven from block 0's hash: the beacon's signed tip, the blocks under it, the
+        account in the block's state. Tip: {{tip}}.</p>
+      <p class="muted" data-if="rows.size == 0">No accounts yet: add your account's number below.</p>
+      <p class="muted" data-if="rows.size > 0">To receive, give the payer your account's number.</p>
+      <div class="item" data-for="r : rows">
+        <span class="grow"><strong>{{r.label}}</strong> account {{r.account}}<br/>
+          <span class="muted">{{r.state}}</span><br/>
+          <span class="muted" data-if="r.keys != ''">{{r.keys}} · {{r.renewal}}</span>
+          <span class="muted" data-if="r.tokens != ''"><br/>{{r.tokens}}</span></span>
+        <span style="width: 160dp;"><strong>{{r.balance}}</strong></span>
+        <span data-if="r.proven" data-attr-id="'account-proven-' + it_index" class="muted">proven</span>
+        <button class="small" data-attr-id="'account-send-' + it_index" data-event-click="accounts_send(it_index)">Send…</button>
+        <button class="small" data-attr-id="'account-evacuate-' + it_index" data-event-click="accounts_evacuate(it_index)">Evacuate…</button>
+        <button class="small" data-event-click="accounts_remove(it_index)">Remove</button>
+      </div>
+      <button id="accounts-refresh" data-event-click="accounts_refresh()" data-attrif-disabled="busy">Read again</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+    <div class="card">
+      <h2>Add an account</h2>
+      <div class="row">
+        <div class="grow">
+          <label>Its number</label>
+          <input id="account-number" class="field" type="text" data-value="new_account"/>
+        </div>
+        <div class="grow">
+          <label>A name for it (yours only)</label>
+          <input id="account-label" class="field" type="text" data-value="new_label"/>
+        </div>
+      </div>
+      <button id="accounts-add" data-event-click="accounts_add()">Add</button>
+    </div>
+  </div>
+</body>
+</rml>

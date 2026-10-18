@@ -13,6 +13,7 @@ make.
 | **PP Ledger Genesis** | The people who start the chain and hold its recovery keys |
 | **PP Ledger Fees** | The fee account's holders: handing the collected fees on to miners and relays ([Fees](fees.md)) |
 | **PP Ledger Token** | A token issuer's operators: issuing its token, its balance, its signers ([Token](token.md)) |
+| **PP Ledger Wallet** | Everyone: your own accounts, proven, and moving them away from leaked keys — the last resort ([Wallet](wallet.md)) |
 
 ## Install
 
@@ -60,4 +61,4 @@ long id). Paste it under **Network** and press *Check and save*. The Signer neve
 anything.
 
 Next: [Signing](signing.md) · [Reserve](reserve.md) · [Admin](admin.md) · [Registrar](registrar.md) ·
-[The genesis ceremony](genesis-ceremony.md) · [Fees](fees.md) · [Token](token.md)
+[The genesis ceremony](genesis-ceremony.md) · [Fees](fees.md) · [Token](token.md) · [Wallet](wallet.md)

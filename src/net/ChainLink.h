@@ -42,6 +42,12 @@ public:
   pp::Roe<pp::operation::SignerSet> signersOf(uint64_t id);
   /** Block `id` (its header and records). */
   pp::Roe<pp::Ledger::ChainNode> block(uint64_t id);
+  /** The beacon's latest signed tip as the node holds it (STATUS); none when it holds none. */
+  pp::Roe<std::optional<pp::Client::SignedTip>> signedTip();
+  /** AUTHORITY_PROOF up to block `upTo`: the records that changed the beacon authority. */
+  pp::Roe<pp::Client::AuthorityProof> authorityProof(uint64_t upTo);
+  /** ACCOUNT_PROOF: account `id` in the node's tip state, with its Merkle path. */
+  pp::Roe<pp::Client::AccountProof> accountProof(uint64_t id);
   /** One page of PRODUCER_STATS for blocks [from, to) (the node caps a page). */
   pp::Roe<pp::Client::ProducerStatsResponse> producerStats(uint64_t from, uint64_t to);
   /** Account `id`'s latest transactions (latest first; as many as the node returns in one page). */

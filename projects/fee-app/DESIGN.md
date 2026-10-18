@@ -1,6 +1,6 @@
 # Fee app — design
 
-**Status:** built (fd0–fd5); see [CURRENT_STATE.md](CURRENT_STATE.md). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
+**Status:** built (fd0–fd5). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
 status today: [CURRENT_STATE.md](CURRENT_STATE.md).
 
 A desktop app for the holders of the chain's **fee account**: every fee paid on pp-ledger collects

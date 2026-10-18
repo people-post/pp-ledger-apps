@@ -119,6 +119,39 @@ pp::Roe<pp::Ledger::ChainNode> ChainLink::block(uint64_t id) {
   return found.value();
 }
 
+pp::Roe<std::optional<pp::Client::SignedTip>> ChainLink::signedTip() {
+  if (!state_) {
+    return pp::Error("Not linked to a node");
+  }
+  auto status = state_->client.fetchBeaconState();
+  if (!status) {
+    return pp::Error("The node does not answer: " + status.error().message);
+  }
+  return status.value().signedTip;
+}
+
+pp::Roe<pp::Client::AuthorityProof> ChainLink::authorityProof(uint64_t upTo) {
+  if (!state_) {
+    return pp::Error("Not linked to a node");
+  }
+  auto proof = state_->client.fetchAuthorityProof(upTo);
+  if (!proof) {
+    return pp::Error("Cannot read the authority proof: " + proof.error().message);
+  }
+  return proof.value();
+}
+
+pp::Roe<pp::Client::AccountProof> ChainLink::accountProof(uint64_t id) {
+  if (!state_) {
+    return pp::Error("Not linked to a node");
+  }
+  auto proof = state_->client.fetchAccountProof(id);
+  if (!proof) {
+    return pp::Error("Cannot read the proof of account " + std::to_string(id) + ": " + proof.error().message);
+  }
+  return proof.value();
+}
+
 pp::Roe<pp::Client::ProducerStatsResponse> ChainLink::producerStats(uint64_t from, uint64_t to) {
   if (!state_) {
     return pp::Error("Not linked to a node");

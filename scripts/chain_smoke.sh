@@ -9,6 +9,7 @@
 #   token), replaces its signers (2 of 2), sends native tokens signed by both (the registrar's balance);
 #   pp-ledger-fees: the first fee round — the period from the chain, a relay paid to that account,
 #   the payouts as one batch from the fee account, signed 3 of 3 (balances, the round file, the mark);
+#   pp-ledger-wallet: the network pinned from a card, accounts proven back to block 0's hash;
 #   pp-ledger-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
 #   as it freezes the admin set until it applies.
 # Each made from the chain, signed with the smoke keys (3 of 3), submitted, seen in a block.
@@ -154,7 +155,29 @@ grep -q "pp-fee-round/1 1 " "$out/fee-transactions.json" ||
   { echo "FAIL: the payouts do not carry the round's mark ($out/fee-transactions.json)"; exit 1; }
 echo "✓ Fees: round 1 paid $total (the relay $relayPaid), one batch signed 3 of 3, each payout marked"
 
-# 6. Genesis: the recovery set announces a new admin set.
+# 6. Wallet: the network pinned from a card (block 0's hash), accounts proven back to it.
+genesisHash=$("$client" -b --host "$node" block 0 2>/dev/null | tr -d ' \n' | sed -n 's/^{"hash":"0x\([0-9a-f]*\)".*/\1/p')
+networkId=$("$client" -b --host "$node" status 2>/dev/null | tr -d ' \n' | sed -n 's/.*"networkId":"\([^"]*\)".*/\1/p')
+test -n "$genesisHash" && test -n "$networkId" || { echo "FAIL: cannot read block 0's hash or the network id"; exit 1; }
+cat >"$out/network-card.json" <<CARD
+{"format": "pp-ledger-network-card", "version": 1, "networkId": "$networkId", "genesisHash": "$genesisHash",
+ "nodes": ["$node"], "notes": "the chain smoke"}
+CARD
+rm -rf "$out/wallet-home"
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/wallet-home" "wallet passphrase" owner \
+  "$out/owner.key" "$out/owner2.key"
+registrarBefore=$(balance 2)
+run_app wallet "$out/wallet-home" wallet-chain.script
+echo "✓ Wallet: network $networkId pinned from its card; accounts $account and 2 proven, an absent one proven absent"
+test "$(balance 2)" -eq $((registrarBefore + 5)) ||
+  { echo "FAIL: registrar balance $registrarBefore → $(balance 2), expected +5 from the wallet"; exit 1; }
+echo "✓ Wallet: sent 5 from account $account to the registrar, signed with its two keys"
+"$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' >"$out/evacuated.json"
+grep -q '"minSignatures":1' "$out/evacuated.json" && test "$(grep -o '"publicKeys":\[[^]]*\]' "$out/evacuated.json" | grep -o '"0x' | wc -l)" -eq 1 ||
+  { echo "FAIL: account $account's keys were not replaced by one new key ($out/evacuated.json)"; exit 1; }
+echo "✓ Wallet: account $account evacuated — its keys replaced by a new one made in the wallet"
+
+# 7. Genesis: the recovery set announces a new admin set.
 rm -rf "$out/genesis-home" "$out/next-admin"*
 for i in 1 2 3; do "$client" keygen -o "$out/next-admin$i" >/dev/null; done
 "$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/genesis-home" "genesis passphrase" recovery \

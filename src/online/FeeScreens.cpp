@@ -30,26 +30,6 @@ std::string trimmed(const std::string &text) {
   return first == std::string::npos ? "" : text.substr(first, text.find_last_not_of(" \t\r\n") - first + 1);
 }
 
-/** "2026-10-31" or "2026-10-31 18:00" (UTC) → Unix seconds. */
-std::optional<int64_t> parseDate(const std::string &text) {
-  std::tm tm{};
-  std::istringstream in(trimmed(text));
-  in >> std::get_time(&tm, "%Y-%m-%d");
-  if (in.fail()) {
-    return std::nullopt;
-  }
-  if (!in.eof()) {
-    in >> std::ws;
-    if (!in.eof()) {
-      in >> std::get_time(&tm, "%H:%M");
-      if (in.fail()) {
-        return std::nullopt;
-      }
-    }
-  }
-  return static_cast<int64_t>(timegm(&tm));
-}
-
 std::string blocksText(const fees::Period &p) {
   return formatAmount(p.fromBlock) + " to " + formatAmount(p.toBlock > 0 ? p.toBlock - 1 : 0);
 }
@@ -286,7 +266,7 @@ void PeriodScreen::read(ui::DataModelHandle, ui::Event &, const ui::VariantList 
   }
   std::optional<int64_t> endsAt;
   if (!trimmed(endsAt_).empty()) {
-    endsAt = parseDate(endsAt_);
+    endsAt = parseUtcDate(endsAt_);
     if (!endsAt) {
       say("Type the end as 2026-10-31 or 2026-10-31 18:00 (UTC), or leave it empty for now.");
       return;

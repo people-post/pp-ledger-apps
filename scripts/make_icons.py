@@ -7,13 +7,16 @@ import math, os, struct, zlib
 SIZE = 512
 SS = 3  # samples per axis per pixel
 
-def png(path, pixels):
+def png_bytes(pixels, size=SIZE):
     raw = b''.join(b'\x00' + bytes(row) for row in pixels)
     def chunk(kind, data):
         return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind + data) & 0xffffffff)
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', size, size, 8, 6, 0, 0, 0))
+            + chunk(b'IDAT', zlib.compress(raw, 9)) + chunk(b'IEND', b''))
+
+def png(path, pixels):
     with open(path, 'wb') as f:
-        f.write(b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', SIZE, SIZE, 8, 6, 0, 0, 0))
-                + chunk(b'IDAT', zlib.compress(raw, 9)) + chunk(b'IEND', b''))
+        f.write(png_bytes(pixels))
 
 # Shapes in unit coordinates (0..1, y down): functions (x, y) -> inside?
 def rounded(x0, y0, x1, y1, r):
@@ -82,22 +85,25 @@ ICONS = {
     'fees': ((21, 128, 61), union(circle(0.5, 0.31, 0.10), circle(0.27, 0.70, 0.09), circle(0.5, 0.72, 0.09),
                                   circle(0.73, 0.70, 0.09), stroke([(0.5, 0.36), (0.27, 0.66)], 0.05),
                                   stroke([(0.5, 0.36), (0.5, 0.66)], 0.05), stroke([(0.5, 0.36), (0.73, 0.66)], 0.05))),
+    # Wallet: a wallet and its clasp — your own accounts.
+    'wallet': ((15, 118, 110), union(minus(rounded(0.20, 0.30, 0.80, 0.74, 0.08), rounded(0.54, 0.43, 0.84, 0.61, 0.05)),
+                                     circle(0.63, 0.52, 0.035))),
     # Token: a coin with a T — an issuer's token.
     'token': ((190, 18, 60), union(ring(0.5, 0.5, 0.27, 0.06), rounded(0.37, 0.36, 0.63, 0.44, 0.02),
                                    rounded(0.46, 0.36, 0.54, 0.66, 0.02))),
 }
 
-def render(colour, glyph):
+def render(colour, glyph, size=SIZE):
     tile = rounded(0.06, 0.06, 0.94, 0.94, 0.2)
     rows = []
-    for py in range(SIZE):
+    for py in range(size):
         row = []
-        for px in range(SIZE):
+        for px in range(size):
             inTile = inGlyph = 0
             for sy in range(SS):
                 for sx in range(SS):
-                    x = (px + (sx + 0.5) / SS) / SIZE
-                    y = (py + (sy + 0.5) / SS) / SIZE
+                    x = (px + (sx + 0.5) / SS) / size
+                    y = (py + (sy + 0.5) / SS) / size
                     if tile(x, y):
                         inTile += 1
                         if glyph(x, y):

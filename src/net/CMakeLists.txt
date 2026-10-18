@@ -9,6 +9,8 @@ add_library(apps_net STATIC
     FeeOperations.h
     TokenOperations.cpp
     TokenOperations.h
+    WalletChain.cpp
+    WalletChain.h
 )
 target_include_directories(apps_net PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(apps_net PUBLIC apps_core pp::client pp::chain)

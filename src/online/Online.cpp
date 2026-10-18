@@ -108,6 +108,9 @@ pp::Roe<void> Online::saveAddress(const std::string &address) {
     return saved;
   }
   address_ = address;
+  if (onStatus) {
+    onStatus(""); // a node is set now
+  }
   return {};
 }
 

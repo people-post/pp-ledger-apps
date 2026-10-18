@@ -11,12 +11,16 @@ add_library(apps_core STATIC
     FeeRounds.h
     KeyCard.cpp
     KeyCard.h
+    KeyBackups.cpp
+    KeyBackups.h
     Operations.cpp
     Operations.h
     Roles.cpp
     Roles.h
     Vault.cpp
     Vault.h
+    WalletBook.cpp
+    WalletBook.h
 )
 target_include_directories(apps_core PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(apps_core PUBLIC pp::operation pp_common sodium)

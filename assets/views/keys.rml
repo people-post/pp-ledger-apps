@@ -21,6 +21,7 @@
         <span class="grow"><strong>{{key.label}}</strong> · {{key.role}}</span>
         <span class="mono">{{key.fingerprint}}</span>
         <button class="small" data-event-click="keys_export_card(it_index)">Save key card…</button>
+        <button class="small" data-attr-id="'key-backup-' + it_index" data-event-click="keys_export_backup(it_index)" data-attrif-disabled="busy">Save key backup…</button>
       </div>
       <h3>Add a key</h3>
       <label class="muted">Its name (whose key, what for) and its role</label>
@@ -39,6 +40,7 @@
       <div class="row">
         <button id="generate" class="primary" data-event-click="keys_generate()">Make a new key</button>
         <button data-event-click="keys_import()">Import a key file…</button>
+        <button id="keys-import-backup" data-event-click="keys_import_backup()" data-attrif-disabled="busy">Import a key backup…</button>
       </div>
     </div>
     <div class="card">
@@ -54,9 +56,10 @@
     <div class="card">
       <h2>Backup</h2>
       <p class="muted">A lost key cannot be made again. Write the vault to a USB stick under a passphrase of its own,
-        and keep the stick and the passphrase apart.</p>
+        and keep the stick and the passphrase apart. The same passphrase seals a single key's backup (Save key
+        backup…), the file other wallets read; and opens one (Import a key backup…).</p>
       <label>Backup passphrase</label>
-      <input class="field" type="password" data-value="backup_passphrase" data-attrif-disabled="busy"/>
+      <input id="backup-passphrase" class="field" type="password" data-value="backup_passphrase" data-attrif-disabled="busy"/>
       <div class="row">
         <button class="primary" data-event-click="keys_backup()" data-attrif-disabled="busy">Write a backup…</button>
         <button data-event-click="keys_restore()" data-attrif-disabled="busy">Restore from a backup…</button>

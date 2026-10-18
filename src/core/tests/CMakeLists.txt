@@ -4,4 +4,7 @@ pp_apps_add_test(apps_core_tests
     key_card_test.cpp
     operations_test.cpp
     fee_rounds_test.cpp
+    wallet_book_test.cpp
+    key_backups_test.cpp
+    portable_test.cpp
     LIBS apps_core)
