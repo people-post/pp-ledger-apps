@@ -2,6 +2,7 @@
 
 | Doc | For |
 |-----|-----|
+| [roles.html](roles.html) · [中文](roles.zh.html) | Stakeholders: who does what — the chain in brief, then each role's powers and limits (two printed pages) |
 | [guides/getting-started.md](guides/getting-started.md) | Key holders: the apps, installing, the vault and its backup, key cards, the node |
 | [guides/signing.md](guides/signing.md) | Every signer: reviewing, signing, combining copies, submitting |
 | [guides/reserve.md](guides/reserve.md) · [guides/admin.md](guides/admin.md) · [guides/registrar.md](guides/registrar.md) | Each role's app |
