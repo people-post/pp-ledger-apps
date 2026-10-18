@@ -1,3 +1,5 @@
 add_subdirectory(core)
+add_subdirectory(net)
 add_subdirectory(ui)
+add_subdirectory(online)
 add_subdirectory(apps)

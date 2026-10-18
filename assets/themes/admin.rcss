@@ -47,6 +47,7 @@ strong { font-weight: bold; }
 }
 .tab:hover { background-color: #374151; }
 .tab.current { background-color: #4b5563; color: #ffffff; }
+.bar .status { color: #9ca3af; font-size: 14dp; margin-right: 8dp; }
 
 .page { padding: 24dp 32dp; }
 .card {
@@ -114,4 +115,5 @@ button:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: default; }
 .facts .item .value { flex: 1; color: #111827; }
 .status-done { color: #047857; width: 90dp; }
 .status-todo { color: #9ca3af; width: 90dp; }
+.done-text { color: #047857; }
 .headline { font-size: 22dp; color: #111827; margin-bottom: 4dp; }

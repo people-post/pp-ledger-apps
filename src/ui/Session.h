@@ -2,6 +2,7 @@
 // What the screens of an app share: the person's vault, and how to move between screens.
 
 #include "core/Vault.h"
+#include "operation/Operation.h"
 
 #include <functional>
 #include <string>
@@ -14,6 +15,18 @@ struct Session {
   Vault vault;
   /** Go to a screen by name ("vault", "review", "keys"); the app decides what they are. */
   std::function<void(const std::string &)> navigate;
+  /** How a submission goes: progress, then done (in a block) or failed. */
+  struct SubmitProgress {
+    std::string status;
+    bool done{false};
+    bool failed{false};
+  };
+  /**
+   * Role apps: send a complete operation to the chain and follow it into a block, reporting on the
+   * UI thread. Empty in the Signer, which has no network (AD005).
+   */
+  std::function<void(const pp::operation::Operation &, std::function<void(const SubmitProgress &)>)> submit;
+
   /** Why the vault was locked, for the vault screen to say ("" when the person locked it). */
   std::string lockedBecause;
 

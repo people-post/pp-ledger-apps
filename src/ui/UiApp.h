@@ -4,6 +4,7 @@
 
 #include "ui/WindowHost.h"
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -87,6 +88,8 @@ public:
   /** The main loop, until the window closes or quit(); the exit code. */
   int run();
   void quit() { running_ = false; }
+  /** False once the app is closing: long background work stops early. */
+  bool running() const { return running_; }
 
 private:
   void drainPosted();
@@ -98,7 +101,7 @@ private:
   WindowHost host_;
   ui::Context *context_{nullptr};
   bool engineStarted_{false};
-  bool running_{true};
+  std::atomic<bool> running_{true};
   Screen *shown_{nullptr};
   std::mutex postedMutex_;
   std::vector<std::function<void()>> posted_;

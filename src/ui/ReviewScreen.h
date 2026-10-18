@@ -44,6 +44,7 @@ private:
   void close(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void addCopies(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void saveMerged(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void submit(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void show();
   void say(const std::string &error, const std::string &notice = "");
 
@@ -64,6 +65,11 @@ private:
   std::vector<SignKey> signable_;
   /** Copies were merged in, not saved yet. */
   bool unsaved_{false};
+  /** The app can send operations (a role app), and this one may be sent. */
+  bool canSubmit_{false};
+  bool submitting_{false};
+  std::string submitStatus_;
+  bool submitted_{false};
   std::string error_;
   std::string notice_;
 };

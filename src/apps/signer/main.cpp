@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   VaultScreen vault(session);
   ReviewScreen review(session);
   KeysScreen keys(session);
-  if (!nav.build(app.context(), "Signer") || !vault.build(app) || !review.build(app) || !keys.build(app)) {
+  if (!nav.build(app.context(), "Signer", {{"review", "Review and sign"}, {"keys", "Keys and people"}}) || !vault.build(app) || !review.build(app) || !keys.build(app)) {
     return 1;
   }
   session.navigate = [&](const std::string &screen) {

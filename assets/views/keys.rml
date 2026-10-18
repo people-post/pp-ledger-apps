@@ -6,9 +6,9 @@
 <body>
   <div class="bar" data-model="nav">
     <span class="app">{{app}}</span>
-    <span id="nav-review" class="tab" data-class-current="current == 'review'" data-event-click="nav_go('review')">Review and sign</span>
-    <span id="nav-keys" class="tab" data-class-current="current == 'keys'" data-event-click="nav_go('keys')">Keys and people</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
     <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
     <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
   </div>
   <div class="page" data-model="keys">
