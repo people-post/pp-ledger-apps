@@ -3,10 +3,14 @@
 #include "chain/AccountPolicy.h"
 #include "chain/ConfigPolicy.h"
 #include "chain/RecordHandler.h"
+#include "client/AccountAttachment.h"
 #include "client/AccountIds.h"
+#include "lib/common/Crypto.h"
 #include "lib/common/BinaryPack.hpp"
 
 #include <sodium.h>
+
+#include <algorithm>
 
 namespace admin::net {
 
@@ -223,6 +227,80 @@ pp::Roe<op::Operation> makeBeaconCertificate(const ChainInfo &chain, const std::
   record.type = pp::Ledger::T_BEACON_CERT;
   record.data = pp::utl::binaryPack(tx);
   return op::wrap(common, record);
+}
+
+bool isIssuedId(uint64_t id) {
+  return id >= pp::AccountIds::ID_FIRST_ISSUED && id < pp::AccountIds::ID_FIRST_USER;
+}
+
+namespace {
+
+pp::UserAccount ownerAccount(const std::vector<std::string> &keys, uint32_t minSignatures, uint64_t amount) {
+  pp::UserAccount account;
+  account.wallet.publicKeys = keys;
+  account.wallet.minSignatures = static_cast<uint8_t>(minSignatures);
+  account.wallet.keyType = pp::Crypto::TK_ML_DSA_65;
+  account.wallet.mBalances[pp::AccountIds::ID_GENESIS] = static_cast<int64_t>(amount);
+  account.meta = pp::AccountAttachment::emptySerialized();
+  return account;
+}
+
+} // namespace
+
+pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::string> &keys, uint32_t minSignatures) {
+  pp::Ledger::TxNewUser probe;
+  probe.fromWalletId = pp::AccountIds::ID_REGISTRAR;
+  probe.meta = ownerAccount(keys, minSignatures, 0).ltsToString();
+  auto metaFee = pp::minimumFeeFor(chain.meta.config, pp::Ledger::TypedTx(probe));
+  if (!metaFee) {
+    return pp::Error(metaFee.error().message);
+  }
+  // After genesis a new account also pays the config's flat fee (NewUserTxHandler).
+  return metaFee.value() + chain.meta.config.newAccountFee;
+}
+
+pp::Roe<op::Operation> makeIssuedAccount(const ChainInfo &chain, const op::SignerSet &registrar, uint64_t id,
+                                         const std::vector<std::string> &keys, uint32_t minSignatures,
+                                         uint64_t amount, uint64_t fee, const Making &making) {
+  if (auto ok = checkValidity(chain, making); !ok) {
+    return ok.error();
+  }
+  if (!isIssuedId(id)) {
+    return pp::Error("Issued account numbers run from " + grouped(pp::AccountIds::ID_FIRST_ISSUED) + " to " +
+                     grouped(pp::AccountIds::ID_FIRST_USER - 1));
+  }
+  if (keys.empty()) {
+    return pp::Error("Add the owner's key");
+  }
+  for (const auto &k : keys) {
+    if (k.size() != pp::utl::kMlDsaPublicKeyBytes) {
+      return pp::Error("An owner key is not an ML-DSA-65 public key");
+    }
+    if (std::count(keys.begin(), keys.end(), k) > 1) {
+      return pp::Error("The same key is listed twice");
+    }
+  }
+  if (minSignatures == 0 || minSignatures > keys.size() || minSignatures > 255) {
+    return pp::Error("Signatures needed: between 1 and the owner's keys");
+  }
+  if (registrar.account != pp::AccountIds::ID_REGISTRAR) {
+    return pp::Error("Issued accounts are created by the registrar");
+  }
+  auto least = newAccountFee(chain, keys, minSignatures);
+  if (!least) {
+    return least.error();
+  }
+  if (fee < least.value()) {
+    return pp::Error("The fee must be at least " + grouped(least.value()));
+  }
+  op::Common common;
+  common.networkId = chain.networkId;
+  common.genesisHash = chain.genesisHash;
+  common.signers = registrar;
+  common.window = op::windowFrom(making.now, making.validForSeconds);
+  common.notes = making.notes;
+  common.createdAt = making.now;
+  return op::newAccount(common, id, ownerAccount(keys, minSignatures, amount), amount, fee);
 }
 
 } // namespace admin::net

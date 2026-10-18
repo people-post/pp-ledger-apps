@@ -146,3 +146,31 @@ TEST(AdminOperationsTest, TheNextBeaconCertificateIsTheNextGeneration) {
   frozen.meta.authority.pendingRecovery.applyEpoch = 99;
   EXPECT_FALSE(makeBeaconCertificate(frozen, beacon, {}, making())); // a recovery pending
 }
+
+TEST(AdminOperationsTest, TheRegistrarCreatesIssuedAccountsAndPaysTheNewAccountFee) {
+  ChainInfo info = chain();
+  info.meta.config.newAccountFee = 50;
+  op::SignerSet registrar;
+  registrar.account = pp::AccountIds::ID_REGISTRAR;
+  registrar.publicKeys = {key(), key()};
+  registrar.minSignatures = 2;
+  const std::vector<std::string> owner = {key()};
+  const uint64_t id = pp::AccountIds::ID_FIRST_ISSUED + 7;
+  auto least = newAccountFee(info, owner, 1);
+  ASSERT_TRUE(least) << least.error().message;
+  EXPECT_GE(least.value(), 51u); // base fee 1 + flat 50
+
+  EXPECT_FALSE(makeIssuedAccount(info, registrar, pp::AccountIds::ID_FIRST_USER, owner, 1, 100, least.value(), making()));
+  EXPECT_FALSE(makeIssuedAccount(info, registrar, 4, owner, 1, 100, least.value(), making()));
+  EXPECT_FALSE(makeIssuedAccount(info, registrar, id, {}, 1, 100, least.value(), making()));
+  EXPECT_FALSE(makeIssuedAccount(info, registrar, id, owner, 2, 100, least.value(), making()));
+  EXPECT_FALSE(makeIssuedAccount(info, registrar, id, owner, 1, 100, least.value() - 1, making()));
+  auto created = makeIssuedAccount(info, registrar, id, owner, 1, 100, least.value(), making());
+  ASSERT_TRUE(created) << created.error().message;
+  EXPECT_EQ(created.value().kind, op::Kind::NewAccount);
+  EXPECT_EQ(created.value().signers, registrar);
+  auto tx = pp::utl::binaryUnpack<pp::Ledger::TxNewUser>(created.value().record.data).value();
+  EXPECT_EQ(tx.fromWalletId, pp::AccountIds::ID_REGISTRAR);
+  EXPECT_EQ(tx.toWalletId, id);
+  EXPECT_EQ(tx.amount, 100u);
+}

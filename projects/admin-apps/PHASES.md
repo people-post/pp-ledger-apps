@@ -25,6 +25,6 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
 - [x] **ad5** Reserve: transfers; `admin_net` (read chain state, submit, follow inclusion)
 - [x] **ad6** Admin: minting to the reserve, config updates (shown as a change against the config in
       force), beacon certificates, admin key rotation
-- [ ] **ad7** Registrar: creating and funding issued accounts
+- [x] **ad7** Registrar: creating and funding issued accounts
 - [ ] **ad8** Genesis: key cards, the genesis plan, recovery operations
 - [ ] **ad9** Packaging (AppImage / `.deb`, notarized `.dmg`) and operator guides; promote to `docs/`

@@ -33,7 +33,8 @@ dialogs, check what is shown, take screenshots); `scripts/ui_smoke.sh` drives th
 under Xvfb (a ctest when `xvfb-run` is present). `scripts/chain_smoke.sh <build> <pp-ledger checkout>`
 drives the role apps against pp-ledger's local smoke network (a built pp-ledger with its apps), each
 operation made from the chain, signed with the smoke keys, submitted, and checked on chain: a
-reserve → registrar transfer; a config update raising the mint cap, a mint, an admin-set rotation.
+reserve → registrar transfer; a config update raising the mint cap, a mint, an admin-set rotation;
+an issued account for an owner's key, funded by the registrar.
 
 | Piece | What |
 |-------|------|
@@ -43,5 +44,6 @@ reserve → registrar transfer; a config update raising the mint cap, a mint, an
 | `src/online` (`admin_online`) | What role apps add: the node setting (kept in the vault), chain work off the UI thread, submitting and following an operation, the transfer form |
 | `src/apps/signer` | `pp-admin-signer`: review, sign and merge operations (genesis plans included), offline; locks itself after 10 minutes without use |
 | `src/apps/admin` | `pp-admin-admin`: minting to the reserve, config updates (the changes shown against the chain), rotating the admin set, beacon certificates |
+| `src/apps/registrar` | `pp-admin-registrar`: issued accounts (2^20 … 2^30) for their owners' keys, funded by the registrar |
 | `src/apps/reserve` | `pp-admin-reserve`: transfers out of the reserve — made from the chain, signed, merged, submitted, followed into a block |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

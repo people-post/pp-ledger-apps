@@ -3,7 +3,8 @@
 # local smoke network and check the chain after —
 #   pp-admin-reserve: a reserve → registrar transfer (the registrar's balance);
 #   pp-admin-admin: a config update raising the mint cap (the config in force), a mint to the
-#   reserve (the reserve's balance), a rotation of the admin set (2 of 4).
+#   reserve (the reserve's balance), a rotation of the admin set (2 of 4);
+#   pp-admin-registrar: an issued account for an owner key, funded by the registrar (the account).
 # Each made from the chain, signed with the smoke keys (3 of 3), submitted, seen in a block.
 # Usage: chain_smoke.sh <build dir> <pp-ledger checkout, built with its apps> [<output dir>]
 set -euo pipefail
@@ -27,12 +28,15 @@ balance() { # account $1's native balance
 run_app() { # <app> <home> <script>
   local app=$1 home=$2 script=$3
   sed -e "s|@OUT@|$out|g" -e "s|@NODE@|$node|g" -e "s|@AMOUNT@|$amount|g" -e "s|@MINT@|$mint|g" -e "s|@CAP@|$cap|g" \
+    -e "s|@ACCOUNT@|$account|g" -e "s|@FUND@|$fund|g" \
     "$here/tests/ui/$script" >"$out/$script"
   PP_LEDGER_ADMIN_HOME="$home" timeout 300 xvfb-run -a -s "-screen 0 1280x900x24" \
     "$build/src/apps/$app/pp-admin-$app" --script "$out/$script" >"$out/$app.log" 2>&1 ||
     { grep -a "script:" "$out/$app.log"; echo "FAIL: the $app app run"; exit 1; }
 }
 mint=$((5000 + RANDOM))
+account=$(((1 << 20) + 1000 + RANDOM))
+fund=$((100 + RANDOM % 900))
 cap=$((700000 + RANDOM))
 
 # 1. Reserve: a transfer to the registrar.
@@ -63,5 +67,16 @@ echo "✓ Admin: minted $mint to the reserve"
 "$client" -b --host "$node" config 2>/dev/null | grep -q "^Admin keys: 2 of 4:" ||
   { echo "FAIL: the admin set is not 2 of 4"; exit 1; }
 echo "✓ Admin: the admin set is 2 of 4"
+
+# 3. Registrar: an issued account for an owner, funded by the registrar.
+rm -rf "$out/registrar-home" "$out/owner".*
+"$client" keygen -o "$out/owner" >/dev/null
+"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/registrar-home" "registrar passphrase" registrar \
+  "$smoke/keys/registrar1.key" "$smoke/keys/registrar2.key" "$smoke/keys/registrar3.key"
+run_app registrar "$out/registrar-home" registrar-chain.script
+test "$(balance "$account")" = "$fund" || { echo "FAIL: account $account does not hold $fund"; exit 1; }
+"$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' | grep -qi "$(tr -d ' \n' <"$out/owner.pub")" ||
+  { echo "FAIL: account $account is not the owner's key"; exit 1; }
+echo "✓ Registrar: account $account created for the owner's key, holding $fund"
 
 echo "Chain smoke passed (screenshots in $out)"

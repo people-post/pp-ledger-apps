@@ -57,4 +57,19 @@ pp::Roe<pp::operation::Operation> makeBeaconCertificate(const ChainInfo &chain, 
                                                         const std::vector<std::string> &dialHints,
                                                         const Making &making);
 
+/** The issued account ids the registrar creates: [2^20, 2^30). */
+bool isIssuedId(uint64_t id);
+
+/**
+ * A new issued account `id` (T_NEW_USER from the registrar, signed by `registrar`'s keys): its
+ * owner's `keys`, `minSignatures` of them to sign, `amount` to start with. The fee is at least the
+ * metadata fee plus the config's newAccountFee.
+ */
+pp::Roe<pp::operation::Operation> makeIssuedAccount(const ChainInfo &chain, const pp::operation::SignerSet &registrar,
+                                                    uint64_t id, const std::vector<std::string> &keys,
+                                                    uint32_t minSignatures, uint64_t amount, uint64_t fee,
+                                                    const Making &making);
+/** The least fee of a new account (of `keys`) under the config in force. */
+pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::string> &keys, uint32_t minSignatures);
+
 } // namespace admin::net
