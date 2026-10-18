@@ -1,0 +1,9 @@
+add_subdirectory(signer)
+if(PP_ADMIN_DEV_HOOKS)
+  add_subdirectory(devfixture)
+  find_program(XVFB_RUN xvfb-run)
+  if(XVFB_RUN AND PP_ADMIN_BUILD_TESTS)
+    add_test(NAME signer_ui_smoke
+             COMMAND ${PROJECT_SOURCE_DIR}/scripts/ui_smoke.sh ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/ui-smoke)
+  endif()
+endif()

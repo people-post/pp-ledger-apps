@@ -1,0 +1,12 @@
+# Unlock the fixture's vault, review its transfer, sign it into a copy.
+wait 5
+click #unlock-passphrase
+type fixture passphrase
+click #unlock
+idle
+wait 5
+answer @OUT@/transfer.signed.json
+click #sign
+wait 5
+shot @OUT@/sign.png
+quit

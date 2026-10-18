@@ -1,0 +1,66 @@
+<rml>
+<head>
+  <title>Keys</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span id="nav-review" class="tab" data-class-current="current == 'review'" data-event-click="nav_go('review')">Review and sign</span>
+    <span id="nav-keys" class="tab" data-class-current="current == 'keys'" data-event-click="nav_go('keys')">Keys and people</span>
+    <span class="spacer"></span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="keys">
+    <p class="error" data-if="error != ''">{{error}}</p>
+    <p class="notice" data-if="notice != ''">{{notice}}</p>
+    <div class="card">
+      <h2>Your keys</h2>
+      <p class="muted" data-if="keys.size == 0">No keys yet. Make one below, or import one made with pp-client.</p>
+      <div class="item" data-for="key : keys">
+        <span class="grow"><strong>{{key.label}}</strong> · {{key.role}}</span>
+        <span class="mono">{{key.fingerprint}}</span>
+        <button class="small" data-event-click="keys_export_card(it_index)">Save key card…</button>
+      </div>
+      <h3>Add a key</h3>
+      <label class="muted">Its name (whose key, what for) and its role</label>
+      <div class="row">
+        <input id="new-label" class="field grow" type="text" data-value="new_label"/>
+        <select class="field" style="width: 160dp;" data-value="new_role">
+          <option value="admin">Admin</option>
+          <option value="recovery">Recovery</option>
+          <option value="reserve">Reserve</option>
+          <option value="registrar">Registrar</option>
+          <option value="fee">Fee</option>
+          <option value="recycle">Recycle</option>
+        </select>
+      </div>
+      <div class="row">
+        <button id="generate" class="primary" data-event-click="keys_generate()">Make a new key</button>
+        <button data-event-click="keys_import()">Import a key file…</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>People</h2>
+      <p class="muted">Names for the keys you deal with, from their key cards. Check each fingerprint with its owner.</p>
+      <div class="item" data-for="card : cards">
+        <span class="grow"><strong>{{card.name}}</strong> · {{card.role}}</span>
+        <span class="mono">{{card.fingerprint}}</span>
+        <button class="small" data-event-click="keys_remove_card(it_index)">Remove</button>
+      </div>
+      <button data-event-click="keys_add_card()">Add a key card…</button>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="muted">A lost key cannot be made again. Write the vault to a USB stick under a passphrase of its own,
+        and keep the stick and the passphrase apart.</p>
+      <label>Backup passphrase</label>
+      <input class="field" type="password" data-value="backup_passphrase" data-attrif-disabled="busy"/>
+      <div class="row">
+        <button class="primary" data-event-click="keys_backup()" data-attrif-disabled="busy">Write a backup…</button>
+        <button data-event-click="keys_restore()" data-attrif-disabled="busy">Restore from a backup…</button>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>

@@ -12,6 +12,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 option(PP_ADMIN_BUILD_TESTS "Build the unit tests" ON)
+# Development only (never in a release): a fixture tool, and apps unlocking with
+# $PP_ADMIN_DEV_PASSPHRASE / opening a screen with --show, for screenshots.
+option(PP_ADMIN_DEV_HOOKS "Development hooks (fixture tool, unattended unlock)" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(AdminWarnings)
@@ -19,6 +22,7 @@ include(AdminWarnings)
 include(PpCppCommon)
 include(PpCppCrypto)
 include(PpLedger)
+include(PpCppUi)
 if(PP_ADMIN_BUILD_TESTS)
   include(AdminTesting)
   enable_testing()

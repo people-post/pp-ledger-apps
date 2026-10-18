@@ -1,0 +1,69 @@
+<rml>
+<head>
+  <title>Review</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span id="nav-review" class="tab" data-class-current="current == 'review'" data-event-click="nav_go('review')">Review and sign</span>
+    <span id="nav-keys" class="tab" data-class-current="current == 'keys'" data-event-click="nav_go('keys')">Keys and people</span>
+    <span class="spacer"></span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="review">
+    <div data-if="!loaded">
+      <div class="card">
+        <h1>Review an operation</h1>
+        <p class="muted">Open the operation file you were sent. You will see what it does, who has
+          signed it, and whether one of your keys is asked to sign.</p>
+        <button id="open" class="primary" data-event-click="review_open()">Open an operation file…</button>
+      </div>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+    <div data-if="loaded">
+      <div class="card">
+        <div class="row">
+          <div class="grow">
+            <p class="headline">{{title}}</p>
+            <p class="muted">{{file}} · {{deadline}}</p>
+          </div>
+          <button data-event-click="review_open()">Open another…</button>
+          <button data-event-click="review_close()">Close</button>
+        </div>
+        <p class="warning" data-if="expired">This operation has expired and cannot be signed. Ask for a new one.</p>
+        <div class="facts">
+          <div class="item" data-for="line : lines">
+            <span class="label">{{line.label}}</span>
+            <span class="value">{{line.value}}</span>
+          </div>
+        </div>
+        <div data-if="notes != ''">
+          <h3>Notes from whoever made it</h3>
+          <p class="muted">These are their words: what the operation does is shown above.</p>
+          <p>{{notes}}</p>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Signatures: {{progress}}</h2>
+        <p class="notice" data-if="complete">Enough signatures: it can be submitted.</p>
+        <div class="item" data-for="signer : signers">
+          <span class="status-done" data-if="signer.done">Signed</span>
+          <span class="status-todo" data-if="!signer.done">Not yet</span>
+          <span class="grow">{{signer.name}}</span>
+        </div>
+        <div data-if="signable.size > 0 &amp;&amp; !expired">
+          <h3>Sign with your key</h3>
+          <div class="item" data-for="key : signable">
+            <span class="grow">{{key.label}}</span>
+            <button id="sign" class="primary" data-event-click="review_sign(it_index)">Sign and save a copy…</button>
+          </div>
+        </div>
+        <p class="muted" data-if="signable.size == 0">None of your keys is asked to sign this, or they have signed it.</p>
+      </div>
+      <p class="error" data-if="error != ''">{{error}}</p>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+    </div>
+  </div>
+</body>
+</rml>
