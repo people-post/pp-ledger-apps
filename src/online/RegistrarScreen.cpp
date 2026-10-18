@@ -1,6 +1,7 @@
 #include "online/RegistrarScreen.h"
 
 #include "net/AdminOperations.h"
+#include "chain/Domains.h"
 #include "core/AtomicFile.h"
 #include "core/Amounts.h"
 #include "core/KeyCard.h"
@@ -25,6 +26,36 @@ const std::vector<ui_host::FileFilter> kPubFiles = {{"Public keys (pp-client key
 
 int indexArg(const ui::VariantList &args) { return args.empty() ? -1 : args[0].Get<int>(-1); }
 
+/** `typed` as a domain (stored as capitals), or none when empty; why not, if it cannot be one. */
+pp::Roe<std::string> domainOf(const std::string &typed) {
+  std::string text;
+  for (char c : typed) {
+    if (c != ' ') {
+      text.push_back(c);
+    }
+  }
+  if (text.empty()) {
+    return std::string();
+  }
+  auto name = pp::chain_domain::normalize(text);
+  if (!name || name->size() < 4) {
+    return pp::Error("An issued account's domain is 4 to 7 letters A-Z");
+  }
+  return *name;
+}
+
+/** `domain` is nobody's, as the node says (the chain refuses one that is). */
+pp::Roe<void> checkFree(net::ChainLink &link, const std::string &domain) {
+  auto proof = link.domainProof(domain);
+  if (!proof) {
+    return proof.error();
+  }
+  if (proof.value().present) {
+    return pp::Error("Domain " + domain + " is account " + formatAmount(proof.value().accountId) + "'s");
+  }
+  return {};
+}
+
 } // namespace
 
 void RegistrarScreen::bind(ui::DataModelConstructor &model) {
@@ -41,11 +72,15 @@ void RegistrarScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("min_signatures", &minSignatures_);
   model.Bind("amount", &amount_);
   model.Bind("fee", &fee_);
+  model.Bind("domain", &domain_);
+  model.Bind("assign_id", &assignId_);
+  model.Bind("assign_domain", &assignDomain_);
   model.BindEventCallback("registrar_pick_id", &RegistrarScreen::pickId, this);
   model.BindEventCallback("registrar_add_card", &RegistrarScreen::addCard, this);
   model.BindEventCallback("registrar_add_pub", &RegistrarScreen::addPub, this);
   model.BindEventCallback("registrar_remove_key", &RegistrarScreen::removeKey, this);
   model.BindEventCallback("registrar_make", &RegistrarScreen::makeAccount, this);
+  model.BindEventCallback("registrar_assign", &RegistrarScreen::makeAssignment, this);
 }
 
 void RegistrarScreen::clearForm() {
@@ -55,6 +90,9 @@ void RegistrarScreen::clearForm() {
   minSignatures_ = "1";
   amount_.clear();
   fee_.clear();
+  domain_.clear();
+  assignId_.clear();
+  assignDomain_.clear();
 }
 
 void RegistrarScreen::willShow() {
@@ -168,17 +206,19 @@ void RegistrarScreen::updateFee() {
   }
   auto fee = std::make_shared<uint64_t>(0);
   const auto keys = keyBytes_;
+  const auto domain = domainOf(domain_);
+  const std::string named = domain ? domain.value() : "";
   const auto minSignatures = parseAmount(minSignatures_);
   const uint32_t min = minSignatures && minSignatures.value() > 0 && minSignatures.value() <= keys.size()
                            ? static_cast<uint32_t>(minSignatures.value())
                            : 1;
   online_.withChain(
-      [fee, keys, min](net::ChainLink &link) -> std::string {
+      [fee, keys, min, named](net::ChainLink &link) -> std::string {
         auto chain = link.info();
         if (!chain) {
           return chain.error().message;
         }
-        auto least = net::newAccountFee(chain.value(), keys, min);
+        auto least = net::newAccountFee(chain.value(), keys, min, named);
         if (!least) {
           return least.error().message;
         }
@@ -219,6 +259,12 @@ void RegistrarScreen::makeAccount(ui::DataModelHandle, ui::Event &, const ui::Va
     say("Type the fee: " + fee.error().message + ".");
     return;
   }
+  auto domain = domainOf(domain_);
+  if (!domain) {
+    say(domain.error().message + " (its token's symbol), or none.");
+    return;
+  }
+  const std::string named = domain.value();
   const uint64_t idValue = id.value();
   const auto keys = keyBytes_;
   const auto min = static_cast<uint32_t>(minSignatures.value());
@@ -230,14 +276,52 @@ void RegistrarScreen::makeAccount(ui::DataModelHandle, ui::Event &, const ui::Va
         if (link.account(idValue)) {
           return pp::Error("Account " + formatAmount(idValue) + " exists already");
         }
+        if (!named.empty()) {
+          if (auto free = checkFree(link, named); !free) {
+            return free.error();
+          }
+        }
         auto registrar = link.signersOf(pp::AccountIds::ID_REGISTRAR);
         if (!registrar) {
           return registrar.error();
         }
         return net::makeIssuedAccount(chain, registrar.value(), idValue, keys, min, amountValue, feeValue,
-                                      {nowSeconds(), validFor, notes});
+                                      {nowSeconds(), validFor, notes}, named);
       },
       "new-account-" + std::to_string(idValue) + ".json");
+}
+
+void RegistrarScreen::makeAssignment(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  auto id = parseAmount(assignId_);
+  if (!id || !net::isIssuedId(id.value())) {
+    say("Type the issued account's number.");
+    return;
+  }
+  auto domain = domainOf(assignDomain_);
+  if (!domain || domain.value().empty()) {
+    say("Type its domain: 4 to 7 letters A-Z (its token's symbol, never changed).");
+    return;
+  }
+  const uint64_t idValue = id.value();
+  const std::string named = domain.value();
+  make(
+      [=](net::ChainLink &link, const net::ChainInfo &chain, int64_t validFor,
+          const std::string &notes) -> pp::Roe<op::Operation> {
+        auto account = link.account(idValue);
+        if (!account) {
+          return pp::Error("Account " + formatAmount(idValue) + ": " + account.error().message);
+        }
+        if (auto free = checkFree(link, named); !free) {
+          return free.error();
+        }
+        auto registrar = link.signersOf(pp::AccountIds::ID_REGISTRAR);
+        if (!registrar) {
+          return registrar.error();
+        }
+        return net::makeDomainAssignment(chain, registrar.value(), idValue, account.value(), named,
+                                         {nowSeconds(), validFor, notes});
+      },
+      "domain-" + named + ".json");
 }
 
 } // namespace apps::online

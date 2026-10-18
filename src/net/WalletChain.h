@@ -35,6 +35,14 @@ struct VerifiedAccount {
   VerifiedTip tip;
 };
 
+/** A domain proven under a verified tip (pp-ledger projects/domains): its account, or nobody's. */
+struct VerifiedDomain {
+  std::string domain;
+  std::optional<uint64_t> accountId;
+  uint64_t provenAtBlock{0};
+  VerifiedTip tip;
+};
+
 /** Who signs for a proven account: its keys and threshold as the proof shows them. */
 pp::operation::SignerSet signersOf(const VerifiedAccount &account);
 
@@ -64,6 +72,13 @@ public:
   pp::Roe<VerifiedTip> tip(ChainLink &link);
   /** Account `id` (or its absence) proven under a verified tip. */
   pp::Roe<VerifiedAccount> account(ChainLink &link, uint64_t id);
+  /** `domain` (any case) proven under a verified tip: the account it is bound to, or nobody. */
+  pp::Roe<VerifiedDomain> domain(ChainLink &link, const std::string &domain);
+  /**
+   * An account typed as its number or its domain (`1048626`, `acme`): the number, proven when a
+   * domain names it.
+   */
+  pp::Roe<uint64_t> accountOf(ChainLink &link, const std::string &typed);
 
   const wallet::NetworkCard &card() const { return card_; }
 

@@ -11,6 +11,8 @@
 #include "lib/common/Utilities.h"
 
 #include <algorithm>
+#include <set>
+#include <map>
 #include <chrono>
 #include <sstream>
 #include <cctype>
@@ -245,6 +247,7 @@ void AccountsScreen::bind(ui::DataModelConstructor &model) {
     row.RegisterMember("renewal", &Row::renewal);
     row.RegisterMember("recovery", &Row::recovery);
     row.RegisterMember("alert", &Row::alert);
+    row.RegisterMember("domain", &Row::domain);
     row.RegisterMember("state", &Row::state);
     row.RegisterMember("proven", &Row::proven);
   }
@@ -273,7 +276,7 @@ void AccountsScreen::say(const std::string &error, const std::string &notice) {
 void AccountsScreen::willShow() {
   rows_.clear();
   for (const auto &a : desk_.book().accounts) {
-    rows_.push_back({a.label, formatAmount(a.id), "…", "", "", "", "reading…", "", "", false});
+    rows_.push_back({a.label, formatAmount(a.id), "…", "", "", "", "reading…", "", "", "", false});
   }
   if (!desk_.verifier()) {
     tip_ = "no network pinned";
@@ -299,12 +302,15 @@ void AccountsScreen::read() {
   auto results = std::make_shared<std::vector<Read>>();
   auto tip = std::make_shared<std::optional<net::VerifiedTip>>();
   auto tipError = std::make_shared<std::string>();
+  // Token id → its symbol: the domain of the account that issues it (the genesis account's for the
+  // native token), proven.
+  auto symbols = std::make_shared<std::map<uint64_t, std::string>>();
   std::vector<uint64_t> ids;
   for (const auto &a : desk_.book().accounts) {
     ids.push_back(a.id);
   }
   online_.withChain(
-      [verifier, ids, results, tip, tipError](net::ChainLink &link) -> std::string {
+      [verifier, ids, results, tip, tipError, symbols](net::ChainLink &link) -> std::string {
         auto verifiedTip = verifier->tip(link);
         if (verifiedTip) {
           *tip = verifiedTip.value();
@@ -332,15 +338,30 @@ void AccountsScreen::read() {
           }
           results->push_back(std::move(r));
         }
+        std::set<uint64_t> tokens = {pp::AccountIds::ID_GENESIS};
+        for (const auto &r : *results) {
+          if (r.account && r.account->exists) {
+            for (const auto &[token, amount] : r.account->wallet.mBalances) {
+              if (amount != 0) {
+                tokens.insert(token);
+              }
+            }
+          }
+        }
+        for (uint64_t token : tokens) {
+          if (auto issuer = verifier->account(link, token); issuer && issuer.value().exists) {
+            (*symbols)[token] = issuer.value().wallet.domain;
+          }
+        }
         return "";
       },
-      [this, results, tip, tipError](const std::string &error) {
+      [this, results, tip, tipError, symbols](const std::string &error) {
         busy_ = false;
         tip_ = *tip ? tipText(**tip) : "not verified: " + (tipError->empty() ? error : *tipError);
         const auto &accounts = desk_.book().accounts;
         rows_.clear();
         for (size_t i = 0; i < accounts.size(); ++i) {
-          Row row{accounts[i].label, formatAmount(accounts[i].id), "", "", "", "", "", "", "", false};
+          Row row{accounts[i].label, formatAmount(accounts[i].id), "", "", "", "", "", "", "", "", false};
           const Read *r = i < results->size() ? &(*results)[i] : nullptr;
           if (!r || !r->account) {
             row.balance = "unknown";
@@ -352,12 +373,21 @@ void AccountsScreen::read() {
             row.proven = true;
           } else {
             const auto &w = r->account->wallet;
-            row.balance = formatAmount(native(w));
+            auto symbol = [&](uint64_t token) {
+              const auto it = symbols->find(token);
+              return it == symbols->end() ? std::string() : it->second;
+            };
+            row.balance = formatAmount(native(w)) + (symbol(pp::AccountIds::ID_GENESIS).empty()
+                                                         ? ""
+                                                         : " " + symbol(pp::AccountIds::ID_GENESIS));
+            row.domain = w.domain;
             for (const auto &[token, amount] : w.mBalances) {
               if (token != pp::AccountIds::ID_GENESIS && amount != 0) {
+                const std::string named = symbol(token);
                 row.tokens += (row.tokens.empty() ? "" : ", ") + std::string(amount < 0 ? "-" : "") +
-                              formatAmount(static_cast<uint64_t>(amount < 0 ? -amount : amount)) + " of token " +
-                              formatAmount(token);
+                              formatAmount(static_cast<uint64_t>(amount < 0 ? -amount : amount)) +
+                              (named.empty() ? " of token " + formatAmount(token)
+                                             : " " + named + " (token " + formatAmount(token) + ")");
               }
             }
             row.keys = std::to_string(w.minSignatures) + " of " + std::to_string(w.publicKeys.size()) + " keys";
@@ -375,24 +405,55 @@ void AccountsScreen::read() {
 }
 
 void AccountsScreen::add(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
-  auto id = parseAmount(newAccount_);
-  if (!id) {
-    say("Type the account's number.");
+  const std::string typed = trimmed(newAccount_);
+  if (typed.empty()) {
+    say("Type the account's number, or its domain (an issuer's symbol).");
     return;
   }
-  auto &accounts = desk_.book().accounts;
-  if (std::any_of(accounts.begin(), accounts.end(), [&](const wallet::FollowedAccount &a) { return a.id == id.value(); })) {
-    say("That account is listed already.");
+  auto follow = [this](uint64_t id) {
+    auto &accounts = desk_.book().accounts;
+    if (std::any_of(accounts.begin(), accounts.end(), [&](const wallet::FollowedAccount &a) { return a.id == id; })) {
+      say("That account is listed already.");
+      return;
+    }
+    accounts.push_back({id, trimmed(newLabel_)});
+    if (auto saved = desk_.save(); !saved) {
+      say(saved.error().message);
+      return;
+    }
+    newAccount_.clear();
+    newLabel_.clear();
+    willShow();
+  };
+  if (auto id = parseAmount(typed)) {
+    follow(id.value());
     return;
   }
-  accounts.push_back({id.value(), trimmed(newLabel_)});
-  if (auto saved = desk_.save(); !saved) {
-    say(saved.error().message);
+  // A domain: the account it names, proven.
+  auto verifier = desk_.verifier();
+  if (!verifier || busy_) {
     return;
   }
-  newAccount_.clear();
-  newLabel_.clear();
-  willShow();
+  busy_ = true;
+  say("", "Proving which account " + typed + " is…");
+  auto found = std::make_shared<uint64_t>(0);
+  online_.withChain(
+      [verifier, typed, found](net::ChainLink &link) -> std::string {
+        auto id = verifier->accountOf(link, typed);
+        if (!id) {
+          return id.error().message;
+        }
+        *found = id.value();
+        return "";
+      },
+      [this, found, follow](const std::string &error) {
+        busy_ = false;
+        if (!error.empty()) {
+          say(error + ".");
+          return;
+        }
+        follow(*found);
+      });
 }
 
 void AccountsScreen::remove(ui::DataModelHandle, ui::Event &, const ui::VariantList &args) {
@@ -583,30 +644,37 @@ void WalletSendScreen::prepare(ui::DataModelHandle, ui::Event &, const ui::Varia
   if (!from || !verifier || busy_) {
     return;
   }
-  auto to = parseAmount(to_);
+  const std::string toTyped = trimmed(to_);
+  const std::string tokenTyped = trimmed(token_);
   auto amount = parseAmount(amount_);
-  uint64_t token = pp::AccountIds::ID_GENESIS;
-  if (!trimmed(token_).empty()) {
-    auto typed = parseAmount(token_);
-    if (!typed) {
-      say("Type the token's number, or leave it empty for the native token.");
-      return;
-    }
-    token = typed.value();
-  }
-  if (!to || !amount || amount.value() == 0) {
-    say("Type the account it goes to and an amount above 0.");
+  if (toTyped.empty() || !amount || amount.value() == 0) {
+    say("Type the account it goes to (its number or its domain) and an amount above 0.");
     return;
   }
   busy_ = true;
   say("", "Proving both accounts, and making the transfer…");
   auto made = std::make_shared<pp::operation::Operation>();
   auto balance = std::make_shared<std::string>();
+  // What a domain typed resolved to, proven: shown with the transfer.
+  auto resolved = std::make_shared<std::vector<Line>>();
   const uint64_t fromId = *from;
-  const uint64_t toId = to.value();
   const uint64_t value = amount.value();
   online_.withChain(
-      [verifier, made, balance, fromId, toId, value, token](net::ChainLink &link) -> std::string {
+      [verifier, made, balance, resolved, fromId, toTyped, tokenTyped, value](net::ChainLink &link) -> std::string {
+        auto toId = verifier->accountOf(link, toTyped);
+        if (!toId) {
+          return "The account it goes to: " + toId.error().message;
+        }
+        // A token is its issuer's account: its number, or its symbol (the native token's is the genesis
+        // account's domain).
+        uint64_t token = pp::AccountIds::ID_GENESIS;
+        if (!tokenTyped.empty()) {
+          auto tokenId = verifier->accountOf(link, tokenTyped);
+          if (!tokenId) {
+            return "The token: " + tokenId.error().message;
+          }
+          token = tokenId.value();
+        }
         auto source = verifier->account(link, fromId);
         if (!source) {
           return "Your account could not be proven: " + source.error().message;
@@ -615,12 +683,19 @@ void WalletSendScreen::prepare(ui::DataModelHandle, ui::Event &, const ui::Varia
           return "Your account does not exist (proven)";
         }
         *balance = formatAmount(native(source.value().wallet));
-        auto target = verifier->account(link, toId);
+        auto target = verifier->account(link, toId.value());
         if (!target) {
           return "The account it goes to could not be proven: " + target.error().message;
         }
         if (!target.value().exists) {
-          return "Account " + formatAmount(toId) + " does not exist (proven): check the number";
+          return "Account " + formatAmount(toId.value()) + " does not exist (proven): check the number";
+        }
+        if (!target.value().wallet.domain.empty()) {
+          resolved->push_back({"It goes to (proven)", "account " + formatAmount(toId.value()) + ", " +
+                                                          target.value().wallet.domain});
+        }
+        if (auto issuer = verifier->account(link, token); issuer && !issuer.value().wallet.domain.empty()) {
+          resolved->push_back({"The token (proven)", issuer.value().wallet.domain + " (token " + formatAmount(token) + ")"});
         }
         auto state = net::provenState(link, source.value());
         auto chain = link.info();
@@ -636,15 +711,15 @@ void WalletSendScreen::prepare(ui::DataModelHandle, ui::Event &, const ui::Varia
         if (!fee) {
           return fee.error().message;
         }
-        auto op = net::makeSend(chain.value(), net::signersOf(source.value()), state.value(), toId, token, value,
-                                fee.value(), {now(), 3600, ""});
+        auto op = net::makeSend(chain.value(), net::signersOf(source.value()), state.value(), toId.value(), token,
+                                value, fee.value(), {now(), 3600, ""});
         if (!op) {
           return op.error().message;
         }
         *made = std::move(op.value());
         return "";
       },
-      [this, made, balance](const std::string &error) {
+      [this, made, balance, resolved](const std::string &error) {
         busy_ = false;
         balance_ = *balance;
         if (!error.empty()) {
@@ -652,6 +727,9 @@ void WalletSendScreen::prepare(ui::DataModelHandle, ui::Event &, const ui::Varia
           return;
         }
         present(*made);
+        // The domains typed, proven: right after the transfer's "To".
+        auto to = std::find_if(lines_.begin(), lines_.end(), [](const Line &l) { return l.label == "To"; });
+        lines_.insert(to == lines_.end() ? lines_.end() : to + 1, resolved->begin(), resolved->end());
         say("", "Check it. It is valid for an hour.");
       });
 }
@@ -764,18 +842,25 @@ void EvacuateScreen::moveAll(ui::DataModelHandle, ui::Event &, const ui::Variant
   if (!from || !verifier || busy_) {
     return;
   }
-  auto to = parseAmount(moveTo_);
-  if (!to || to.value() == *from) {
-    say("Type the number of another account of yours, whose keys never were where the leak was.");
+  const std::string toTyped = trimmed(moveTo_);
+  if (toTyped.empty()) {
+    say("Type the number (or domain) of another account of yours, whose keys never were where the leak was.");
     return;
   }
   busy_ = true;
   say("", "Proving both accounts, and making the transfers…");
   auto made = std::make_shared<pp::operation::Operation>();
   const uint64_t id = *from;
-  const uint64_t toId = to.value();
   online_.withChain(
-      [verifier, made, id, toId](net::ChainLink &link) -> std::string {
+      [verifier, made, id, toTyped](net::ChainLink &link) -> std::string {
+        auto resolved = verifier->accountOf(link, toTyped);
+        if (!resolved) {
+          return "The account it goes to: " + resolved.error().message;
+        }
+        const uint64_t toId = resolved.value();
+        if (toId == id) {
+          return "Move it to another account of yours";
+        }
         auto account = verifier->account(link, id);
         if (!account || !account.value().exists) {
           return account ? "The account does not exist (proven)" : account.error().message;

@@ -13,6 +13,8 @@ registrar for the account. The registrar creates it for your keys and tells you 
 
 Type the account's number and *Check and save* (once: it is kept in your vault). The overview shows:
 
+- **Its symbol:** the account's domain, which the registrar gives (4 to 7 letters, never changed):
+  what holders see next to their amounts and can send it by.
 - **Issued and out:** how much of the token holders have, all together.
 - **Native balance** and **what a renewal costs.** The chain renews every account now and then and
   charges the fee from its native balance. **An account that cannot pay is ended, and its token's

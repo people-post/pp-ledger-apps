@@ -3,9 +3,14 @@
 #include "net/TokenOperations.h"
 #include "chain/AccountBuffer.h"
 #include "chain/ClientVerify.h"
+#include "chain/Domains.h"
 #include "chain/RecordHandler.h"
 #include "client/AccountIds.h"
 #include "lib/common/BinaryPack.hpp"
+
+#include <algorithm>
+#include <cctype>
+#include <string>
 
 namespace apps::net {
 
@@ -126,6 +131,61 @@ pp::Roe<VerifiedAccount> Verifier::account(ChainLink &link, uint64_t id) {
     return out;
   }
   return pp::Error(why);
+}
+
+pp::Roe<VerifiedDomain> Verifier::domain(ChainLink &link, const std::string &typed) {
+  auto name = pp::chain_domain::normalize(typed);
+  if (!name) {
+    return pp::Error("Not a domain: 1 to 7 letters A-Z");
+  }
+  std::string why;
+  for (int attempt = 0; attempt < 3; ++attempt) {
+    auto proof = link.domainProof(*name);
+    if (!proof) {
+      why = proof.error().message;
+      continue;
+    }
+    auto checked = tipAndBlocks(link, proof.value().blockId);
+    if (!checked) {
+      why = checked.error().message;
+      continue;
+    }
+    auto proven = pp::verify::checkDomainProof(checked.value().second.back().block, proof.value());
+    if (!proven) {
+      return pp::Error("The node's domain proof does not hold: " + proven.error().message);
+    }
+    VerifiedDomain out;
+    out.domain = *name;
+    out.accountId = proven.value().accountId;
+    out.provenAtBlock = proven.value().blockId;
+    out.tip = checked.value().first;
+    return out;
+  }
+  return pp::Error(why);
+}
+
+pp::Roe<uint64_t> Verifier::accountOf(ChainLink &link, const std::string &typed) {
+  std::string text;
+  for (char c : typed) {
+    if (c != ' ' && c != ',' && c != '\t') {
+      text.push_back(c);
+    }
+  }
+  if (!text.empty() && std::all_of(text.begin(), text.end(), [](unsigned char c) { return std::isdigit(c); })) {
+    try {
+      return static_cast<uint64_t>(std::stoull(text));
+    } catch (const std::exception &) {
+      return pp::Error("Not an account number: " + typed);
+    }
+  }
+  auto found = domain(link, text);
+  if (!found) {
+    return found.error();
+  }
+  if (!found.value().accountId) {
+    return pp::Error("No account has the domain " + found.value().domain + " (proven)");
+  }
+  return *found.value().accountId;
 }
 
 pp::operation::SignerSet signersOf(const VerifiedAccount &account) {

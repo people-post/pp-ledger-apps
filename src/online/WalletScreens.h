@@ -93,6 +93,8 @@ public:
     std::string recovery;
     /** A recovery announced: what and when, for the owner to cancel if not theirs. */
     std::string alert;
+    /** Its domain (its token's symbol), proven; "" when none. */
+    std::string domain;
     bool proven{false};
   };
 

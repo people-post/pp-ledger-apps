@@ -152,6 +152,17 @@ pp::Roe<pp::Client::AccountProof> ChainLink::accountProof(uint64_t id) {
   return proof.value();
 }
 
+pp::Roe<pp::Client::DomainProof> ChainLink::domainProof(const std::string &domain) {
+  if (!state_) {
+    return pp::Error("Not linked to a node");
+  }
+  auto proof = state_->client.fetchDomainProof(domain);
+  if (!proof) {
+    return pp::Error("Cannot read the proof of domain " + domain + ": " + proof.error().message);
+  }
+  return proof.value();
+}
+
 pp::Roe<pp::Client::ProducerStatsResponse> ChainLink::producerStats(uint64_t from, uint64_t to) {
   if (!state_) {
     return pp::Error("Not linked to a node");

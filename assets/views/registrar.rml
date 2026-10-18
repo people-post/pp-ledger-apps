@@ -30,6 +30,8 @@
         <button id="registrar-card" data-event-click="registrar_add_card()" data-attrif-disabled="busy">Add a key card…</button>
         <button id="registrar-pub" data-event-click="registrar_add_pub()" data-attrif-disabled="busy">Add a .pub file…</button>
       </div>
+      <label>Its domain (optional): 4 to 7 letters, its token's symbol — never changed</label>
+      <input id="registrar-domain" class="field" type="text" data-value="domain" data-attrif-disabled="busy"/>
       <div class="row">
         <div class="grow">
           <label>Signatures needed</label>
@@ -57,6 +59,22 @@
       <button id="registrar-make" class="primary" data-event-click="registrar_make()" data-attrif-disabled="busy">Make the operation…</button>
       <p class="notice" data-if="notice != ''">{{notice}}</p>
       <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+    <div class="card">
+      <h2>Give an account its domain</h2>
+      <p class="muted">An issued account created without one: its domain — 4 to 7 letters, its token's symbol — is
+        given once and never changed. Hours and notes as above.</p>
+      <div class="row">
+        <div class="grow">
+          <label>The issued account (its number)</label>
+          <input id="assign-id" class="field" type="text" data-value="assign_id" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Its domain</label>
+          <input id="assign-domain" class="field" type="text" data-value="assign_domain" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="registrar-assign" class="primary" data-event-click="registrar_assign()" data-attrif-disabled="busy">Make the operation…</button>
     </div>
   </div>
 </body>

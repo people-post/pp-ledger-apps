@@ -60,6 +60,17 @@
       </div>
     </div>
     <div class="card">
+      <h2>The system accounts' names</h2>
+      <p class="muted">Their domains: 1 to 3 letters A-Z each (4 to 7 are issuers'), never changed. The genesis
+        account's is the native token's symbol. Empty: none.</p>
+      <div class="facts">
+        <div class="item" data-for="named : names">
+          <span class="label">{{named.title}}</span>
+          <input class="field" style="width: 220dp; margin: 0;" type="text" data-attr-id="'plan-name-' + named.name" data-value="named.value"/>
+        </div>
+      </div>
+    </div>
+    <div class="card">
       <h2>Settings</h2>
       <p class="muted">pp-ledger's defaults; slot timing cannot change after the start. The recovery delay: epochs between a recovery's announcement and the new admin set.</p>
       <div class="facts">

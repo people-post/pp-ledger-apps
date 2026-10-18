@@ -20,7 +20,7 @@ Check the download against the release's `SHA256SUMS` ([how to rebuild it](../RE
    first block. A node far behind the others is flagged.
 4. **Bring your keys** (Keys): *Import a key backup…* — the file your other wallet exports (a
    `.ppkey`, under its passphrase) — or a key file from `pp-client keygen`. Then **back the vault up**.
-5. **Add your accounts** (Accounts) by number.
+5. **Add your accounts** (Accounts) by number — or, a token issuer's, by its domain (`acme`).
 
 ## What "proven" means
 
@@ -34,7 +34,9 @@ the chain does not hold. An account that does not exist is *proven absent*. What
 
 - **Receive**: give the payer your account's number.
 - **Send** (Send… on an account): the account it goes to and the amount (and the token, if not the
-  native one). The wallet proves both accounts, then shows what the transfer does. If this wallet holds
+  native one). An issuer and its token can be typed by their domain — its symbol (`ACME`); the wallet
+  proves which account the domain is and shows it before you sign. Amounts show their token's symbol
+  (`1,000 ACME`), proven too. The wallet proves both accounts, then shows what the transfer does. If this wallet holds
   enough of the account's keys: *Sign and send*; it follows the transfer into a block and proves the
   balance again. If others must sign too: *Save as an operation file…* and hand it to them
   ([Signing](signing.md)).
