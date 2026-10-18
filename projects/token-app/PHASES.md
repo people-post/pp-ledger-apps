@@ -8,4 +8,4 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
 - [x] **tk2** `admin_net` token operations and overview; the app: overview, issue, send — against the
       chain smoke
 - [x] **tk3** Key replacement
-- [ ] **tk4** (all but archiving pp-token-admin) Its package (Token + Signer), its guide; pp-token-admin archived
+- [x] **tk4** Its package (Token + Signer), its guide; pp-token-admin archived
