@@ -1,5 +1,7 @@
 #include "core/FeeRounds.h"
 
+#include "core/MulDiv.h"
+
 #include "lib/common/Utilities.h"
 #include "common/io/Json.h"
 
@@ -27,10 +29,6 @@ std::string trimmed(const std::string &text) {
   return text.substr(first, text.find_last_not_of(" \t\r\n") - first + 1);
 }
 
-/** a * b / c, rounded down, without overflowing (c > 0). */
-uint64_t mulDiv(uint64_t a, uint64_t b, uint64_t c) {
-  return static_cast<uint64_t>(static_cast<unsigned __int128>(a) * b / c);
-}
 
 // ---- JSON: written in a fixed order, so the digest is the same everywhere ----
 
@@ -373,8 +371,7 @@ pp::Roe<Table> computePayouts(const Report &report, const Rules &rules, uint64_t
     }
     auto &r = recipients[m.account];
     r.miner = true;
-    const auto cost = static_cast<unsigned __int128>(m.misses) * rules.missPenalty;
-    r.weight[0] += cost >= m.blocks ? 0 : m.blocks - static_cast<uint64_t>(cost);
+    r.weight[0] += productReaches(m.misses, rules.missPenalty, m.blocks) ? 0 : m.blocks - m.misses * rules.missPenalty;
     r.weight[1] += m.fees;
     r.weight[3] = 1;
   }

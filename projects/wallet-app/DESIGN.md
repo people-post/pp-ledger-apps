@@ -1,6 +1,6 @@
 # Wallet app — design
 
-**Status:** design (wl0). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
+**Status:** built (wl0–wl6; Windows awaits its first CI build). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
 status today: [CURRENT_STATE.md](CURRENT_STATE.md).
 
 A desktop wallet for **everyone's own accounts** on pp-ledger — the **last resort**: what a person

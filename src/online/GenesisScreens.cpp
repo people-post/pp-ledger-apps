@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <memory>
 #include <sstream>
+#include <algorithm>
 
 namespace apps::online {
 

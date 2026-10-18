@@ -2,9 +2,11 @@
 #   signer — the Signer and the shared assets;
 #   system — Genesis, Admin, Reserve, Registrar, Fees: the chain's system key holders;
 #   token  — the Token app: token issuers' operators.
-# Linux: a .deb per component (pp-ledger-signer, pp-ledger-system, pp-ledger-token); the other two
-# depend on pp-ledger-signer. macOS: the release's disk images are made per set by
-# scripts/macos_dmg.sh; `cpack` here makes one of every bundle (local use).
+#   wallet — the Wallet: everyone's, standing alone (projects/wallet-app).
+# Linux: a .deb per component (pp-ledger-signer, pp-ledger-system, pp-ledger-token, pp-ledger-wallet);
+# system and token depend on pp-ledger-signer. macOS: the release's disk images are made per set by
+# scripts/macos_dmg.sh; `cpack` here makes one of every bundle (local use). Windows: the wallet's
+# installer (NSIS).
 set(CPACK_PACKAGE_NAME "pp-ledger-apps")
 set(CPACK_PACKAGE_VENDOR "People Post")
 set(CPACK_PACKAGE_CONTACT "pp-ledger-apps maintainers <noreply@github.com>")
@@ -12,7 +14,24 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Desktop apps for the key holders of a pp-
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_COMPONENTS_ALL signer system token wallet)
 set(CPACK_STRIP_FILES ON)
-if(APPLE)
+if(WIN32)
+  set(CPACK_GENERATOR "NSIS")
+  set(CPACK_COMPONENTS_ALL wallet)
+  set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
+  set(CPACK_PACKAGE_NAME "pp-ledger-wallet")
+  set(CPACK_PACKAGE_FILE_NAME "pp-ledger-wallet-${PROJECT_VERSION}-windows-x64")
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "PP Ledger Wallet")
+  set(CPACK_NSIS_DISPLAY_NAME "PP Ledger Wallet")
+  set(CPACK_NSIS_PACKAGE_NAME "PP Ledger Wallet")
+  set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+  set(CPACK_NSIS_MUI_ICON "${PROJECT_SOURCE_DIR}/assets/icons/wallet.ico")
+  set(CPACK_NSIS_INSTALLED_ICON_NAME "pp-ledger-wallet.exe")
+  set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
+  set(CPACK_PACKAGE_EXECUTABLES "pp-ledger-wallet" "PP Ledger Wallet")
+  set(CPACK_NSIS_CREATE_ICONS_EXTRA
+      "CreateShortCut '$DESKTOP\\\\PP Ledger Wallet.lnk' '$INSTDIR\\\\pp-ledger-wallet.exe'")
+  set(CPACK_NSIS_DELETE_ICONS_EXTRA "Delete '$DESKTOP\\\\PP Ledger Wallet.lnk'")
+elseif(APPLE)
   set(CPACK_GENERATOR "DragNDrop")
   set(CPACK_DMG_VOLUME_NAME "PP Ledger Apps")
   set(CPACK_DMG_FORMAT "UDZO")
@@ -35,8 +54,6 @@ else()
   set(CPACK_COMPONENT_WALLET_DESCRIPTION "PP Ledger Wallet: your accounts, proven; move them when keys may have leaked")
   set(CPACK_COMPONENT_SYSTEM_DEPENDS signer)
   set(CPACK_COMPONENT_TOKEN_DEPENDS signer)
-  # The shared assets ship with the Signer for now; the wallet's own package is wl6's.
-  set(CPACK_COMPONENT_WALLET_DEPENDS signer)
   set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS ON)
   # SDL loads the display and GL libraries at run time: name them; the rest dpkg-shlibdeps finds.
   set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)

@@ -124,14 +124,17 @@ std::string UiApp::assetPath(const std::string &relative) const {
     return (fs::path(dir) / relative).string();
   }
   if (const char *base = SDL_GetBasePath()) {
-#ifdef __APPLE__
-    const fs::path bundled = fs::path(base) / "assets"; // <app>.app/Contents/Resources/
-#else
-    const fs::path bundled = fs::path(base) / ".." / "share" / "pp-ledger-apps" / "assets";
-#endif
-    std::error_code ec;
-    if (fs::exists(bundled / relative, ec)) {
-      return (bundled / relative).string();
+    // A macOS bundle's Resources/assets; Windows: beside the program; elsewhere the package's share/ —
+    // the wallet's package carries its own copy, the others share one.
+    const std::vector<fs::path> places = {
+        fs::path(base) / "assets",
+        fs::path(base) / ".." / "share" / "pp-ledger-wallet" / "assets",
+        fs::path(base) / ".." / "share" / "pp-ledger-apps" / "assets"};
+    for (const auto &bundled : places) {
+      std::error_code ec;
+      if (fs::exists(bundled / relative, ec)) {
+        return (bundled / relative).string();
+      }
     }
   }
   return (fs::path(PP_APPS_ASSETS_DIR) / relative).string();

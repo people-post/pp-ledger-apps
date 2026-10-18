@@ -14,6 +14,7 @@ lies in keys and signatures, not in hidden code. One public repository is one se
 pin of pp-ledger; reviewers audit what the wallet links, not the rest.
 **Alternatives:** A public library repository and a public wallet repository, the admin apps private
 (a third repository and versioned releases between them); a public wallet with copied code (drifts).
+**Done:** the repository moved to people-post and is public (2026-10-19).
 
 ## WL002 — Five promises
 
@@ -33,6 +34,7 @@ Several nodes are asked and disagreements shown. What cannot be verified is mark
 **Rationale:** A node that lies about a balance or a transfer is what a last resort must withstand;
 pp-ledger's chain already carries the proofs but the account proof's request.
 **Alternatives:** Several nodes' agreement only (a majority of lying nodes wins; nothing proven).
+**As built:** pp-ledger's `ACCOUNT_PROOF` and `verify::`; the pin is a network card (docs/NETWORK_CARD.md). Each node's tip is verified, and one far behind the others flagged: a node can show an older state, not a false one.
 
 ## WL004 — Evacuate is the wallet's first job
 
@@ -49,6 +51,7 @@ its reach, before anything else, is what they need.
 file); wallet plugins must be able to export to it.
 **Rationale:** The last resort is useless if keys cannot reach it.
 **Alternatives:** Import each plugin's own format (as many formats as plugins, some never documented).
+**As built:** pp-ledger `docs/contracts/KEY_BACKUP.md` — Argon2id and XChaCha20-Poly1305 (libsodium, in browsers too), the public key in the clear and bound to the ciphertext.
 
 ## WL006 — The wallet signs offline itself
 
@@ -63,6 +66,7 @@ for both is simpler than a second one to install.
 **Decision:** Release builds are reproducible; releases publish checksums and how to rebuild; packages
 are signed where the platform signs.
 **Rationale:** Public source proves little if nobody can tie a download to it.
+**As built:** `PP_APPS_RELEASE` (no build-machine path in the binaries), `SHA256SUMS` in every release, docs/REPRODUCIBLE.md. The binaries are what is reproducible; package containers and macOS signatures carry their own timestamps.
 
 ## WL008 — Windows too
 
@@ -70,6 +74,7 @@ are signed where the platform signs.
 **Decision:** The wallet ships for Windows as well as Linux and macOS.
 **Rationale:** Everyone's wallet; most people use Windows. pp-ledger builds on Windows already; the UI
 host and packaging are the work.
+**As built:** the code made portable (no 128-bit integers, no timegm, Windows file writes, %APPDATA%), icon and version resources, an NSIS installer of the wallet, the build in CI on windows-2022 for every app. Proven only by that CI: no Windows machine here.
 
 ## WL009 — The same strict vault
 

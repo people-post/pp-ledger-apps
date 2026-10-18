@@ -1,6 +1,7 @@
-# The apps as installed: a bundle each on macOS (its icon, the shared assets in Resources), a binary,
-# desktop entry and icon each on Linux (the assets under share/pp-ledger-apps). UiApp::assetPath
-# finds the assets either way.
+# The apps as installed: a bundle each on macOS (its icon, the shared assets in Resources); a binary,
+# desktop entry and icon each on Linux (the assets under share/pp-ledger-apps, and a copy of the wallet's
+# own under share/pp-ledger-wallet: its package stands alone); on Windows a program (its icon and
+# version in it) with the assets beside it. UiApp::assetPath finds the assets each way.
 
 # pp_apps_app(<target> <slug> <title> <comment> <package>): `slug` names the icon
 # (assets/icons/<slug>.png) and ids; `title` is what people see ("PP Ledger Signer"); `package` the
@@ -25,6 +26,15 @@ function(pp_apps_app target slug title comment package)
               "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Resources/assets"
       VERBATIM)
     install(TARGETS ${target} BUNDLE DESTINATION . COMPONENT ${package})
+  elseif(WIN32)
+    set(PP_APP_TITLE "${title}")
+    set(PP_APP_COMMENT "${comment}")
+    set(PP_APP_EXEC ${target})
+    set(PP_APP_ICO ${PROJECT_SOURCE_DIR}/assets/icons/${slug}.ico)
+    configure_file(${PROJECT_SOURCE_DIR}/packaging/windows/app.rc.in ${CMAKE_CURRENT_BINARY_DIR}/${slug}.rc @ONLY)
+    target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${slug}.rc)
+    set_target_properties(${target} PROPERTIES WIN32_EXECUTABLE TRUE) # no console window
+    install(TARGETS ${target} RUNTIME DESTINATION . COMPONENT ${package})
   else()
     # One less library a distribution must match: the C++ runtime comes with the binary.
     target_link_options(${target} PRIVATE -static-libstdc++ -static-libgcc)
@@ -42,7 +52,11 @@ function(pp_apps_app target slug title comment package)
   endif()
 endfunction()
 
-# The assets ship with the Signer, which both other packages depend on.
-if(NOT APPLE)
+# The assets ship with the Signer, which the system and token packages depend on; the wallet's package
+# carries its own copy (it stands alone); on Windows, beside the program.
+if(WIN32)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION assets COMPONENT wallet)
+elseif(NOT APPLE)
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION share/pp-ledger-apps/assets COMPONENT signer)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION share/pp-ledger-wallet/assets COMPONENT wallet)
 endif()

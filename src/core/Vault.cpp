@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <cctype>
 
 namespace apps {
 
@@ -221,12 +222,17 @@ std::string Vault::defaultDir() {
   if (const char *home = std::getenv("PP_LEDGER_APPS_HOME"); home && *home) {
     return (std::filesystem::path(home) / "vault").string();
   }
+#ifdef _WIN32
+  const char *appData = std::getenv("APPDATA");
+  return (std::filesystem::path(appData ? appData : ".") / "pp-ledger-apps" / "vault").string();
+#else
   const char *home = std::getenv("HOME");
   const std::filesystem::path base = home ? home : ".";
 #ifdef __APPLE__
   return (base / "Library" / "Application Support" / "pp-ledger-apps" / "vault").string();
 #else
   return (base / ".pp-ledger-apps" / "vault").string();
+#endif
 #endif
 }
 

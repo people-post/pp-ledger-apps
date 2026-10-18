@@ -46,7 +46,8 @@ public:
 
   /**
    * This machine's vault directory: $PP_LEDGER_APPS_HOME/vault, else ~/.pp-ledger-apps/vault
-   * (Linux) or ~/Library/Application Support/pp-ledger-apps/vault (macOS).
+   * (Linux), ~/Library/Application Support/pp-ledger-apps/vault (macOS) or %APPDATA%\\pp-ledger-apps\\vault
+   * (Windows).
    */
   static std::string defaultDir();
   /** Shortest passphrase a vault takes. */

@@ -3,6 +3,8 @@
 #include "chain/RecordHandler.h"
 #include "client/AccountIds.h"
 
+#include <map>
+
 namespace apps::net {
 
 namespace op = pp::operation;

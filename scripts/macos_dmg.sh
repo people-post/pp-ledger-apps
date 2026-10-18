@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # A release disk image: the bundles of an install folder (signed or not) and an Applications
 # shortcut to drag them to. Prints the .dmg's path.
-# Usage: macos_dmg.sh <install folder holding the .app bundles> <version> <out dir> [system|token]
+# Usage: macos_dmg.sh <install folder holding the .app bundles> <version> <out dir> [system|token|wallet]
 #   system (default): "PP Ledger System", pp-ledger-system-<version>-macos-<arch>.dmg
 #   token: "PP Ledger Token", pp-ledger-token-<version>-macos-<arch>.dmg
+#   wallet: "PP Ledger Wallet", pp-ledger-wallet-<version>-macos-<arch>.dmg (the wallet alone)
 # The install folder holds one set (cmake --install … --component signer, then system or token).
 set -euo pipefail
 src=$(cd "$1" && pwd)
@@ -14,7 +15,8 @@ set=${4:-system}
 case "$set" in
   system) volume="PP Ledger System" ;;
   token) volume="PP Ledger Token" ;;
-  *) echo "unknown set: $set (system or token)" >&2; exit 1 ;;
+  wallet) volume="PP Ledger Wallet" ;;
+  *) echo "unknown set: $set (system, token or wallet)" >&2; exit 1 ;;
 esac
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT

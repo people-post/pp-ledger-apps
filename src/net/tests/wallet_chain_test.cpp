@@ -6,6 +6,7 @@
 #include "lib/common/Utilities.h"
 
 #include <gtest/gtest.h>
+#include <map>
 
 using namespace apps;
 using namespace apps::net;

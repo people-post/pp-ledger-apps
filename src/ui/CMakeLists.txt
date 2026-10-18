@@ -20,7 +20,12 @@ add_library(apps_ui STATIC
     WindowHost.h
 )
 target_include_directories(apps_ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
-target_compile_definitions(apps_ui PRIVATE PP_APPS_ASSETS_DIR="${PROJECT_SOURCE_DIR}/assets")
+# Development builds find the assets in the source tree; a release only beside the program (UiApp).
+if(PP_APPS_RELEASE)
+  target_compile_definitions(apps_ui PRIVATE PP_APPS_ASSETS_DIR="assets")
+else()
+  target_compile_definitions(apps_ui PRIVATE PP_APPS_ASSETS_DIR="${PROJECT_SOURCE_DIR}/assets")
+endif()
 target_link_libraries(apps_ui PUBLIC apps_core pp_ui ${PP_UI_SDL3_TARGET} ${PP_UI_SDL3_IMAGE_TARGET})
 target_compile_definitions(apps_ui PUBLIC UI_SDL_VERSION_MAJOR=3)
 if(PP_APPS_DEV_HOOKS)
