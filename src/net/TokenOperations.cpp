@@ -174,6 +174,7 @@ pp::Roe<TokenOverview> tokenOverview(const ChainInfo &chain, uint64_t account, c
   overview.minSignatures = state.wallet.minSignatures;
   overview.publicKeys = state.wallet.publicKeys;
   overview.recovery = state.wallet.recovery;
+  overview.domain = state.wallet.domain;
   for (const auto &[token, balance] : state.wallet.mBalances) {
     if (token != account && token != pp::AccountIds::ID_GENESIS && balance != 0) {
       overview.otherTokens.emplace_back(token, balance);

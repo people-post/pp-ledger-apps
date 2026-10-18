@@ -48,6 +48,8 @@ public:
   pp::Roe<pp::Client::AuthorityProof> authorityProof(uint64_t upTo);
   /** ACCOUNT_PROOF: account `id` in the node's tip state, with its Merkle path. */
   pp::Roe<pp::Client::AccountProof> accountProof(uint64_t id);
+  /** DOMAIN_GET: `domain` (capital letters) in the node's tip state, with its Merkle path. */
+  pp::Roe<pp::Client::DomainProof> domainProof(const std::string &domain);
   /** One page of PRODUCER_STATS for blocks [from, to) (the node caps a page). */
   pp::Roe<pp::Client::ProducerStatsResponse> producerStats(uint64_t from, uint64_t to);
   /** Account `id`'s latest transactions (latest first; as many as the node returns in one page). */

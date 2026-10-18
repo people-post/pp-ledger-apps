@@ -99,3 +99,13 @@ holders can use the wallet too.
 **Rationale:** The last resort is where lost and stolen keys are met. The recovery set stands above
 the account's keys (pp-ledger AR002), so an owner whose account is frozen must see why without
 trusting a node — the wallet's reads are proven.
+
+## WL011 — Symbols, proven like balances
+
+**Date:** 2026-10-19
+**Decision:** The wallet shows an account's domain and each token's symbol (its issuer's domain; the
+native token's, the genesis account's), and takes a domain wherever an account or a token is typed —
+always proven from the pinned genesis hash (pp-ledger `projects/domains`: `DOMAIN_GET` and the
+account's leaf).
+**Rationale:** A symbol decides where funds go: one a node could swap would be worse than a number.
+

@@ -6,12 +6,14 @@
 #include "core/Operations.h"
 #include "chain/Genesis.h"
 
+#include <cctype>
 #include <ctime>
 #include <filesystem>
 #include <iomanip>
 #include <memory>
 #include <sstream>
 #include <algorithm>
+#include <cctype>
 
 namespace apps::online {
 
@@ -116,6 +118,7 @@ void GenesisPlanScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("beacons", &beacons_);
   model.Bind("miners", &miners_);
   model.Bind("settings", &settings_);
+  model.Bind("names", &names_);
   model.Bind("recovery_delay", &recoveryDelay_);
   model.Bind("notes", &notes_);
   model.Bind("error", &error_);
@@ -201,6 +204,12 @@ void GenesisPlanScreen::willShow() {
       settings_.push_back({field.name, field.title, formatAmount(field.get(config))});
     }
     recoveryDelay_ = formatAmount(pp::chain_genesis::defaultRecoveryDelayEpochs(config));
+    const auto names = pp::chain_genesis::defaultSystemNames();
+    names_ = {{"genesis", "Genesis — the native token's symbol", names.genesis},
+              {"reserve", "Reserve", names.reserve},
+              {"registrar", "Registrar", names.registrar},
+              {"fee", "Fee account", names.fee},
+              {"recycle", "Recycle account", names.recycle}};
     const int64_t tomorrow = (nowSeconds() / 3600 + 24) * 3600;
     start_ = formatLocal(tomorrow);
   }
@@ -279,6 +288,20 @@ void GenesisPlanScreen::makePlan(ui::DataModelHandle, ui::Event &, const ui::Var
   }
   auto delay = parseAmount(recoveryDelay_);
   form.recoveryDelayEpochs = delay ? delay.value() : 0;
+  for (const auto &named : names_) {
+    std::string domain;
+    for (char c : named.value) {
+      if (c != ' ') {
+        domain.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(c))));
+      }
+    }
+    std::string *slot = named.name == "genesis"     ? &form.names.genesis
+                        : named.name == "reserve"   ? &form.names.reserve
+                        : named.name == "registrar" ? &form.names.registrar
+                        : named.name == "fee"       ? &form.names.fee
+                                                    : &form.names.recycle;
+    *slot = domain;
+  }
   auto plan = net::makeGenesisPlan(form, notes_, nowSeconds());
   if (!plan) {
     say(plan.error().message + ".");

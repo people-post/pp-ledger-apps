@@ -10,3 +10,4 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
 - [x] **wl5** Keys in and out: the key-backup contract (pp-ledger), import and export; offline signing
 - [x] **wl6** Packages: its own, Linux and macOS; reproducible builds, checksums; the repository public
 - [x] **wl7** Account recovery (pp-ledger's): name the set; as a set, announce, withdraw, change; the frozen account shown; the token app's issuer too
+- [x] **wl8** Domains: symbols shown and accounts found by domain, proven (WL011)

@@ -23,9 +23,11 @@ In **Genesis plan**, the coordinator:
 2. For each account and the recovery set, ticks its holders' keys and how many must sign. The admin
    set needs at least 3 keys and 2 signatures. The recovery set must not hold admin keys.
 3. Ticks the beacon's key, and the genesis miners with their stakes.
-4. Checks the settings. They start from pp-ledger's defaults; the slot length and the epoch length
+4. Names the system accounts: 1 to 3 letters each, never changed. The genesis account's is the native
+   token's symbol (`PPL` by default, until the network settles its own).
+5. Checks the settings. They start from pp-ledger's defaults; the slot length and the epoch length
    cannot change later.
-5. *Make the plan…*, and hands a copy to each admin.
+6. *Make the plan…*, and hands a copy to each admin.
 
 ## Sign and start
 

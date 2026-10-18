@@ -16,7 +16,7 @@
       <h1>Send from {{from}}</h1>
       <p class="muted" data-if="balance != ''">It holds {{balance}} of the native token (proven).</p>
       <div data-if="!has_pending">
-        <label>To account (its number)</label>
+        <label>To account (its number, or its domain)</label>
         <input id="send-to" class="field" type="text" data-value="to" data-attrif-disabled="busy"/>
         <div class="row">
           <div class="grow">
@@ -24,7 +24,7 @@
             <input id="send-amount" class="field" type="text" data-value="amount" data-attrif-disabled="busy"/>
           </div>
           <div class="grow">
-            <label>Token (its number; empty: the native token)</label>
+            <label>Token (its number or symbol; empty: the native token)</label>
             <input id="send-token" class="field" type="text" data-value="token" data-attrif-disabled="busy"/>
           </div>
         </div>

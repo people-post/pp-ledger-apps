@@ -4,12 +4,12 @@
 #   pp-ledger-reserve: a reserve → registrar transfer (the registrar's balance);
 #   pp-ledger-admin: a config update raising the mint cap (the config in force), a mint to the
 #   reserve (the reserve's balance), a rotation of the admin set (2 of 4);
-#   pp-ledger-registrar: an issued account for an owner key, funded by the registrar (the account);
+#   pp-ledger-registrar: an issued account for an owner key, with its domain, funded by the registrar;
 #   pp-ledger-token: that account as a token issuer — issues to the registrar (both balances of its
 #   token), replaces its signers (2 of 2), sends native tokens signed by both (the registrar's balance);
 #   pp-ledger-fees: the first fee round — the period from the chain, a relay paid to that account,
 #   the payouts as one batch from the fee account, signed 3 of 3 (balances, the round file, the mark);
-#   pp-ledger-wallet: the network pinned from a card, accounts proven back to block 0's hash; an account
+#   pp-ledger-wallet: the network pinned from a card, accounts (one added by its domain) proven back to block 0's hash, their symbols shown, a send to REG; an account
 #   given a recovery set, its recovery announced from a second wallet holding the set (the account shown
 #   frozen), and withdrawn by the set;
 #   pp-ledger-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
@@ -38,6 +38,7 @@ run_app() { # <app> <home> <script>
   local app=$1 home=$2 script=$3
   sed -e "s|@OUT@|$out|g" -e "s|@NODE@|$node|g" -e "s|@AMOUNT@|$amount|g" -e "s|@MINT@|$mint|g" -e "s|@CAP@|$cap|g" \
     -e "s|@ACCOUNT@|$account|g" -e "s|@FUND@|$fund|g" -e "s|@ISSUE@|$issue|g" -e "s|@SEND@|$send|g" \
+    -e "s|@DOMAIN@|$domain|g" -e "s|@DOMAIN_LC@|${domain,,}|g" \
     "$here/tests/ui/$script" >"$out/$script"
   PP_LEDGER_APPS_HOME="$home" timeout 300 xvfb-run -a -s "-screen 0 1280x900x24" \
     "$build/src/apps/$app/pp-ledger-$app" --script "$out/$script" >"$out/$app.log" 2>&1 ||
@@ -45,6 +46,7 @@ run_app() { # <app> <home> <script>
 }
 mint=$((5000 + RANDOM))
 account=$(((1 << 20) + 1000 + RANDOM))
+domain=$(n=$account; letters=ABCDEFGHIJKLMNOPQRSTUVWXYZ; out=""; for _ in 1 2 3 4; do out="${letters:$((n % 26)):1}$out"; n=$((n / 26)); done; echo "S$out")
 fund=$((20000 + RANDOM % 900))
 issue=$((1000 + RANDOM))
 send=$((10 + RANDOM % 90))
@@ -91,7 +93,9 @@ test -n "$held" && test "$held" -le "$fund" && test "$held" -gt $((fund - 100)) 
   { echo "FAIL: account $account holds ${held:-nothing}, expected $fund less renewals"; exit 1; }
 "$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' | grep -qi "$(tr -d ' \n' <"$out/owner.pub")" ||
   { echo "FAIL: account $account is not the owner's key"; exit 1; }
-echo "✓ Registrar: account $account created for the owner's key, holding $held of $fund"
+"$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' | grep -q "\"domain\":\"$domain\"" ||
+  { echo "FAIL: account $account does not have its domain $domain"; exit 1; }
+echo "✓ Registrar: account $account ($domain) created for the owner's key, holding $held of $fund"
 
 # 4. Token: the new account issues its token, replaces its signers, sends from them both.
 rm -rf "$out/token-home" "$out/owner2".*
@@ -170,10 +174,10 @@ rm -rf "$out/wallet-home"
   "$out/owner.key" "$out/owner2.key"
 registrarBefore=$(balance 2)
 run_app wallet "$out/wallet-home" wallet-chain.script
-echo "✓ Wallet: network $networkId pinned from its card; accounts $account and 2 proven, an absent one proven absent"
+echo "✓ Wallet: network $networkId pinned from its card; accounts $domain (by its domain) and 2 proven, their symbols shown; an absent one proven absent"
 test "$(balance 2)" -eq $((registrarBefore + 5)) ||
   { echo "FAIL: registrar balance $registrarBefore → $(balance 2), expected +5 from the wallet"; exit 1; }
-echo "✓ Wallet: sent 5 from account $account to the registrar, signed with its two keys"
+echo "✓ Wallet: sent 5 from account $account to the registrar, typed as REG, signed with its two keys"
 "$client" -b --host "$node" account "$account" 2>/dev/null | tr -d ' \n' >"$out/evacuated.json"
 grep -q '"minSignatures":1' "$out/evacuated.json" && test "$(grep -o '"publicKeys":\[[^]]*\]' "$out/evacuated.json" | grep -o '"0x' | wc -l)" -eq 1 ||
   { echo "FAIL: account $account's keys were not replaced by one new key ($out/evacuated.json)"; exit 1; }

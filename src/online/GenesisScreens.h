@@ -67,6 +67,8 @@ private:
   std::vector<Miner> miners_;
   std::vector<std::string> minerKeys_;
   std::vector<Setting> settings_;
+  /** The system accounts' domains (pp-ledger projects/domains): name = the account's role. */
+  std::vector<Setting> names_;
   std::string recoveryDelay_;
   std::string notes_;
   std::string error_;

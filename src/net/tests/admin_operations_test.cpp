@@ -177,6 +177,42 @@ TEST(AdminOperationsTest, TheRegistrarCreatesIssuedAccountsAndPaysTheNewAccountF
   EXPECT_EQ(tx.amount, 100u);
 }
 
+TEST(AdminOperationsTest, TheRegistrarGivesIssuedAccountsTheirDomains) {
+  ChainInfo info = chain();
+  op::SignerSet registrar;
+  registrar.account = pp::AccountIds::ID_REGISTRAR;
+  registrar.publicKeys = {key(), key()};
+  registrar.minSignatures = 2;
+  const std::vector<std::string> owner = {key()};
+  const uint64_t id = pp::AccountIds::ID_FIRST_ISSUED + 7;
+  auto least = newAccountFee(info, owner, 1, "ACME");
+  ASSERT_TRUE(least) << least.error().message;
+  EXPECT_FALSE(makeIssuedAccount(info, registrar, id, owner, 1, 100, least.value(), making(), "ABC")); // 1-3: system
+  EXPECT_FALSE(makeIssuedAccount(info, registrar, id, owner, 1, 100, least.value(), making(), "acme"));
+  auto created = makeIssuedAccount(info, registrar, id, owner, 1, 100, least.value(), making(), "ACME");
+  ASSERT_TRUE(created) << created.error().message;
+  pp::UserAccount account;
+  ASSERT_TRUE(account.ltsFromString(pp::utl::binaryUnpack<pp::Ledger::TxNewUser>(created.value().record.data).value().meta));
+  EXPECT_EQ(account.wallet.domain, "ACME");
+
+  // Given later, to an issued account with none.
+  pp::UserAccount plain;
+  plain.wallet.publicKeys = owner;
+  plain.wallet.minSignatures = 1;
+  auto assigned = makeDomainAssignment(info, registrar, id, plain, "SHOPCO", making());
+  ASSERT_TRUE(assigned) << assigned.error().message;
+  EXPECT_EQ(assigned.value().kind, op::Kind::DomainAssign);
+  EXPECT_EQ(assigned.value().signers, registrar);
+  auto tx = pp::utl::binaryUnpack<pp::Ledger::TxDomainAssign>(assigned.value().record.data).value();
+  EXPECT_EQ(tx.domain, "SHOPCO");
+  EXPECT_GT(tx.fee, 0u);
+  EXPECT_FALSE(makeDomainAssignment(info, registrar, id, account, "SHOPCO", making())); // it has one
+  EXPECT_FALSE(makeDomainAssignment(info, registrar, pp::AccountIds::ID_FIRST_USER, plain, "SHOPCO", making()));
+  op::SignerSet other = registrar;
+  other.account = pp::AccountIds::ID_RESERVE;
+  EXPECT_FALSE(makeDomainAssignment(info, other, id, plain, "SHOPCO", making()));
+}
+
 TEST(AdminOperationsTest, TheRecoverySetNamesANewAdminSet) {
   const ChainInfo info = chain();
   const std::vector<std::string> fresh = {key(), key(), key()};
@@ -217,6 +253,17 @@ TEST(AdminOperationsTest, AGenesisPlanIsBlockZeroForTheAdminSetToSign) {
   EXPECT_EQ(plan.value().networkId, "new-net");
   EXPECT_EQ(plan.value().signers.publicKeys, form.admin.publicKeys);
   EXPECT_EQ(plan.value().moreRecords.size(), 5u); // fee, reserve, registrar, recycle, one miner
+  // The system accounts carry their domains; the native token's symbol is the genesis account's.
+  auto summary = op::summarize(plan.value());
+  ASSERT_TRUE(summary) << summary.error().message;
+  bool symbol = false;
+  for (const auto &[label, value] : summary.value().lines) {
+    symbol = symbol || (label == "The native token's symbol" && value.rfind("PPL", 0) == 0);
+  }
+  EXPECT_TRUE(symbol);
+  form.names.fee = "TOOLONG";
+  EXPECT_FALSE(makeGenesisPlan(form, "", 1'800'000'000)); // 1-3 letters
+  form.names = pp::chain_genesis::defaultSystemNames();
 
   form.admin = set(2, 2); // the admin set needs at least 3 keys
   EXPECT_FALSE(makeGenesisPlan(form, "", 1'800'000'000));

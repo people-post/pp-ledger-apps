@@ -2,6 +2,7 @@
 
 #include "chain/AccountPolicy.h"
 #include "chain/ConfigPolicy.h"
+#include "chain/Domains.h"
 #include "chain/Genesis.h"
 #include "chain/RecordHandler.h"
 #include "client/AccountAttachment.h"
@@ -236,8 +237,10 @@ bool isIssuedId(uint64_t id) {
 
 namespace {
 
-pp::UserAccount ownerAccount(const std::vector<std::string> &keys, uint32_t minSignatures, uint64_t amount) {
+pp::UserAccount ownerAccount(const std::vector<std::string> &keys, uint32_t minSignatures, uint64_t amount,
+                             const std::string &domain) {
   pp::UserAccount account;
+  account.wallet.domain = domain;
   account.wallet.publicKeys = keys;
   account.wallet.minSignatures = static_cast<uint8_t>(minSignatures);
   account.wallet.keyType = pp::Crypto::TK_ML_DSA_65;
@@ -248,10 +251,11 @@ pp::UserAccount ownerAccount(const std::vector<std::string> &keys, uint32_t minS
 
 } // namespace
 
-pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::string> &keys, uint32_t minSignatures) {
+pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::string> &keys, uint32_t minSignatures,
+                                const std::string &domain) {
   pp::Ledger::TxNewUser probe;
   probe.fromWalletId = pp::AccountIds::ID_REGISTRAR;
-  probe.meta = ownerAccount(keys, minSignatures, 0).ltsToString();
+  probe.meta = ownerAccount(keys, minSignatures, 0, domain).ltsToString();
   // The metadata fee and the config's flat newAccountFee (pp-ledger's rule).
   auto fee = pp::minimumFeeFor(chain.meta.config, pp::Ledger::TypedTx(probe));
   if (!fee) {
@@ -262,7 +266,8 @@ pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::s
 
 pp::Roe<op::Operation> makeIssuedAccount(const ChainInfo &chain, const op::SignerSet &registrar, uint64_t id,
                                          const std::vector<std::string> &keys, uint32_t minSignatures,
-                                         uint64_t amount, uint64_t fee, const Making &making) {
+                                         uint64_t amount, uint64_t fee, const Making &making,
+                                         const std::string &domain) {
   if (auto ok = checkValidity(chain, making); !ok) {
     return ok.error();
   }
@@ -287,7 +292,12 @@ pp::Roe<op::Operation> makeIssuedAccount(const ChainInfo &chain, const op::Signe
   if (registrar.account != pp::AccountIds::ID_REGISTRAR) {
     return pp::Error("Issued accounts are created by the registrar");
   }
-  auto least = newAccountFee(chain, keys, minSignatures);
+  if (!domain.empty()) {
+    if (auto valid = pp::chain_domain::validateFor(domain, id); !valid) {
+      return pp::Error(valid.error().message);
+    }
+  }
+  auto least = newAccountFee(chain, keys, minSignatures, domain);
   if (!least) {
     return least.error();
   }
@@ -301,7 +311,47 @@ pp::Roe<op::Operation> makeIssuedAccount(const ChainInfo &chain, const op::Signe
   common.window = op::windowFrom(making.now, making.validForSeconds);
   common.notes = making.notes;
   common.createdAt = making.now;
-  return op::newAccount(common, id, ownerAccount(keys, minSignatures, amount), amount, fee);
+  return op::newAccount(common, id, ownerAccount(keys, minSignatures, amount, domain), amount, fee);
+}
+
+pp::Roe<op::Operation> makeDomainAssignment(const ChainInfo &chain, const op::SignerSet &registrar, uint64_t id,
+                                            const pp::UserAccount &state, const std::string &domain,
+                                            const Making &making) {
+  if (auto ok = checkValidity(chain, making); !ok) {
+    return ok.error();
+  }
+  if (registrar.account != pp::AccountIds::ID_REGISTRAR) {
+    return pp::Error("The registrar gives domains");
+  }
+  if (!isIssuedId(id)) {
+    return pp::Error("Only issued accounts get a domain from the registrar");
+  }
+  if (!state.wallet.domain.empty()) {
+    return pp::Error("Account " + grouped(id) + " has its domain already: " + state.wallet.domain);
+  }
+  if (auto valid = pp::chain_domain::validateFor(domain, id); !valid) {
+    return pp::Error(valid.error().message);
+  }
+  op::Common common;
+  common.networkId = chain.networkId;
+  common.genesisHash = chain.genesisHash;
+  common.signers = registrar;
+  common.window = op::windowFrom(making.now, making.validForSeconds);
+  common.notes = making.notes;
+  common.createdAt = making.now;
+  auto probe = op::assignDomain(common, id, domain, 0);
+  if (!probe) {
+    return probe;
+  }
+  auto typed = probe.value().record.decode();
+  if (!typed) {
+    return pp::Error("The assignment does not decode: " + typed.error().message);
+  }
+  auto least = pp::minimumFeeFor(chain.meta.config, typed.value());
+  if (!least) {
+    return pp::Error("Cannot work out the fee: " + least.error().message);
+  }
+  return op::assignDomain(common, id, domain, least.value());
 }
 
 pp::Roe<op::Operation> makeRecovery(const ChainInfo &chain, const std::vector<std::string> &adminKeys,
@@ -377,6 +427,7 @@ pp::Roe<op::Operation> makeGenesisPlan(const GenesisForm &form, const std::strin
   plan.keys.registrar = keys(form.registrar);
   plan.keys.fee = keys(form.fee);
   plan.keys.recycle = keys(form.recycle);
+  plan.names = form.names;
   for (const auto *k : {&form.admin, &form.reserve, &form.registrar, &form.fee, &form.recycle, &form.recovery}) {
     if (k->publicKeys.empty() || k->minSignatures == 0 || k->minSignatures > k->publicKeys.size()) {
       return pp::Error("Every account and the recovery set need keys, and between 1 and that many to sign");

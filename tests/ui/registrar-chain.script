@@ -1,5 +1,5 @@
-# Against a running chain: create an issued account for an owner (their pp-client .pub file), funded
-# by the registrar, signed with the vault's three registrar keys, submitted, seen in a block.
+# Against a running chain: create an issued account for an owner (their pp-client .pub file), with its
+# domain, funded by the registrar, signed with the vault's three registrar keys, submitted, seen in a block.
 wait 5
 click #unlock-passphrase
 type registrar passphrase
@@ -18,6 +18,8 @@ idle
 wait 5
 click #registrar-id
 type @ACCOUNT@
+click #registrar-domain
+type @DOMAIN@
 answer @OUT@/owner.pub
 click #registrar-pub
 wait 3

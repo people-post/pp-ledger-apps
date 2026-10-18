@@ -4,6 +4,7 @@
 // the reserve, a config update (settings and/or the admin set itself), the next beacon certificate.
 
 #include "net/ChainLink.h"
+#include "chain/Genesis.h"
 
 #include <functional>
 #include <optional>
@@ -68,9 +69,19 @@ bool isIssuedId(uint64_t id);
 pp::Roe<pp::operation::Operation> makeIssuedAccount(const ChainInfo &chain, const pp::operation::SignerSet &registrar,
                                                     uint64_t id, const std::vector<std::string> &keys,
                                                     uint32_t minSignatures, uint64_t amount, uint64_t fee,
-                                                    const Making &making);
-/** The least fee of a new account (of `keys`) under the config in force. */
-pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::string> &keys, uint32_t minSignatures);
+                                                    const Making &making, const std::string &domain = "");
+/** The least fee of a new account (of `keys`, with `domain` if any) under the config in force. */
+pp::Roe<uint64_t> newAccountFee(const ChainInfo &chain, const std::vector<std::string> &keys, uint32_t minSignatures,
+                                const std::string &domain = "");
+/**
+ * Issued account `id` (as `state` holds it: it has no domain yet) given its domain (pp-ledger
+ * projects/domains: 4–7 capital letters), signed by the registrar, which pays the least fee. Whether
+ * another account has it is the chain's to refuse.
+ */
+pp::Roe<pp::operation::Operation> makeDomainAssignment(const ChainInfo &chain,
+                                                       const pp::operation::SignerSet &registrar, uint64_t id,
+                                                       const pp::UserAccount &state, const std::string &domain,
+                                                       const Making &making);
 
 /**
  * A recovery announcement (T_RECOVERY): the recovery set in force names a new admin set, applied its
@@ -92,6 +103,8 @@ struct PlanKeys {
 struct GenesisForm {
   pp::BlockChainConfig config; ///< networkId and genesisTime (the start) included
   PlanKeys admin, reserve, registrar, fee, recycle, recovery;
+  /** The system accounts' domains (1–3 letters; the genesis account's is the native token's symbol). */
+  pp::chain_genesis::SystemNames names = pp::chain_genesis::defaultSystemNames();
   uint64_t recoveryDelayEpochs{0};
   std::string beaconKey;
   /** Genesis miners: their key and stake (ids assigned from 2^20 up). */

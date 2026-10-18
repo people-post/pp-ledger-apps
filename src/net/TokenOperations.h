@@ -32,6 +32,8 @@ struct TokenOverview {
   bool low{false};
   uint32_t minSignatures{0};
   std::vector<std::string> publicKeys;
+  /** Its domain: its token's symbol (pp-ledger projects/domains); "" when the registrar gave none. */
+  std::string domain;
   /** Its recovery set and any recovery announced (pp-ledger projects/account-recovery). */
   pp::AccountRecovery recovery;
   /** Other tokens the account holds: id and balance. */

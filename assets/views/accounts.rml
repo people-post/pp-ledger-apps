@@ -17,9 +17,9 @@
       <p class="muted">Each proven from block 0's hash: the beacon's signed tip, the blocks under it, the
         account in the block's state. Tip: {{tip}}.</p>
       <p class="muted" data-if="rows.size == 0">No accounts yet: add your account's number below.</p>
-      <p class="muted" data-if="rows.size > 0">To receive, give the payer your account's number.</p>
+      <p class="muted" data-if="rows.size > 0">To receive, give the payer your account's number (or its domain, an issuer's).</p>
       <div class="item" data-for="r : rows">
-        <div class="grow"><strong>{{r.label}}</strong> account {{r.account}}<br/>
+        <div class="grow"><strong>{{r.label}}</strong> account {{r.account}}<span data-if="r.domain != ''" data-attr-id="'account-domain-' + it_index"> · <strong>{{r.domain}}</strong></span><br/>
           <span class="muted">{{r.state}}</span><br/>
           <span class="muted" data-if="r.keys != ''">{{r.keys}} · {{r.renewal}}</span>
           <span class="muted" data-if="r.tokens != ''"><br/>{{r.tokens}}</span>
@@ -40,7 +40,7 @@
       <h2>Add an account</h2>
       <div class="row">
         <div class="grow">
-          <label>Its number</label>
+          <label>Its number, or its domain (an issuer's symbol)</label>
           <input id="account-number" class="field" type="text" data-value="new_account"/>
         </div>
         <div class="grow">

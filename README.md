@@ -55,9 +55,9 @@ writes block 0 from it.
 | `src/apps/signer` | `pp-ledger-signer`: review, sign and merge operations (genesis plans included), offline; locks itself after 10 minutes without use |
 | `src/apps/admin` | `pp-ledger-admin`: minting to the reserve, config updates (the changes shown against the chain), rotating the admin set, beacon certificates |
 | `src/apps/genesis` | `pp-ledger-genesis`: the genesis plan (block 0 from everyone's key cards, pp-ledger's defaults, signed offline for `pp-beacon --init --genesis-op`) and recovery announcements |
-| `src/apps/registrar` | `pp-ledger-registrar`: issued accounts (2^20 … 2^30) for their owners' keys, funded by the registrar |
+| `src/apps/registrar` | `pp-ledger-registrar`: issued accounts (2^20 … 2^30) for their owners' keys, funded by the registrar, with their domains (symbols) |
 | `src/apps/reserve` | `pp-ledger-reserve`: transfers out of the reserve — made from the chain, signed, merged, submitted, followed into a block |
 | `src/apps/fees` | `pp-ledger-fees`: fee rounds — a period read from the chain, the relays' measures, the rules, the payouts as one batch from the fee account; round files checked by their digest |
 | `src/apps/token` | `pp-ledger-token`: a token issuer's overview, issuing its token, sending, replacing its signers, its recovery set |
-| `src/apps/wallet` | `pp-ledger-wallet`: everyone's last resort — the network pinned from a card, accounts proven (no node believed), send, receive, evacuate, recovery (an account's set; acting as a set: announce, withdraw, change), key backups |
+| `src/apps/wallet` | `pp-ledger-wallet`: everyone's last resort — the network pinned from a card, accounts proven (no node believed), symbols proven, send (by number or domain), receive, evacuate, recovery (an account's set; acting as a set: announce, withdraw, change), key backups |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

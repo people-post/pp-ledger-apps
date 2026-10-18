@@ -22,7 +22,7 @@
         <button id="evac-keys" class="primary" data-event-click="evac_keys()" data-attrif-disabled="busy">Replace its keys with a new one</button>
         <h2>Or move everything it holds</h2>
         <p class="muted">To another account of yours, whose keys were never where the leak was.</p>
-        <label>To account (its number)</label>
+        <label>To account (its number, or its domain)</label>
         <input id="evac-to" class="field" type="text" data-value="move_to" data-attrif-disabled="busy"/>
         <button id="evac-move" data-event-click="evac_move()" data-attrif-disabled="busy">Move everything</button>
       </div>

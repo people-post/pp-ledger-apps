@@ -156,7 +156,9 @@ void TokenOverviewScreen::willShow() {
         }
         const auto &o = *overview;
         const uint64_t native = o.native < 0 ? 0 : static_cast<uint64_t>(o.native);
-        facts_ = {{"Its token", "token " + formatAmount(o.account) + " (the account's number)"},
+        facts_ = {{"Its token", (o.domain.empty() ? "" : o.domain + ", ") + "token " + formatAmount(o.account) +
+                                    " (the account's number)"},
+                  {"Its symbol", o.domain.empty() ? "none yet: the registrar gives it (its domain)" : o.domain},
                   {"Issued and out", formatAmount(o.supply)},
                   {"Native balance", formatAmount(native)},
                   {"A renewal costs about", formatAmount(o.renewalFee)},
