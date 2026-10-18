@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # UI smoke (development builds, PP_ADMIN_DEV_HOOKS=ON): drive pp-admin-signer under a virtual X
-# display — create a vault and a key; unlock a fixture vault and sign its operation — and check the
-# results on disk. Usage: ui_smoke.sh <build dir> [<output dir>]
+# display — create a vault and a key; unlock a fixture vault, sign its transfer, merge a copy signed
+# apart, sign its genesis plan, lock when left alone — and check the results. Usage: ui_smoke.sh <build dir> [<output dir>]
 set -euo pipefail
 build=$(cd "$1" && pwd)
 out=${2:-$(mktemp -d)}
@@ -13,7 +13,7 @@ here=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 run() { # <home> <script> [args...]
   local home=$1 script=$2
   shift 2
-  sed "s|@OUT@|$out|g" "$script" >"$out/$(basename "$script")"
+  sed -e "s|@OUT@|$out|g" -e "s|@FIXTURE@|$out/fixture|g" "$script" >"$out/$(basename "$script")"
   PP_LEDGER_ADMIN_HOME="$home" timeout 180 xvfb-run -a -s "-screen 0 1280x900x24" \
     "$signer" --script "$out/$(basename "$script")" "$@"
 }
@@ -29,5 +29,17 @@ rm -rf "$out/fixture"
 "$fixture" "$out/fixture" "fixture passphrase" >/dev/null
 run "$out/fixture" "$here/tests/ui/sign.script" "$out/fixture/transfer.json"
 "$fixture" verify "$out/transfer.signed.json" 2 || { echo "FAIL: the signed copy is not 2 of 2"; exit 1; }
+
+# 3. Merging: Bob's copy added to Alice's makes 2 of 2.
+run "$out/fixture" "$here/tests/ui/merge.script" "$out/fixture/transfer.json"
+"$fixture" verify "$out/transfer.merged.json" 2 || { echo "FAIL: the merged copy is not 2 of 2"; exit 1; }
+
+# 4. A genesis plan: our admin key signs every record of block 0 (Alice's signature plus ours).
+run "$out/fixture" "$here/tests/ui/genesis.script" "$out/fixture/genesis.json"
+"$fixture" verify "$out/genesis.signed.json" 2 || { echo "FAIL: the signed genesis is not 2 of 2"; exit 1; }
+
+# 5. Left alone, the app locks the vault (the idle timeout shortened for the run).
+PP_ADMIN_DEV_IDLE_SECONDS=2 run "$out/fixture" "$here/tests/ui/lock.script" ||
+  { echo "FAIL: the app did not lock itself"; exit 1; }
 
 echo "UI smoke passed (screenshots in $out)"

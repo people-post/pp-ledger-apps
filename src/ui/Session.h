@@ -14,6 +14,11 @@ struct Session {
   Vault vault;
   /** Go to a screen by name ("vault", "review", "keys"); the app decides what they are. */
   std::function<void(const std::string &)> navigate;
+  /** Why the vault was locked, for the vault screen to say ("" when the person locked it). */
+  std::string lockedBecause;
+
+  /** Minutes without use after which an app locks the vault. */
+  static constexpr int kIdleLockMinutes = 10;
 };
 
 } // namespace admin::ui_host

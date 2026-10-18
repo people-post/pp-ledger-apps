@@ -26,6 +26,7 @@ private:
   std::string passphrase_;
   std::string confirm_;
   std::string error_;
+  std::string notice_;
   bool busy_{false};
   std::string dir_;
 };

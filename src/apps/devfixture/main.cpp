@@ -1,11 +1,14 @@
 // Development only:
 //   pp-admin-devfixture <home> <passphrase>
-//     Makes <home>/vault (cheap KDF) holding a reserve and an admin key and an address book, and
-//     <home>/transfer.json: a reserve transfer, 2 of 3, signed by a third holder.
+//     Makes <home>/vault (cheap KDF) holding a reserve and an admin key and an address book;
+//     <home>/transfer.json: a reserve transfer, 2 of 3, signed by Alice; <home>/transfer.bob.json:
+//     the same, signed by Bob (a copy to merge); <home>/genesis.json: a genesis plan (pp-ledger's
+//     builder) the vault's admin key is one of three admins of, 2 to sign.
 //   pp-admin-devfixture verify <operation file> <signatures>
 //     Exit 0 when the file holds exactly that many valid signatures (and no invalid one).
 #include "core/AddressBook.h"
 #include "core/Vault.h"
+#include "chain/Genesis.h"
 #include "client/AccountIds.h"
 #include "operation/Operation.h"
 #include "lib/common/Utilities.h"
@@ -41,7 +44,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   auto mine = vault.generateKey("Hongwei — reserve", Role::Reserve).value();
-  vault.generateKey("Hongwei — admin", Role::Admin).value();
+  auto myAdmin = vault.generateKey("Hongwei — admin", Role::Admin).value();
   const auto alice = pp::utl::mlDsaGenerate().value();
   const auto bob = pp::utl::mlDsaGenerate().value();
   AddressBook book;
@@ -62,12 +65,55 @@ int main(int argc, char **argv) {
   common.window = op::windowFrom(now, 86400);
   common.notes = "Monthly top-up of the registrar, as agreed on Monday.";
   common.createdAt = now;
-  auto transfer = op::transfer(common, pp::AccountIds::ID_REGISTRAR, 5'000'000, 1).value();
+  const auto unsignedTransfer = op::transfer(common, pp::AccountIds::ID_REGISTRAR, 5'000'000, 1).value();
+  auto transfer = unsignedTransfer;
   op::sign(transfer, alice.privateKey).value();
-  if (auto saved = op::save(transfer, (home / "transfer.json").string(), true); !saved) {
-    std::cerr << saved.error().message << "\n";
+  auto bobsCopy = unsignedTransfer;
+  op::sign(bobsCopy, bob.privateKey).value();
+
+  // A genesis plan, as pp-beacon --plan-genesis makes it.
+  auto key = [] { return pp::utl::mlDsaGenerate().value().publicKey; };
+  pp::chain_genesis::Plan plan;
+  plan.config.networkId = "pp-mainnet";
+  plan.config.genesisTime = now + 86400;
+  plan.config.slotDuration = 7;
+  plan.config.slotsPerEpoch = 1800;
+  plan.config.maxTransactionsPerBlock = 4096;
+  plan.config.maxBlockBytes = 4u << 20;
+  plan.config.maxCustomMetaSize = 4096;
+  plan.config.minFeeCoefficients = {1, 1, 0};
+  plan.config.maxValidationTimespanSeconds = 86400;
+  plan.config.maxIssuancePerEpoch = 1'000'000;
+  plan.config.newAccountFee = 10;
+  plan.config.minerMinStake = 1000;
+  plan.config.minerRegistrationFee = 10;
+  plan.keys.genesis = {{alice.publicKey, myAdmin.publicKey, bob.publicKey}, 2};
+  plan.keys.reserve = {{mine.publicKey}, 0};
+  plan.keys.registrar = {{key()}, 0};
+  plan.keys.fee = {{key()}, 0};
+  plan.keys.recycle = {{key()}, 0};
+  plan.miners = {{pp::AccountIds::ID_FIRST_ISSUED, {key()}, 1, 10'000}};
+  plan.authority.recovery.publicKeys = {key(), key(), key()};
+  plan.authority.recovery.minSignatures = 2;
+  plan.authority.recovery.delayEpochs = 200;
+  plan.authority.beacon.generation = 1;
+  plan.authority.beacon.publicKey = key();
+  auto records = pp::chain_genesis::records(plan);
+  if (!records) {
+    std::cerr << records.error().message << "\n";
     return 1;
   }
-  std::cout << (home / "transfer.json").string() << "\n";
+  auto genesis = op::genesis(records.value(), "The launch plan, as agreed.", now).value();
+  op::sign(genesis, alice.privateKey).value();
+
+  for (const auto &[name, operation] : {std::pair<const char *, const op::Operation *>{"transfer.json", &transfer},
+                                        {"transfer.bob.json", &bobsCopy},
+                                        {"genesis.json", &genesis}}) {
+    if (auto saved = op::save(*operation, (home / name).string(), true); !saved) {
+      std::cerr << saved.error().message << "\n";
+      return 1;
+    }
+  }
+  std::cout << home.string() << "\n";
   return 0;
 }

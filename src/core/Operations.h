@@ -26,6 +26,12 @@ struct Review {
  */
 pp::Roe<Review> openOperation(const std::string &path);
 
+/**
+ * Add the signatures of copies signed apart (`paths`, each opened like any file for review) to
+ * `review` (AD002): only signatures may differ. The number of signers gained.
+ */
+pp::Roe<size_t> addCopies(Review &review, const std::vector<std::string> &paths);
+
 /** The vault keys that may sign `operation` now: among its signers, not signed yet. */
 std::vector<KeyInfo> keysToSign(const pp::operation::Operation &operation, const std::vector<KeyInfo> &vaultKeys);
 

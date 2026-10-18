@@ -29,8 +29,9 @@ struct AppOptions {
   int screenshotFrames{30};
   /**
    * Development (PP_ADMIN_DEV_HOOKS): steps to drive the app, one per line — `click #id`,
-   * `type <text>`, `wait <frames>`, `idle` (background work done), `answer <path>` (the next file
-   * dialog's choice), `shot <png>`, `quit`.
+   * `type <text>`, `wait <frames>`, `idle` (background work done), `answer <path>[|<path>…]` (the
+   * next file dialog's choice), `sleep <ms>`, `expect #id` (fails the run unless the screen shown
+   * has it), `shot <png>`, `quit`. A failed step ends the run with exit code 1.
    */
   std::string script;
 };
@@ -74,9 +75,14 @@ public:
 
   /** Ask for a file to open; `done` gets it, or nothing when cancelled. */
   void chooseFileToOpen(const std::vector<FileFilter> &filters, std::function<void(std::optional<std::string>)> done);
+  /** Ask for one or more files to open; `done` gets them (none when cancelled). */
+  void chooseFilesToOpen(const std::vector<FileFilter> &filters, std::function<void(std::vector<std::string>)> done);
   /** Ask where to save; `suggested` is where the dialog starts. */
   void chooseFileToSave(const std::vector<FileFilter> &filters, const std::string &suggested,
                         std::function<void(std::optional<std::string>)> done);
+
+  /** Call `onIdle` once nobody has touched the app for `seconds` (again after the next touch). */
+  void setIdleTimeout(int seconds, std::function<void()> onIdle);
 
   /** The main loop, until the window closes or quit(); the exit code. */
   int run();
@@ -84,6 +90,7 @@ public:
 
 private:
   void drainPosted();
+  std::optional<std::vector<std::string>> takeAnswer();
   /** Advance the development script; false once it quits. */
   bool stepScript();
 
@@ -99,7 +106,11 @@ private:
   std::vector<std::string> script_;
   size_t scriptLine_{0};
   int scriptWait_{0};
+  bool scriptFailed_{false};
   std::vector<std::string> dialogAnswers_;
+  int idleSeconds_{0};
+  std::function<void()> onIdle_;
+  bool idleFired_{false};
 };
 
 } // namespace admin::ui_host
