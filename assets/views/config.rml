@@ -1,7 +1,7 @@
 <rml>
 <head>
   <title>Config</title>
-  <link type="text/rcss" href="../themes/admin.rcss"/>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
 </head>
 <body>
   <div class="bar" data-model="nav">

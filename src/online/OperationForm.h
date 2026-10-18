@@ -10,7 +10,7 @@
 #include <functional>
 #include <string>
 
-namespace admin::online {
+namespace apps::online {
 
 class OperationForm : public ui_host::Screen {
 public:
@@ -48,4 +48,4 @@ private:
 std::string accountTitle(uint64_t id);
 int64_t nowSeconds();
 
-} // namespace admin::online
+} // namespace apps::online

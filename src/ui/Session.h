@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 struct Session {
   explicit Session(std::string vaultDir) : vault(std::move(vaultDir)) {}
@@ -45,4 +45,4 @@ struct Session {
   static constexpr int kIdleLockMinutes = 10;
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <memory>
 
-namespace admin::online {
+namespace apps::online {
 
 namespace op = pp::operation;
 
@@ -103,4 +103,4 @@ void OperationForm::make(std::function<pp::Roe<op::Operation>(net::ChainLink &, 
       });
 }
 
-} // namespace admin::online
+} // namespace apps::online

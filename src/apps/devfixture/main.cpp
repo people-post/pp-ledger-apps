@@ -1,15 +1,15 @@
 // Development only:
-//   pp-admin-devfixture <home> <passphrase>
+//   pp-ledger-devfixture <home> <passphrase>
 //     Makes <home>/vault (cheap KDF) holding a reserve and an admin key and an address book;
 //     <home>/transfer.json: a reserve transfer, 2 of 3, signed by Alice; <home>/transfer.bob.json:
 //     the same, signed by Bob (a copy to merge); <home>/genesis.json: a genesis plan (pp-ledger's
 //     builder) the vault's admin key is one of three admins of, 2 to sign.
-//   pp-admin-devfixture import <home> <passphrase> <role> <name>.key…
+//   pp-ledger-devfixture import <home> <passphrase> <role> <name>.key…
 //     Adds the given pp-client keygen keys (each with its .pub) to <home>/vault, made (cheap KDF)
 //     if missing.
-//   pp-admin-devfixture card <home> <passphrase> <role> <name> <name>.pub
+//   pp-ledger-devfixture card <home> <passphrase> <role> <name> <name>.pub
 //     Adds a key card to <home>/vault's address book.
-//   pp-admin-devfixture verify <operation file> <signatures>
+//   pp-ledger-devfixture verify <operation file> <signatures>
 //     Exit 0 when the file holds exactly that many valid signatures (and no invalid one).
 #include "core/AddressBook.h"
 #include "core/Vault.h"
@@ -25,7 +25,7 @@
 #include <filesystem>
 #include <iostream>
 
-using namespace admin;
+using namespace apps;
 namespace op = pp::operation;
 
 int main(int argc, char **argv) {
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (argc != 3) {
-    std::cerr << "usage: pp-admin-devfixture <home> <passphrase>\n";
+    std::cerr << "usage: pp-ledger-devfixture <home> <passphrase>\n";
     return 2;
   }
   const std::filesystem::path home = argv[1];

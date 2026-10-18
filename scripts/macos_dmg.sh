@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # A release disk image: the bundles of an install folder (signed or not) and an Applications
 # shortcut to drag them to. Prints the .dmg's path.
-# Usage: macos_dmg.sh <install folder holding the .app bundles> <version> <out dir> [admin|token]
-#   admin (default): "PP Ledger Admin", pp-ledger-admin-<version>-macos-<arch>.dmg
+# Usage: macos_dmg.sh <install folder holding the .app bundles> <version> <out dir> [system|token]
+#   system (default): "PP Ledger System", pp-ledger-system-<version>-macos-<arch>.dmg
 #   token: "PP Ledger Token", pp-ledger-token-<version>-macos-<arch>.dmg
-# The install folder holds one set (cmake --install … --component signer, then admin or token).
+# The install folder holds one set (cmake --install … --component signer, then system or token).
 set -euo pipefail
 src=$(cd "$1" && pwd)
 version=$2
 mkdir -p "$3"
 out=$(cd "$3" && pwd)
-set=${4:-admin}
+set=${4:-system}
 case "$set" in
-  admin) volume="PP Ledger Admin" ;;
+  system) volume="PP Ledger System" ;;
   token) volume="PP Ledger Token" ;;
-  *) echo "unknown set: $set (admin or token)" >&2; exit 1 ;;
+  *) echo "unknown set: $set (system or token)" >&2; exit 1 ;;
 esac
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT

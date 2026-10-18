@@ -5,7 +5,7 @@
 #include "operation/Operation.h"
 #include "common/io/Json.h"
 
-namespace admin {
+namespace apps {
 
 using pp::common::Object;
 
@@ -56,4 +56,4 @@ pp::Roe<KeyCard> loadKeyCard(const std::string &path) {
 
 pp::Roe<void> saveKeyCard(const KeyCard &card, const std::string &path) { return writeNewFile(path, toJson(card)); }
 
-} // namespace admin
+} // namespace apps

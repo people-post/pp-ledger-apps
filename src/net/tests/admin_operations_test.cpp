@@ -9,7 +9,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace admin::net;
+using namespace apps::net;
 namespace op = pp::operation;
 
 namespace {

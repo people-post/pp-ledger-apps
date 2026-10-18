@@ -12,7 +12,7 @@
 #include <cstring>
 #include <filesystem>
 
-namespace admin {
+namespace apps {
 
 namespace {
 
@@ -155,7 +155,7 @@ pp::Roe<std::string> openWithPassphrase(const char (&magic)[4], std::string_view
 }
 
 std::string fileAad(const std::string &kind, const std::string &name) {
-  return "pp-ledger-admin/" + kind + "|" + name + "|1";
+  return "pp-ledger-apps/" + kind + "|" + name + "|1";
 }
 
 bool validName(const std::string &name) {
@@ -198,7 +198,7 @@ pp::Roe<std::pair<KeyInfo, std::string>> fromKeyRecord(const Object &record) {
 
 /** `privateKey` and `publicKey` are one ML-DSA-65 pair. */
 bool isPair(const std::string &privateKey, const std::string &publicKey) {
-  static const std::string probe = "pp-ledger-admin/key-pair-probe/v1";
+  static const std::string probe = "pp-ledger-apps/key-pair-probe/v1";
   auto signature = pp::utl::mlDsaSign(privateKey, probe);
   return signature && pp::utl::mlDsaVerify(publicKey, probe, signature.value());
 }
@@ -218,15 +218,15 @@ Vault::Vault(std::string dir, KdfLimits limits) : dir_(std::move(dir)), limits_(
 Vault::~Vault() { lock(); }
 
 std::string Vault::defaultDir() {
-  if (const char *home = std::getenv("PP_LEDGER_ADMIN_HOME"); home && *home) {
+  if (const char *home = std::getenv("PP_LEDGER_APPS_HOME"); home && *home) {
     return (std::filesystem::path(home) / "vault").string();
   }
   const char *home = std::getenv("HOME");
   const std::filesystem::path base = home ? home : ".";
 #ifdef __APPLE__
-  return (base / "Library" / "Application Support" / "pp-ledger-admin" / "vault").string();
+  return (base / "Library" / "Application Support" / "pp-ledger-apps" / "vault").string();
 #else
-  return (base / ".pp-ledger-admin" / "vault").string();
+  return (base / ".pp-ledger-apps" / "vault").string();
 #endif
 }
 
@@ -270,7 +270,7 @@ pp::Roe<void> Vault::create(std::string_view passphrase) {
 }
 
 pp::Roe<void> Vault::unlock(std::string_view passphrase) {
-  auto bytes = admin::readFile((std::filesystem::path(dir_) / kVaultFile).string());
+  auto bytes = apps::readFile((std::filesystem::path(dir_) / kVaultFile).string());
   if (!bytes) {
     return pp::Error("No vault in " + dir_);
   }
@@ -310,7 +310,7 @@ pp::Roe<std::pair<KeyInfo, std::string>> Vault::loadKey(const std::string &id) c
   if (!validName(id)) {
     return pp::Error("No key " + id + " in the vault");
   }
-  auto bytes = admin::readFile((std::filesystem::path(dir_) / kKeysDir / (id + ".key")).string());
+  auto bytes = apps::readFile((std::filesystem::path(dir_) / kKeysDir / (id + ".key")).string());
   if (!bytes) {
     return pp::Error("No key " + id + " in the vault");
   }
@@ -453,7 +453,7 @@ pp::Roe<std::string> Vault::readFile(const std::string &name) const {
   if (!std::filesystem::exists(path, ec)) {
     return std::string();
   }
-  auto bytes = admin::readFile(path.string());
+  auto bytes = apps::readFile(path.string());
   if (!bytes) {
     return bytes.error();
   }
@@ -529,7 +529,7 @@ pp::Roe<std::vector<KeyInfo>> Vault::importBackup(const std::string &path, std::
   if (auto ok = requireUnlocked(); !ok) {
     return ok.error();
   }
-  auto bytes = admin::readFile(path);
+  auto bytes = apps::readFile(path);
   if (!bytes) {
     return bytes.error();
   }
@@ -581,4 +581,4 @@ pp::Roe<std::vector<KeyInfo>> Vault::importBackup(const std::string &path, std::
   return added;
 }
 
-} // namespace admin
+} // namespace apps

@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace admin {
+namespace apps {
 
 /** Write `data` to `path` atomically (temp file 0600, fsync, rename, fsync dir); parents made. */
 pp::Roe<void> writeFileAtomic(const std::string &path, const std::string &data);
@@ -14,4 +14,4 @@ pp::Roe<void> writeNewFile(const std::string &path, const std::string &data);
 /** A whole file's bytes. */
 pp::Roe<std::string> readFile(const std::string &path);
 
-} // namespace admin
+} // namespace apps

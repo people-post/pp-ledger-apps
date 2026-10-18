@@ -5,7 +5,7 @@
 #include <cctype>
 #include <limits>
 
-namespace admin {
+namespace apps {
 
 pp::Roe<uint64_t> parseAmount(const std::string &text) {
   uint64_t value = 0;
@@ -31,4 +31,4 @@ pp::Roe<uint64_t> parseAmount(const std::string &text) {
 
 std::string formatAmount(uint64_t amount) { return pp::operation::groupDigits(amount); }
 
-} // namespace admin
+} // namespace apps

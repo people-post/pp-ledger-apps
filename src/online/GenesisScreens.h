@@ -11,7 +11,7 @@
 #include <functional>
 #include <vector>
 
-namespace admin::online {
+namespace apps::online {
 
 /** A key offered for a place in the plan: from a key card or the vault. */
 struct KeyChoice {
@@ -95,4 +95,4 @@ private:
   std::string threshold_{"2"};
 };
 
-} // namespace admin::online
+} // namespace apps::online

@@ -11,7 +11,7 @@
 #include <mutex>
 #include <string>
 
-namespace admin::online {
+namespace apps::online {
 
 class Online {
 public:
@@ -53,4 +53,4 @@ private:
   std::string address_;
 };
 
-} // namespace admin::online
+} // namespace apps::online

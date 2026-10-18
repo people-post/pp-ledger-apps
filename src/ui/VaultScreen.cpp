@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 namespace {
 
@@ -109,4 +109,4 @@ void VaultScreen::create(ui::DataModelHandle, ui::Event &, const ui::VariantList
       [this, result] { finish(*result); });
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

@@ -2,7 +2,7 @@
 
 #include <ui/dom/Context.h>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 bool Nav::build(ui::Context *context, const std::string &appTitle, std::vector<Tab> tabs) {
   appTitle_ = appTitle;
@@ -43,4 +43,4 @@ void Nav::setStatus(const std::string &status) {
   model_.DirtyAllVariables();
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

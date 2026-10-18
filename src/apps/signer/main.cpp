@@ -1,5 +1,5 @@
-// pp-admin-signer: every key holder's app. Opens an operation, shows what it does, signs it with a
-// key from the vault — offline. Usage: pp-admin-signer [operation file]
+// pp-ledger-signer: every key holder's app. Opens an operation, shows what it does, signs it with a
+// key from the vault — offline. Usage: pp-ledger-signer [operation file]
 #include "ui/IdleLock.h"
 #include "ui/KeysScreen.h"
 #include "ui/Nav.h"
@@ -13,12 +13,12 @@
 
 #include <cstdlib>
 
-using namespace admin;
-using namespace admin::ui_host;
+using namespace apps;
+using namespace apps::ui_host;
 
 int main(int argc, char **argv) {
   std::vector<std::string> args;
-  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Signer — pp-ledger admin"}, args);
+  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Signer — PP Ledger"}, args);
   UiApp app(options);
   if (!app.start()) {
     return 1;
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   };
   installIdleLock(app, session);
   std::string first = "vault";
-#ifdef PP_ADMIN_DEV_HOOKS
+#ifdef PP_APPS_DEV_HOOKS
   // Development only: unattended unlock and a first screen, for screenshots.
   for (size_t i = 0; i + 1 < args.size(); ++i) {
     if (args[i] == "--show") {
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
       break;
     }
   }
-  if (const char *passphrase = std::getenv("PP_ADMIN_DEV_PASSPHRASE")) {
+  if (const char *passphrase = std::getenv("PP_APPS_DEV_PASSPHRASE")) {
     (void)session.vault.unlock(passphrase);
   }
 #endif

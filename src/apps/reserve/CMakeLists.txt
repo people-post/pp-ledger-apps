@@ -1,5 +1,5 @@
-# pp-admin-reserve: the reserve's holders — transfers out of the treasury, made, signed, submitted.
-add_executable(pp-admin-reserve main.cpp)
-target_link_libraries(pp-admin-reserve PRIVATE admin_online)
-pp_admin_apply_warnings(pp-admin-reserve)
-pp_admin_app(pp-admin-reserve reserve "PP Ledger Reserve" "Transfers out of a pp-ledger reserve" admin)
+# pp-ledger-reserve: the reserve's holders — transfers out of the treasury, made, signed, submitted.
+add_executable(pp-ledger-reserve main.cpp)
+target_link_libraries(pp-ledger-reserve PRIVATE apps_online)
+pp_apps_apply_warnings(pp-ledger-reserve)
+pp_apps_app(pp-ledger-reserve reserve "PP Ledger Reserve" "Transfers out of a pp-ledger reserve" system)

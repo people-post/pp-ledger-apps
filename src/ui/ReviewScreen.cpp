@@ -9,7 +9,7 @@
 #include <regex>
 #include <filesystem>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 namespace op = pp::operation;
 
@@ -238,7 +238,7 @@ void ReviewScreen::addCopies(ui::DataModelHandle, ui::Event &, const ui::Variant
     if (paths.empty() || !review_) {
       return;
     }
-    auto added = admin::addCopies(*review_, paths);
+    auto added = apps::addCopies(*review_, paths);
     if (!added) {
       say(added.error().message + ".");
       return;
@@ -292,4 +292,4 @@ void ReviewScreen::submit(ui::DataModelHandle, ui::Event &, const ui::VariantLis
   });
 }
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

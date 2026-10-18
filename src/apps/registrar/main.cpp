@@ -1,6 +1,6 @@
-// pp-admin-registrar: for the registrar's holders. Create issued accounts for their owners and fund
+// pp-ledger-registrar: for the registrar's holders. Create issued accounts for their owners and fund
 // them; sign, collect, submit.
-// Usage: pp-admin-registrar [operation file]
+// Usage: pp-ledger-registrar [operation file]
 #include "online/RegistrarScreen.h"
 #include "online/NetworkScreen.h"
 #include "online/Online.h"
@@ -17,13 +17,13 @@
 
 #include <map>
 
-using namespace admin;
-using namespace admin::ui_host;
-using namespace admin::online;
+using namespace apps;
+using namespace apps::ui_host;
+using namespace apps::online;
 
 int main(int argc, char **argv) {
   std::vector<std::string> args;
-  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Registrar — pp-ledger admin"}, args);
+  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Registrar — PP Ledger"}, args);
   UiApp app(options);
   if (!app.start()) {
     return 1;

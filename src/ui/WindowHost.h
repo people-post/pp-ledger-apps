@@ -15,7 +15,7 @@ namespace ui {
 class Context;
 }
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 class WindowHost {
 public:
@@ -48,4 +48,4 @@ private:
   std::unique_ptr<State> state_;
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

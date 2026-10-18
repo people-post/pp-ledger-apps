@@ -11,7 +11,7 @@
 #include <optional>
 #include <vector>
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 class ReviewScreen : public Screen {
 public:
@@ -77,4 +77,4 @@ private:
   std::string notice_;
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

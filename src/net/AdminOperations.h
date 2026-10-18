@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace admin::net {
+namespace apps::net {
 
 /** A setting of the chain config an update may change. */
 struct ConfigField {
@@ -101,4 +101,4 @@ struct GenesisForm {
 /** Block 0 as an operation for the admin set to sign offline (pp-beacon --init --genesis-op). */
 pp::Roe<pp::operation::Operation> makeGenesisPlan(const GenesisForm &form, const std::string &notes, int64_t now);
 
-} // namespace admin::net
+} // namespace apps::net

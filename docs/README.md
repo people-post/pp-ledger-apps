@@ -1,4 +1,4 @@
-# pp-ledger-admin docs
+# pp-ledger-apps docs
 
 | Doc | For |
 |-----|-----|

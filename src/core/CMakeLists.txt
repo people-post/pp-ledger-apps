@@ -1,6 +1,6 @@
-# admin_core: vault, key cards and address book, the operation workflow. No network code: the
+# apps_core: vault, key cards and address book, the operation workflow. No network code: the
 # Signer links this and the UI only (DESIGN.md § Shape of the code, AD005).
-add_library(admin_core STATIC
+add_library(apps_core STATIC
     AddressBook.cpp
     Amounts.cpp
     Amounts.h
@@ -16,10 +16,10 @@ add_library(admin_core STATIC
     Vault.cpp
     Vault.h
 )
-target_include_directories(admin_core PUBLIC ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(admin_core PUBLIC pp::operation pp_common sodium)
-pp_admin_apply_warnings(admin_core)
+target_include_directories(apps_core PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_link_libraries(apps_core PUBLIC pp::operation pp_common sodium)
+pp_apps_apply_warnings(apps_core)
 
-if(PP_ADMIN_BUILD_TESTS)
+if(PP_APPS_BUILD_TESTS)
   add_subdirectory(tests)
 endif()

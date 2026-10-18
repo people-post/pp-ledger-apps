@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace admin;
+using namespace apps;
 
 TEST(AmountsTest, AmountsAreWholeUnitsGroupedOrNot) {
   EXPECT_EQ(parseAmount("1,000,000").value(), 1'000'000u);

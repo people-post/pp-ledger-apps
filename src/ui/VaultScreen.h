@@ -4,7 +4,7 @@
 #include "ui/Screen.h"
 #include "ui/Session.h"
 
-namespace admin::ui_host {
+namespace apps::ui_host {
 
 class VaultScreen : public Screen {
 public:
@@ -31,4 +31,4 @@ private:
   std::string dir_;
 };
 
-} // namespace admin::ui_host
+} // namespace apps::ui_host

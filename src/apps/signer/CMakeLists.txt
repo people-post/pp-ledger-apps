@@ -1,5 +1,5 @@
-# pp-admin-signer: review, sign and merge operations, offline (AD005: it links no network code).
-add_executable(pp-admin-signer main.cpp)
-target_link_libraries(pp-admin-signer PRIVATE admin_ui)
-pp_admin_apply_warnings(pp-admin-signer)
-pp_admin_app(pp-admin-signer signer "PP Ledger Signer" "Review and sign pp-ledger operations, offline" signer)
+# pp-ledger-signer: review, sign and merge operations, offline (AD005: it links no network code).
+add_executable(pp-ledger-signer main.cpp)
+target_link_libraries(pp-ledger-signer PRIVATE apps_ui)
+pp_apps_apply_warnings(pp-ledger-signer)
+pp_apps_app(pp-ledger-signer signer "PP Ledger Signer" "Review and sign pp-ledger operations, offline" signer)

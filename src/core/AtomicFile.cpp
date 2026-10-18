@@ -9,7 +9,7 @@
 #include <sstream>
 #include <unistd.h>
 
-namespace admin {
+namespace apps {
 
 namespace {
 
@@ -97,4 +97,4 @@ pp::Roe<std::string> readFile(const std::string &path) {
   return bytes.str();
 }
 
-} // namespace admin
+} // namespace apps

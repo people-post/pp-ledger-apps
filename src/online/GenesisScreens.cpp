@@ -12,7 +12,7 @@
 #include <memory>
 #include <sstream>
 
-namespace admin::online {
+namespace apps::online {
 
 namespace op = pp::operation;
 
@@ -379,4 +379,4 @@ void RecoveryScreen::makeRecovery(ui::DataModelHandle, ui::Event &, const ui::Va
       "recovery.json");
 }
 
-} // namespace admin::online
+} // namespace apps::online

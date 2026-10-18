@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace admin {
+namespace apps {
 
 namespace {
 
@@ -51,4 +51,4 @@ const std::vector<Role> &vaultRoles() {
   return roles;
 }
 
-} // namespace admin
+} // namespace apps

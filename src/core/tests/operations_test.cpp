@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace admin;
+using namespace apps;
 namespace op = pp::operation;
 
 namespace {

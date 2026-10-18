@@ -1,6 +1,6 @@
-// pp-admin-token: for a token issuer's operators (projects/token-app). The issuer's overview, issuing
+// pp-ledger-token: for a token issuer's operators (projects/token-app). The issuer's overview, issuing
 // its token, sending from it, replacing its signers; sign, collect, submit.
-// Usage: pp-admin-token [operation file]
+// Usage: pp-ledger-token [operation file]
 #include "online/NetworkScreen.h"
 #include "online/Online.h"
 #include "online/TokenScreens.h"
@@ -17,13 +17,13 @@
 
 #include <map>
 
-using namespace admin;
-using namespace admin::ui_host;
-using namespace admin::online;
+using namespace apps;
+using namespace apps::ui_host;
+using namespace apps::online;
 
 int main(int argc, char **argv) {
   std::vector<std::string> args;
-  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Token — pp-ledger"}, args);
+  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Token — PP Ledger"}, args);
   UiApp app(options);
   if (!app.start()) {
     return 1;

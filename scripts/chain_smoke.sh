@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Chain smoke (development builds, PP_ADMIN_DEV_HOOKS=ON): drive the role apps against pp-ledger's
+# Chain smoke (development builds, PP_APPS_DEV_HOOKS=ON): drive the role apps against pp-ledger's
 # local smoke network and check the chain after —
-#   pp-admin-reserve: a reserve → registrar transfer (the registrar's balance);
-#   pp-admin-admin: a config update raising the mint cap (the config in force), a mint to the
+#   pp-ledger-reserve: a reserve → registrar transfer (the registrar's balance);
+#   pp-ledger-admin: a config update raising the mint cap (the config in force), a mint to the
 #   reserve (the reserve's balance), a rotation of the admin set (2 of 4);
-#   pp-admin-registrar: an issued account for an owner key, funded by the registrar (the account);
-#   pp-admin-token: that account as a token issuer — issues to the registrar (both balances of its
+#   pp-ledger-registrar: an issued account for an owner key, funded by the registrar (the account);
+#   pp-ledger-token: that account as a token issuer — issues to the registrar (both balances of its
 #   token), replaces its signers (2 of 2), sends native tokens signed by both (the registrar's balance);
-#   pp-admin-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
+#   pp-ledger-genesis: a recovery announcing a new admin set (the authority's pending recovery) — last,
 #   as it freezes the admin set until it applies.
 # Each made from the chain, signed with the smoke keys (3 of 3), submitted, seen in a block.
 # Usage: chain_smoke.sh <build dir> <pp-ledger checkout, built with its apps> [<output dir>]
@@ -34,8 +34,8 @@ run_app() { # <app> <home> <script>
   sed -e "s|@OUT@|$out|g" -e "s|@NODE@|$node|g" -e "s|@AMOUNT@|$amount|g" -e "s|@MINT@|$mint|g" -e "s|@CAP@|$cap|g" \
     -e "s|@ACCOUNT@|$account|g" -e "s|@FUND@|$fund|g" -e "s|@ISSUE@|$issue|g" -e "s|@SEND@|$send|g" \
     "$here/tests/ui/$script" >"$out/$script"
-  PP_LEDGER_ADMIN_HOME="$home" timeout 300 xvfb-run -a -s "-screen 0 1280x900x24" \
-    "$build/src/apps/$app/pp-admin-$app" --script "$out/$script" >"$out/$app.log" 2>&1 ||
+  PP_LEDGER_APPS_HOME="$home" timeout 300 xvfb-run -a -s "-screen 0 1280x900x24" \
+    "$build/src/apps/$app/pp-ledger-$app" --script "$out/$script" >"$out/$app.log" 2>&1 ||
     { grep -a "script:" "$out/$app.log"; echo "FAIL: the $app app run"; exit 1; }
 }
 mint=$((5000 + RANDOM))
@@ -49,7 +49,7 @@ cap=$((700000 + RANDOM))
 before=$(balance 2)
 
 rm -rf "$out/home"
-"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/home" "reserve passphrase" reserve \
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/home" "reserve passphrase" reserve \
   "$smoke/keys/reserve1.key" "$smoke/keys/reserve2.key" "$smoke/keys/reserve3.key"
 run_app reserve "$out/home" reserve-chain.script
 after=$(balance 2)
@@ -60,7 +60,7 @@ echo "✓ Reserve: the registrar received $amount"
 reserveBefore=$(balance 1)
 rm -rf "$out/admin-home" "$out/admin-new".*
 "$client" keygen -o "$out/admin-new" >/dev/null # the fourth admin of the rotation
-"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/admin-home" "admin passphrase" admin \
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/admin-home" "admin passphrase" admin \
   "$smoke/keys/genesis1.key" "$smoke/keys/genesis2.key" "$smoke/keys/genesis3.key" "$out/admin-new.key"
 run_app admin "$out/admin-home" admin-chain.script
 reserveAfter=$(balance 1)
@@ -77,7 +77,7 @@ echo "✓ Admin: the admin set is 2 of 4"
 # 3. Registrar: an issued account for an owner, funded by the registrar.
 rm -rf "$out/registrar-home" "$out/owner".*
 "$client" keygen -o "$out/owner" >/dev/null
-"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/registrar-home" "registrar passphrase" registrar \
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/registrar-home" "registrar passphrase" registrar \
   "$smoke/keys/registrar1.key" "$smoke/keys/registrar2.key" "$smoke/keys/registrar3.key"
 run_app registrar "$out/registrar-home" registrar-chain.script
 # Renewals take their fee (a few units on the smoke chain) from it from then on.
@@ -91,7 +91,7 @@ echo "✓ Registrar: account $account created for the owner's key, holding $held
 # 4. Token: the new account issues its token, replaces its signers, sends from them both.
 rm -rf "$out/token-home" "$out/owner2".*
 "$client" keygen -o "$out/owner2" >/dev/null
-"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/token-home" "token passphrase" owner \
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/token-home" "token passphrase" owner \
   "$out/owner.key" "$out/owner2.key"
 registrarBefore=$(balance 2)
 run_app token "$out/token-home" token-chain.script
@@ -106,9 +106,9 @@ echo "✓ Token: account $account issued $issue to the registrar, is 2 of 2, sen
 # 5. Genesis: the recovery set announces a new admin set.
 rm -rf "$out/genesis-home" "$out/next-admin"*
 for i in 1 2 3; do "$client" keygen -o "$out/next-admin$i" >/dev/null; done
-"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/genesis-home" "genesis passphrase" recovery \
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/genesis-home" "genesis passphrase" recovery \
   "$smoke/keys/recovery1.key"
-"$build/src/apps/devfixture/pp-admin-devfixture" import "$out/genesis-home" "genesis passphrase" admin \
+"$build/src/apps/devfixture/pp-ledger-devfixture" import "$out/genesis-home" "genesis passphrase" admin \
   "$out/next-admin1.key" "$out/next-admin2.key" "$out/next-admin3.key"
 run_app genesis "$out/genesis-home" recovery-chain.script
 "$client" -b --host "$node" config 2>/dev/null | grep -q "pendingRecovery: {adminKeys: 3, adminMinSignatures: 2" ||

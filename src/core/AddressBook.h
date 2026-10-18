@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace admin {
+namespace apps {
 
 class AddressBook {
 public:
@@ -32,4 +32,4 @@ private:
   std::vector<KeyCard> cards_;
 };
 
-} // namespace admin
+} // namespace apps

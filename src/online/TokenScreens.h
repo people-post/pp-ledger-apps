@@ -10,7 +10,7 @@
 #include <optional>
 #include <vector>
 
-namespace admin::online {
+namespace apps::online {
 
 /** The issuer account the app operates: its number, kept in the vault. */
 class Issuer {
@@ -153,4 +153,4 @@ private:
   std::string fee_;
 };
 
-} // namespace admin::online
+} // namespace apps::online

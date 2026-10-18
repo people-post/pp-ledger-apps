@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-namespace admin {
+namespace apps {
 
 using pp::common::Object;
 using pp::common::Value;
@@ -79,4 +79,4 @@ std::optional<KeyCard> AddressBook::find(const std::string &publicKey) const {
   return std::nullopt;
 }
 
-} // namespace admin
+} // namespace apps
