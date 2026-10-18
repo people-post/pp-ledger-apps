@@ -6,6 +6,7 @@
 | [guides/signing.md](guides/signing.md) | Every signer: reviewing, signing, combining copies, submitting |
 | [guides/reserve.md](guides/reserve.md) · [guides/admin.md](guides/admin.md) · [guides/registrar.md](guides/registrar.md) | Each role's app |
 | [guides/genesis-ceremony.md](guides/genesis-ceremony.md) | Starting a chain with the system keys offline; recovery |
+| [guides/fees.md](guides/fees.md) | The fee account's holders: fee rounds |
 | [guides/token.md](guides/token.md) | A token issuer's operators: the Token app |
 | [RELEASE.md](RELEASE.md) | Maintainers: packages, signing, releases |
 

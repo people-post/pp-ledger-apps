@@ -10,6 +10,8 @@ add_library(apps_online STATIC
     OperationForm.h
     RegistrarScreen.cpp
     RegistrarScreen.h
+    FeeScreens.cpp
+    FeeScreens.h
     TokenScreens.cpp
     TokenScreens.h
     NetworkScreen.h

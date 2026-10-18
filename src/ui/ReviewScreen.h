@@ -73,6 +73,7 @@ private:
   /** Against the chain now (role apps): label/value lines. */
   std::vector<Line> against_;
   bool comparing_{false};
+  std::string againstTitle_;
   std::string error_;
   std::string notice_;
 };

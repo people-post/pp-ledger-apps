@@ -1,0 +1,64 @@
+<rml>
+<head>
+  <title>Relays</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="relays">
+    <div class="card">
+      <h1>Relays</h1>
+      <p class="muted">Relays sign nothing on the chain: the round takes their work from you. List each relay
+        and the account it is paid to; for this round, enter its uptime (from your monitoring), typed or from a
+        CSV of "relay,uptime" lines.</p>
+      <div class="item" data-for="r : rows">
+        <span class="grow"><strong>{{r.name}}</strong> · account {{r.account}}</span>
+        <span class="mono" style="width: 200dp;">{{r.peer_id}}</span>
+        <input class="field" style="width: 110dp; margin: 0;" type="text" data-attr-id="'relay-uptime-' + it_index" data-value="r.uptime" data-attrif-disabled="!has_draft"/>
+        <button class="small" data-event-click="relays_remove(it_index)">Remove</button>
+      </div>
+      <p class="muted" data-if="rows.size == 0">No relays yet.</p>
+      <div class="row">
+        <div class="grow">
+          <label>Who entered the measures</label>
+          <input id="relays-by" class="field" type="text" data-value="entered_by" data-attrif-disabled="!has_draft"/>
+        </div>
+        <div class="grow">
+          <label>Where they come from</label>
+          <input id="relays-source" class="field" type="text" data-value="source" data-attrif-disabled="!has_draft"/>
+        </div>
+      </div>
+      <div class="row">
+        <button id="relays-keep" class="primary" data-event-click="relays_keep()">Keep them</button>
+        <button id="relays-import" data-event-click="relays_import()" data-attrif-disabled="!has_draft">Import uptime (CSV)…</button>
+      </div>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+    <div class="card">
+      <h2>Add a relay</h2>
+      <div class="row">
+        <div class="grow">
+          <label>Name</label>
+          <input id="relay-name" class="field" type="text" data-value="new_name"/>
+        </div>
+        <div class="grow">
+          <label>Peer id (from its operator)</label>
+          <input id="relay-peer" class="field" type="text" data-value="new_peer_id"/>
+        </div>
+        <div class="grow">
+          <label>Paid to account</label>
+          <input id="relay-account" class="field" type="text" data-value="new_account"/>
+        </div>
+      </div>
+      <button id="relay-add" data-event-click="relays_add()">Add</button>
+    </div>
+  </div>
+</body>
+</rml>

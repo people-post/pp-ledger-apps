@@ -5,6 +5,7 @@
 
 #include "operation/Operation.h"
 #include "chain/Types.h"
+#include "client/Client.h"
 
 #include <cstdint>
 #include <memory>
@@ -39,6 +40,10 @@ public:
   pp::Roe<pp::UserAccount> account(uint64_t id);
   /** Account `id`'s keys and threshold: who signs for it. */
   pp::Roe<pp::operation::SignerSet> signersOf(uint64_t id);
+  /** Block `id` (its header and records). */
+  pp::Roe<pp::Ledger::ChainNode> block(uint64_t id);
+  /** One page of PRODUCER_STATS for blocks [from, to) (the node caps a page). */
+  pp::Roe<pp::Client::ProducerStatsResponse> producerStats(uint64_t from, uint64_t to);
   /** Account `id`'s latest transactions (latest first; as many as the node returns in one page). */
   pp::Roe<std::vector<pp::Ledger::Record>> transactions(uint64_t id);
   /** The least fee `record` may carry under the config in force. */
@@ -46,13 +51,16 @@ public:
 
   /**
    * Send a complete operation: refused when short of its quorum, or made for another network or
-   * another chain of it (its genesis hash). Sending again is harmless (OPERATION_FILE.md).
+   * another chain of it (its genesis hash). Sending again is harmless (OPERATION_FILE.md). A batch
+   * goes transfer by transfer; refused when any is (the others are sent).
    */
   pp::Roe<void> submit(const pp::operation::Operation &operation);
-  /** Whether the operation's transaction is in a block (looked for among its payer's latest). */
+  /** Whether the operation's transactions are all in blocks (looked for among their payer's latest). */
   pp::Roe<bool> included(const pp::operation::Operation &operation);
 
 private:
+  /** Pages of the payer's transactions looked through for an operation's (about 32 blocks each). */
+  static constexpr int kIncludedPages = 16;
   struct State;
   std::unique_ptr<State> state_;
   std::string address_;

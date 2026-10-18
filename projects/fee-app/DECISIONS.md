@@ -19,6 +19,9 @@ the vault, key cards, operation files signed apart, the Signer, submitting and f
 choose (a date, or the tip). The start is read from the chain (FD007), not typed.
 **Rationale:** Rounds that neither overlap nor leave gaps, whatever the calendar: every block is
 counted once. Holders think in months or seasons; the app turns a date into the last block before it.
+**Amended (fd4):** the start comes from the last round kept (the vault's, holders sharing round files),
+not read from the chain: a node lists an account's transactions 32 blocks a page, too slow to search a
+season. The app warns when a period would overlap the last round or leave a gap.
 **Alternatives:** Calendar periods (blocks at the edges counted by timestamps; gaps when a round is
 late); epoch ranges (not how the holders think).
 
@@ -70,6 +73,9 @@ transaction type (a protocol change, where a batch of existing transfers is not)
 Every transfer of the round carries the file's hash and the round's end block in its metadata.
 **Rationale:** The chain alone then says where the last round ended (FD002) and what it paid; the file
 says why, and is checked against the hash. The holders keep and publish the files as they choose.
+**As built:** the metadata is `pp-fee-round/1 <number> <end block> <digest>`; the digest covers the
+report, rules and table (the file adds when and where it was made). Reviewing payouts, the fee app
+checks them against the round file of that digest.
 **Alternatives:** Files only (the next round's start depends on whoever kept them); everything on the
 chain (a season's report is too large for transaction metadata).
 
@@ -80,3 +86,24 @@ chain (a season's report is too large for transaction metadata).
 **Rationale:** Rounds are roughly monthly or seasonal while the rules are worked out; a schedule can
 come once they settle (the app proposing the next round, prefilled).
 **Alternatives:** A fixed schedule from the start.
+
+## FD009 — Four fixed shares
+
+**Date:** 2026-10-19
+**Decision:** The rules split the pot in four shares, each a percentage: miners by blocks produced,
+miners by the fees in their blocks, relays by uptime, everyone paid this round equally; with a
+keep-back, a miss penalty (blocks), a smallest payout and whether to leave out miners no longer
+registered.
+**Rationale:** The measures there are; four percentages a holder reads at a glance and compares round
+to round. A free list of shares would let rules say more, and ask more of every reviewer.
+**Alternatives:** A list of shares, each naming its recipients and measure (more to read, more to get
+wrong).
+
+## FD010 — A miss is what the chain charges
+
+**Date:** 2026-10-19
+**Decision:** A miner's misses are the slots it led while due (no block for `minerDueAfterSlots`) and
+skipped — the misses the chain charges (pp-ledger WIRE_SCHEMA § Producer statistics).
+**Rationale:** An idle chain seals about one heartbeat block an epoch: most empty slots are nobody's
+failure. A due miner must produce, an empty block if need be, so its skipped slot is a real miss.
+**Alternatives:** Every empty slot by its elected leader (punishes miners for a quiet chain).

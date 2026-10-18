@@ -7,6 +7,8 @@ add_library(apps_core STATIC
     AddressBook.h
     AtomicFile.cpp
     AtomicFile.h
+    FeeRounds.cpp
+    FeeRounds.h
     KeyCard.cpp
     KeyCard.h
     Operations.cpp

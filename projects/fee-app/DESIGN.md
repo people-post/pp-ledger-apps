@@ -1,6 +1,6 @@
 # Fee app — design
 
-**Status:** design (fd0). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
+**Status:** built (fd0–fd5); see [CURRENT_STATE.md](CURRENT_STATE.md). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
 status today: [CURRENT_STATE.md](CURRENT_STATE.md).
 
 A desktop app for the holders of the chain's **fee account**: every fee paid on pp-ledger collects
@@ -21,9 +21,9 @@ A round is the four steps of the holders' work, each leaving something the next 
 
 ### 1. Gather: the period report
 
-**The period** is a block range (FD002). It starts after the last round's end block, found on the
-chain (step 4: the fee account's latest round transfers say where it ended); the first round starts at
-block 1. It ends where the holders choose: a date (the last block before it) or the tip. Nodes keep a
+**The period** is a block range (FD002). It starts where the last round ended — the last round kept
+in the vault, the holders' rounds shared as round files (step 4) — and the first round at block 1. It
+ends where the holders choose: a date (the blocks before it) or the tip. Nodes keep a
 year of blocks by default (`checkpoint.minAgeSeconds`); the app reads from a node that holds the
 period's (the beacon holds them all).
 
@@ -33,7 +33,7 @@ period's (the beacon holds them all).
 |---------|------|
 | Blocks produced | Blocks of the period, by `slotLeader` |
 | Fees in its blocks | The fees of those blocks' transactions |
-| Slots missed | Slots of the period with no block, by their elected leader (pp-ledger: exposed from the election inputs blocks commit — `epochSeed`, the stake snapshot) |
+| Misses | The misses the chain charged it: slots it led while **due** (no block for `minerDueAfterSlots`) and skipped (FD010). Not every empty slot: an idle chain seals about one heartbeat block an epoch |
 | Registered, stake | The account (`Wallet.miner`, native balance), at the period's end |
 
 and the period's totals: blocks, slots, fees collected, the fee account's balance.
@@ -47,17 +47,16 @@ which they take on trust.
 
 ### 2. Decide: the rules
 
-**Rules** are a file of their own, kept across rounds and changed when the holders agree (FD005): a
-round names the rules it used (their hash). They split the **pot** — what the round hands out:
+**Rules** are kept across rounds and changed when the holders agree (FD005): a round names the rules
+it used (their hash). They split the **pot** — what the round hands out:
 
-- **The pot**: the fee account's balance at the period's end, less what the rules keep back (a share
-  or an amount).
-- **Shares**: the pot in parts, each split among the recipients it names by one measure — e.g. 60% to
-  miners by blocks produced, 30% to relays by uptime, 10% to every recipient active the whole period,
-  equally.
-- **Adjustments**: e.g. a miner's blocks less its missed slots (floored at 0); recipients deregistered
-  during the period, or below a minimum, left out; nothing paid under a minimum payout (it stays for
-  the next round).
+- **The pot**: the fee account's balance when the period is read, less what the rules keep back (a
+  percentage) and a fee for each possible payout.
+- **Four shares** (FD009), adding up to 100%: miners by blocks produced, miners by the fees in their
+  blocks, relays by uptime, and everyone paid this round equally — e.g. 60%, 0%, 30%, 10%.
+- **Adjustments**: a miner's blocks less `missPenalty` a miss (floored at 0); miners no longer
+  registered left out (a setting); nothing paid under the smallest payout (it stays for a later
+  round). Rounding is down; what it leaves stays in the fee account.
 
 The app shows the payout table as the rules make it, beside the previous round's; the holders change
 settings, compare, and keep the settings they agree on (as new rules, or this round only).
@@ -72,41 +71,42 @@ them into blocks and reports any refused (e.g. a recipient account ended) for a 
 
 ### 4. Keep: the round file
 
-The round file holds the period, the report (with the outside inputs and their source), the rules, the
-payout table and the operation. **Each transfer of the round carries the file's hash and the round's
-end block in its metadata** (FD007): the chain alone says when the last round ended and what it paid;
-the file, kept by the holders (and published as they choose), shows why — anyone holding it can check
-it matches what the chain paid.
+The round file holds the period, the report (with the outside inputs and their source), the rules and
+the payout table, and their **digest**; it is saved beside the operation and kept in the vault.
+**Each transfer of the round carries `pp-fee-round/1 <number> <end block> <digest>`** (FD007): a
+holder reviewing the payouts sees them checked, account by account, against the round file their
+digest names; anyone holding a round file checks it against what the chain paid. Holders share round
+files (Rounds: save, import — an imported file is refused unless its digest matches), so each knows
+where the next round starts.
 
 ## Screens
 
 | Screen | What |
 |--------|------|
-| **Rounds** | The rounds so far (from the chain and the round files kept), the fee account's balance; start the next |
+| **Rounds** | The rounds so far (kept in the vault; others' as round files), the fee account's balance; start the next |
 | **Period** | Its end (date or tip); reading the chain, with progress; the chain's measures per miner |
 | **Relays** | The recipients list; this round's measures per relay (typed or imported) |
 | **Rules** | The rules in force; edit, preview, compare with the last round's table |
 | **Payouts** | The table; make the batch operation |
 | **Review and submit**, **Keys and people**, **Network** | The apps' shared screens |
 
-## What it needs from pp-ledger
+## What it needs from pp-ledger (1.2)
 
-- **A batch operation** (FD006): several transfers from one account in one operation file, each record
-  signed by the account's keys; summarized as a table; submitted record by record. (The genesis plan
-  already carries several records, signed alike.)
-- **A slot's elected leader** for slots with no block — computable from what blocks commit; exposed so
-  clients need not reimplement the election.
-- **Reading a block range** efficiently enough for a season of blocks (fetching blocks one by one is
-  slow at that scale): a range read, or the period's per-leader counts computed by the node.
+- **A batch operation** (FD006): 2 to 1,000 transfers from one account in one operation file, each
+  record signed by the account's keys; summarized as a table; submitted record by record.
+- **Producer statistics** (`PRODUCER_STATS`): a block range's blocks, fees and misses charged per
+  producer, 10,000 blocks a reply — nodes record the misses they charge as they apply blocks.
 
 ## Shape of the code
 
 | Piece | Change |
 |-------|--------|
-| `apps_net` | The period report from the chain; the batch operation; following a round's transfers |
-| `apps_core` | Rules, the payout computation (pure: report and rules in, table out — unit-tested), round files, the recipients list (in the vault) |
+| `apps_net` | `FeeOperations`: the period report from the chain, the block at a date, the payouts' operation; `ChainLink` submits and follows a batch transfer by transfer |
+| `apps_core` | `FeeRounds`: rules, the payout computation (pure: report and rules in, table out — unit-tested), round files and their digest, the vault's records (relays, rules, draft, rounds) |
 | `apps_online` | The screens above |
 | `src/apps/fees` | `pp-ledger-fees` (`PP Ledger Fees`), in the `system` package |
 
 Not in the first version: periodic rounds (the holders start each round; once the rules settle,
-the app may propose the next round on a schedule — FD008); measuring relays itself.
+the app may propose the next round on a schedule — FD008); measuring relays itself; finding the last
+round on the chain alone (a node lists an account's transactions 32 blocks a page: too slow over a
+season — the round files carry it, FD002).
