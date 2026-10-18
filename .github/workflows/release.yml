@@ -1,0 +1,124 @@
+name: release
+
+# A tag v1.2.3 builds the packages and publishes them as a GitHub release; a manual run builds them
+# (artifacts only). macOS bundles are signed and the disk image notarized when the repository's
+# Apple secrets are set (packaging/macos/signing.env.example lists them); unsigned otherwise.
+on:
+  push:
+    tags: ['v*']
+  # The packages are built (not published) when a change touches packaging.
+  pull_request:
+    paths:
+      - 'packaging/**'
+      - 'scripts/linux_appimages.sh'
+      - 'scripts/macos_*.sh'
+      - 'cmake/AdminApps.cmake'
+      - 'cmake/AdminPackaging.cmake'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for the packages (numeric, e.g. 1.2.3)'
+        required: false
+        default: '0.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then v="${GITHUB_REF_NAME#v}"; else v="${{ inputs.version || '0.0.0' }}"; fi
+          [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "not a version: $v"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+  linux:
+    needs: version
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: >
+          sudo apt-get update && sudo apt-get install -y ninja-build
+          libx11-dev libxext-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev libxfixes-dev
+          libxrender-dev libxss-dev libgl-dev
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_ADMIN_BUILD_TESTS=OFF \
+            -DPP_ADMIN_VERSION=${{ needs.version.outputs.version }}
+          cmake --build build -j 4
+      - name: Package (.deb, AppImages)
+        run: |
+          mkdir -p dist
+          (cd build && cpack) && mv build/*.deb dist/
+          cmake --install build --prefix stage/usr
+          ./scripts/linux_appimages.sh stage ${{ needs.version.outputs.version }} dist
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  macos:
+    needs: version
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: brew install ninja
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_ADMIN_BUILD_TESTS=OFF \
+            -DPP_ADMIN_VERSION=${{ needs.version.outputs.version }}
+          cmake --build build -j 3
+          cmake --install build --prefix install
+      - name: Sign the apps
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for app in install/*.app; do ./scripts/macos_sign_and_notarize.sh sign-app "$app"; done
+      - name: Disk image
+        run: |
+          mkdir -p dist
+          ./scripts/macos_dmg.sh install ${{ needs.version.outputs.version }} dist
+      - name: Notarize
+        env:
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APPLE_NOTARY_P8_BASE64: ${{ secrets.APPLE_NOTARY_P8_BASE64 }}
+          SIGNED: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_NOTARY_KEY_ID != '' }}
+        run: |
+          if [[ "$SIGNED" != "true" ]]; then echo "Unsigned apps: not notarized."; exit 0; fi
+          for dmg in dist/*.dmg; do
+            ./scripts/macos_sign_and_notarize.sh notarize "$dmg"
+            ./scripts/macos_sign_and_notarize.sh staple "$dmg"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [version, linux, macos]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
+            --title "pp-ledger-admin ${{ needs.version.outputs.version }}" \
+            --notes "Linux: a .deb (Ubuntu 24.04 and later) and an AppImage per app. macOS (Apple silicon): a disk image of the five apps. Guides: docs/guides."

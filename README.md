@@ -5,7 +5,9 @@ system keys — kick-starting the chain and holding its restore keys, administer
 updates), operating its reserve and creating accounts. For non-technical operators: every step is a
 form or a file. Linux and macOS.
 
-Work in progress: [projects/admin-apps](projects/admin-apps/DESIGN.md).
+Guides for key holders: [docs/guides](docs/guides/getting-started.md). Packages: the repository's
+releases (a `.deb` and AppImages for Linux, a disk image for macOS; [docs/RELEASE.md](docs/RELEASE.md)).
+Design: [projects/admin-apps](projects/admin-apps/DESIGN.md).
 
 ## Build
 
