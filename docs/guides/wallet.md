@@ -5,8 +5,8 @@ trusting — no plugins, no web pages, no automatic updates — and that believe
 what you hold, to send it, and above all to **move your funds away from keys that may have leaked**
 (through a browser plugin, a lost computer, a doubtful app).
 
-Install it on its own: the `pp-ledger-wallet` package (Linux), its disk image (macOS), its installer
-(Windows). Check the download against the release's `SHA256SUMS` ([how to rebuild it](../REPRODUCIBLE.md)).
+Install it on its own: the `pp-ledger-wallet` package or AppImage (Linux), its disk image (macOS).
+Check the download against the release's `SHA256SUMS` ([how to rebuild it](../REPRODUCIBLE.md)).
 
 ## The first time
 

@@ -5,10 +5,10 @@ system keys — kick-starting the chain and holding its restore keys, administer
 updates), operating its reserve and creating accounts — for token issuers' operators and the fee
 account's holders, and **everyone's last-resort wallet**: accounts proven from a pinned network, believing
 no node, and evacuated from leaked keys. For non-technical people: every step is a form or a file. Linux
-and macOS; the wallet on Windows too.
+and macOS.
 
 Guides for key holders: [docs/guides](docs/guides/getting-started.md). Packages: the repository's
-releases (`.deb`s and AppImages for Linux, disk images for macOS, the wallet's installer for Windows, with checksums; [docs/RELEASE.md](docs/RELEASE.md)).
+releases (`.deb`s and AppImages for Linux, disk images for macOS, with checksums; [docs/RELEASE.md](docs/RELEASE.md)).
 Design: [projects/admin-apps](projects/admin-apps/DESIGN.md), [projects/token-app](projects/token-app/DESIGN.md),
 [projects/fee-app](projects/fee-app/DESIGN.md), [projects/wallet-app](projects/wallet-app/DESIGN.md).
 
@@ -16,9 +16,8 @@ Design: [projects/admin-apps](projects/admin-apps/DESIGN.md), [projects/token-ap
 
 Needs CMake 3.24+ and a C++20 compiler (on Linux, X11 and OpenGL headers:
 `libx11-dev libxext-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev libxfixes-dev
-libxrender-dev libxss-dev libgl-dev`; on Windows, a Visual Studio 2022 developer prompt with Ninja and
-NASM); dependencies (pp-ledger, pp-cpp-ui with SDL3, pp-cpp-common, pp-cpp-crypto, GoogleTest) are
-fetched at pinned versions.
+libxrender-dev libxss-dev libgl-dev`); dependencies (pp-ledger, pp-cpp-ui with SDL3,
+pp-cpp-common, pp-cpp-crypto, GoogleTest) are fetched at pinned versions.
 
 ```bash
 cmake -S . -B build

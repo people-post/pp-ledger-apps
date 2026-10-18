@@ -1,6 +1,6 @@
 # Wallet app — design
 
-**Status:** built (wl0–wl6; Windows awaits its first CI build). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
+**Status:** built (wl0–wl6). Phases: [PHASES.md](PHASES.md) · decisions: [DECISIONS.md](DECISIONS.md) ·
 status today: [CURRENT_STATE.md](CURRENT_STATE.md).
 
 A desktop wallet for **everyone's own accounts** on pp-ledger — the **last resort**: what a person
@@ -90,10 +90,10 @@ With no network set, the wallet is a signer: it reviews and signs operation file
 its own online copy on another machine, or by pp-client. A careful person keeps their keys on a machine
 that never connects, and carries files.
 
-## Packages (WL007, WL008)
+## Packages (WL007)
 
 `PP Ledger Wallet` (`pp-ledger-wallet`), its own package — the wallet alone (it signs itself) — for
-Linux, macOS and **Windows**. Release builds are reproducible: the same source, compiler and
+Linux and macOS (not Windows: WL008). Release builds are reproducible: the same source, compiler and
 dependencies give the same bytes; the release publishes the checksums and how to rebuild.
 
 ## What it needs from pp-ledger
@@ -110,7 +110,7 @@ dependencies give the same bytes; the release publishes the checksums and how to
 | pp-ledger | `ACCOUNT_PROOF`; a verification library (authority, signed tip, block, account proof) |
 | `apps_net` | A verified view of the chain: the anchor, several nodes, what each says, what is proven |
 | `apps_online` | The wallet's screens |
-| `src/apps/wallet` | `pp-ledger-wallet`; its own package; Windows build |
+| `src/apps/wallet` | `pp-ledger-wallet`; its own package |
 
 ## The repository goes public (WL001)
 

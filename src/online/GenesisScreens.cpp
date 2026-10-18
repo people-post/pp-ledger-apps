@@ -41,11 +41,7 @@ std::optional<int64_t> parseStart(const std::string &text, int64_t now) {
 std::string formatLocal(int64_t at) {
   const std::time_t t = static_cast<std::time_t>(at);
   std::tm tm{};
-#ifdef _WIN32
-  localtime_s(&tm, &t);
-#else
   localtime_r(&t, &tm);
-#endif
   std::ostringstream out;
   out << std::put_time(&tm, "%Y-%m-%d %H:%M");
   return out.str();

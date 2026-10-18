@@ -8,9 +8,7 @@
 
 #include <filesystem>
 #include <fstream>
-#ifndef _WIN32
 #include <sys/stat.h>
-#endif
 
 using namespace apps;
 
@@ -62,11 +60,9 @@ TEST(VaultTest, KeysStayInTheVaultEncryptedAndSign) {
 
   // On disk: owner-only, and neither the label nor the private key in clear.
   const std::string path = dir / ("vault/keys/" + key.value().id + ".key");
-#ifndef _WIN32
   struct stat st {};
   ASSERT_EQ(::stat(path.c_str(), &st), 0);
   EXPECT_EQ(st.st_mode & 0777, 0600);
-#endif
   const std::string bytes = fileBytes(path);
   EXPECT_EQ(bytes.find("Alice"), std::string::npos);
   EXPECT_EQ(bytes.find("privateKey"), std::string::npos);

@@ -70,6 +70,10 @@ are signed where the platform signs.
 
 ## WL008 — Windows too
 
+**Superseded (2026-10-19):** no Windows — the owner's decision. Linux and macOS only, as the other apps;
+the Windows build and installer were removed before they shipped (the portable arithmetic and date
+code they brought stays: it is tested and simpler).
+
 **Date:** 2026-10-19
 **Decision:** The wallet ships for Windows as well as Linux and macOS.
 **Rationale:** Everyone's wallet; most people use Windows. pp-ledger builds on Windows already; the UI

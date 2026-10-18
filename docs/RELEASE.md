@@ -13,7 +13,6 @@ publishes them as a GitHub release.
 | `pp-ledger-system-<v>-macos-arm64.dmg`: the Signer and the five system apps | macos-14: Apple silicon, macOS 13+ (`scripts/macos_dmg.sh`) |
 | `pp-ledger-token-<v>-macos-arm64.dmg`: the Signer and the Token app | Same |
 | `pp-ledger-wallet-<v>-macos-arm64.dmg`: the Wallet alone | Same |
-| `pp-ledger-wallet-<v>-windows-x64.exe`: the Wallet's installer (NSIS: Start menu and desktop shortcuts, an uninstaller) | windows-2022, MSVC |
 | `SHA256SUMS`: every file's SHA-256 | The publish job |
 
 Release builds set `PP_APPS_RELEASE`: no path of the build machine goes into the binaries, so they can

@@ -37,5 +37,3 @@ strip -o built-stripped build/src/apps/wallet/pp-ledger-wallet && sha256sum buil
   release ties the packages themselves to the release.
 - **macOS**: signed bundles carry Apple's signature and timestamp; compare after
   `codesign --remove-signature`.
-- **Windows**: release builds ask MSVC for deterministic output (`/Brepro`, the debug file named
-  without its path); not yet checked by rebuilding — the Windows build is new.

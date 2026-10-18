@@ -1,6 +1,5 @@
 #include "core/AtomicFile.h"
 
-#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
@@ -8,14 +7,7 @@
 #include <fstream>
 #include <random>
 #include <sstream>
-#ifdef _WIN32
-#include <io.h>
-#include <process.h>
-#include <share.h>
-#include <sys/stat.h>
-#else
 #include <unistd.h>
-#endif
 
 namespace apps {
 
@@ -24,44 +16,10 @@ namespace {
 std::filesystem::path tempPathFor(const std::filesystem::path &path) {
   std::random_device rd;
   std::filesystem::path tmp = path;
-#ifdef _WIN32
-  tmp += ".tmp." + std::to_string(::_getpid()) + "." + std::to_string(std::mt19937_64(rd())());
-#else
   tmp += ".tmp." + std::to_string(::getpid()) + "." + std::to_string(std::mt19937_64(rd())());
-#endif
   return tmp;
 }
 
-#ifdef _WIN32
-// The user's profile folders are theirs alone already; the data reaches the disk before the rename.
-pp::Roe<void> writeOwnerOnly(const std::filesystem::path &path, const std::string &data) {
-  int fd = -1;
-  if (::_wsopen_s(&fd, path.wstring().c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC | _O_BINARY, _SH_DENYRW,
-                  _S_IREAD | _S_IWRITE) != 0) {
-    return pp::Error("Cannot create " + path.string());
-  }
-  size_t written = 0;
-  while (written < data.size()) {
-    const size_t chunk = std::min<size_t>(data.size() - written, 1u << 30);
-    const int n = ::_write(fd, data.data() + written, static_cast<unsigned int>(chunk));
-    if (n < 0) {
-      ::_close(fd);
-      return pp::Error("Cannot write " + path.string());
-    }
-    written += static_cast<size_t>(n);
-  }
-  if (::_commit(fd) != 0) {
-    ::_close(fd);
-    return pp::Error("Cannot sync " + path.string());
-  }
-  if (::_close(fd) != 0) {
-    return pp::Error("Cannot close " + path.string());
-  }
-  return {};
-}
-
-void syncDirectory(const std::filesystem::path &) {}
-#else
 pp::Roe<void> writeOwnerOnly(const std::filesystem::path &path, const std::string &data) {
   const int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
   if (fd < 0) {
@@ -95,7 +53,6 @@ void syncDirectory(const std::filesystem::path &dir) {
     ::close(fd);
   }
 }
-#endif
 
 } // namespace
 

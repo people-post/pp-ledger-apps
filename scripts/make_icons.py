@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """The apps' icons: a coloured rounded square, a white symbol. Pure Python (no imaging library):
-shapes are sampled 3×3 per pixel and written as RGBA PNGs to assets/icons/<app>.png, and as
-Windows icons (one 256×256 PNG inside) to assets/icons/<app>.ico.
+shapes are sampled 3×3 per pixel and written as RGBA PNGs to assets/icons/<app>.png.
 Run again after changing a shape (`make_icons.py [app…]`: only those); the PNGs are committed."""
 import math, os, struct, zlib
 
@@ -18,14 +17,6 @@ def png_bytes(pixels, size=SIZE):
 def png(path, pixels):
     with open(path, 'wb') as f:
         f.write(png_bytes(pixels))
-
-def ico(path, pixels256):
-    """A Windows icon of one 256×256 PNG image (Windows Vista and later read PNG in ICO)."""
-    image = png_bytes(pixels256, 256)
-    header = struct.pack('<HHH', 0, 1, 1)
-    entry = struct.pack('<BBBBHHII', 0, 0, 0, 0, 1, 32, len(image), 6 + 16)  # 0 = 256 wide and high
-    with open(path, 'wb') as f:
-        f.write(header + entry + image)
 
 # Shapes in unit coordinates (0..1, y down): functions (x, y) -> inside?
 def rounded(x0, y0, x1, y1, r):
@@ -135,5 +126,4 @@ if __name__ == '__main__':
         if len(sys.argv) > 1 and name not in sys.argv[1:]:
             continue
         png(os.path.join(out, name + '.png'), render(colour, glyph))
-        ico(os.path.join(out, name + '.ico'), render(colour, glyph, 256))
-        print('wrote', name + '.png', name + '.ico')
+        print('wrote', name + '.png')

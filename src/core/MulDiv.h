@@ -1,5 +1,5 @@
 #pragma once
-// Exact integer arithmetic past 64 bits, portably (MSVC has no 128-bit integer type).
+// Exact integer arithmetic past 64 bits, without a compiler's 128-bit integer type.
 
 #include <cstdint>
 

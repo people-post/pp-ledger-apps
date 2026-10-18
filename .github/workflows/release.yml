@@ -114,38 +114,9 @@ jobs:
           name: macos
           path: dist/*
 
-  windows:
-    needs: version
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Install tools
-        run: |
-          choco install ninja nasm nsis --no-progress -y
-          echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      - name: Build the wallet
-        shell: bash
-        run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_APPS_BUILD_TESTS=OFF -DPP_APPS_RELEASE=ON \
-            -DPP_APPS_VERSION=${{ needs.version.outputs.version }}
-          cmake --build build -j 4 --target pp-ledger-wallet
-      - name: Installer (NSIS)
-        shell: bash
-        run: |
-          mkdir -p dist
-          (cd build && cpack -G NSIS)
-          mv build/*.exe dist/
-          ls -la dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows
-          path: dist/*
-
   publish:
     if: github.ref_type == 'tag'
-    needs: [version, linux, macos, windows]
+    needs: [version, linux, macos]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
@@ -160,4 +131,4 @@ jobs:
         run: |
           gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
             --title "pp-ledger-apps ${{ needs.version.outputs.version }}" \
-            --notes "Everyone: the wallet — pp-ledger-wallet (.deb, Ubuntu 24.04 and later; AppImage), its disk image (macOS, Apple silicon), its installer (Windows). System key holders: pp-ledger-system and pp-ledger-signer, or the pp-ledger-system disk image. Token issuers: pp-ledger-token and pp-ledger-signer, or the pp-ledger-token disk image. Linux also has an AppImage per app. SHA256SUMS lists every file's checksum; docs/REPRODUCIBLE.md says how to rebuild them. Guides: docs/guides."
+            --notes "Everyone: the wallet — pp-ledger-wallet (.deb, Ubuntu 24.04 and later; AppImage), its disk image (macOS, Apple silicon). System key holders: pp-ledger-system and pp-ledger-signer, or the pp-ledger-system disk image. Token issuers: pp-ledger-token and pp-ledger-signer, or the pp-ledger-token disk image. Linux also has an AppImage per app. SHA256SUMS lists every file's checksum; docs/REPRODUCIBLE.md says how to rebuild them. Guides: docs/guides."

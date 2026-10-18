@@ -124,8 +124,8 @@ std::string UiApp::assetPath(const std::string &relative) const {
     return (fs::path(dir) / relative).string();
   }
   if (const char *base = SDL_GetBasePath()) {
-    // A macOS bundle's Resources/assets; Windows: beside the program; elsewhere the package's share/ —
-    // the wallet's package carries its own copy, the others share one.
+    // A macOS bundle's Resources/assets; on Linux the package's share/ — the wallet's package carries
+    // its own copy, the others share one.
     const std::vector<fs::path> places = {
         fs::path(base) / "assets",
         fs::path(base) / ".." / "share" / "pp-ledger-wallet" / "assets",
