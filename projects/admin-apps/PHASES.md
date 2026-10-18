@@ -14,13 +14,14 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
 
 ## Apps
 
-- [ ] **ad3** This repo's skeleton: CMake (pp-ledger, pp-cpp-ui, pp-cpp-crypto), `admin_core`
+- [x] **ad3** This repo's skeleton: CMake (pp-ledger, pp-cpp-ui, pp-cpp-crypto), `admin_core`
       (vault, key cards / address book), `admin_ui` (unlock, keys, operation review), CI on Linux and
       macOS
-  - [ ] **ad3a** CMake (pp-ledger, pp-cpp-common, pp-cpp-crypto, GoogleTest), `admin_core`, CI
-  - [ ] **ad3b** pp-cpp-ui, the window host, `admin_ui`
+  - [x] **ad3a** CMake (pp-ledger, pp-cpp-common, pp-cpp-crypto, GoogleTest), `admin_core`, CI
+  - [x] **ad3b** pp-cpp-ui, the window host, `admin_ui`
 - [ ] **ad4** Signer (offline): open an operation, review it, sign with a vault key, merge copies,
-      save — the first app, used by every role
+      save — the first app, used by every role (review and signing came with ad3b; ad4 adds merging,
+      genesis operations' many records, packaging-ready polish)
 - [ ] **ad5** Reserve: transfers; `admin_net` (read chain state, submit, follow inclusion)
 - [ ] **ad6** Admin: minting to the reserve, config updates (shown as a change against the config in
       force), beacon certificates, admin key rotation

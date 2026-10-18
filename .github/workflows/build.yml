@@ -17,7 +17,11 @@ jobs:
 
       - name: Install tools (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y ccache ninja-build
+        # SDL3 is built from source (pp-cpp-ui): X11 and OpenGL headers; Xvfb + Mesa for the UI smoke.
+        run: >
+          sudo apt-get update && sudo apt-get install -y ccache ninja-build
+          libx11-dev libxext-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev libxfixes-dev
+          libxrender-dev libxss-dev libgl-dev libgl1-mesa-dri xvfb xauth
 
       - name: Install tools (macOS)
         if: runner.os == 'macOS'
@@ -31,7 +35,7 @@ jobs:
 
       - name: Configure
         run: >
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_ADMIN_DEV_HOOKS=ON
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
