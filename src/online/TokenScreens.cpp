@@ -161,7 +161,7 @@ void TokenOverviewScreen::willShow() {
                   {"Native balance", formatAmount(native)},
                   {"A renewal costs about", formatAmount(o.renewalFee)},
                   {"Signed by", std::to_string(o.minSignatures) + " of " + std::to_string(o.publicKeys.size())}};
-        facts_.push_back({"Recovery", o.recovery.hasSet() ? recoveryText(o.recovery, epochs->first) : "none"});
+        facts_.push_back({"Recovery", o.recovery.hasSet() ? recoveryText(o.recovery) : "none"});
         for (const auto &[token, balance] : o.otherTokens) {
           facts_.push_back({"Holds token " + formatAmount(token), signed64(balance)});
         }
@@ -171,7 +171,9 @@ void TokenOverviewScreen::willShow() {
                      " renewals. An account that cannot pay its renewal is ended, and its token's book with it: "
                      "ask the registrar (or anyone) to send it native tokens.";
         }
-        if (const std::string announced = announcedText(o.recovery, epochs->second, epochs->first, "Signers");
+        if (const std::string announced =
+                announcedText(o.recovery, epochs->second, epochs->first,
+                              "If the issuer did not ask for it, its recovery keys' holders withdraw it (Signers).");
             !announced.empty()) {
           warning_ += (warning_.empty() ? "" : " ") + announced;
         }
@@ -474,7 +476,7 @@ void SignersScreen::bind(ui::DataModelConstructor &model) {
   model.BindEventCallback("recovery_drop", &SignersScreen::dropRecoveryKey, this);
   model.BindEventCallback("recovery_set", &SignersScreen::makeRecoverySet, this);
   model.BindEventCallback("recovery_remove", &SignersScreen::makeRecoveryRemoval, this);
-  model.BindEventCallback("recovery_cancel", &SignersScreen::makeRecoveryCancel, this);
+  model.BindEventCallback("recovery_withdraw", &SignersScreen::makeRecoveryWithdrawal, this);
 }
 
 void SignersScreen::clearForm() {
@@ -530,11 +532,13 @@ void SignersScreen::willShow() {
         const auto &r = wallet->recovery;
         hasRecovery_ = r.hasSet();
         isAnnounced_ = r.pending;
-        recoveryNow_ = error.empty() ? (hasRecovery_ ? "Recovery: " + recoveryText(r, epochs->first) +
-                                                           ". Its recovery keys: " + fingerprintsText(r.publicKeys) + "."
+        recoveryNow_ = error.empty() ? (hasRecovery_ ? "Recovery: " + recoveryText(r) +
+                                                           ". Its recovery keys: " + fingerprintsText(r.publicKeys) +
+                                                           ". Only they change it now."
                                                      : "No recovery: if every key in force is lost, so is the account.")
                                      : "";
-        announced_ = announcedText(r, epochs->second, epochs->first, "below");
+        announced_ = announcedText(r, epochs->second, epochs->first,
+                                   "If the issuer did not ask for it, its recovery keys' holders withdraw it.");
         // The keys in force, chosen; then the owners' keys in the vault and the address book.
         for (const auto &publicKey : wallet->publicKeys) {
           addCandidate(publicKey, true);
@@ -691,6 +695,7 @@ void SignersScreen::makeRecoverySet(ui::DataModelHandle, ui::Event &, const ui::
   const uint64_t id = *account;
   const auto min = static_cast<uint32_t>(needed.value());
   const uint64_t d = days.value();
+  // The keys in force name the first set; a change after that is the set's to sign.
   make(
       [=](net::ChainLink &link, const net::ChainInfo &chain, int64_t validFor,
           const std::string &notes) -> pp::Roe<op::Operation> {
@@ -698,11 +703,15 @@ void SignersScreen::makeRecoverySet(ui::DataModelHandle, ui::Event &, const ui::
         if (!held) {
           return held.error();
         }
-        auto epochs = net::delayEpochsFor(chain, d);
-        if (!epochs) {
-          return epochs.error();
+        auto delay = net::delaySecondsFor(chain, d);
+        if (!delay) {
+          return delay.error();
         }
-        return net::makeRecoverySet(chain, held.value().signers, held.value().state, keys, min, epochs.value(),
+        const auto &state = held.value().state;
+        if (state.wallet.recovery.hasSet()) {
+          return net::makeRecoveryChange(chain, id, state, keys, min, delay.value(), making(validFor, notes));
+        }
+        return net::makeRecoverySet(chain, held.value().signers, state, keys, min, delay.value(),
                                     making(validFor, notes));
       },
       "recovery-" + std::to_string(id) + ".json");
@@ -722,13 +731,12 @@ void SignersScreen::makeRecoveryRemoval(ui::DataModelHandle, ui::Event &, const 
         if (!held) {
           return held.error();
         }
-        return net::makeRecoverySet(chain, held.value().signers, held.value().state, {}, 0, 0,
-                                    making(validFor, notes));
+        return net::makeRecoveryChange(chain, id, held.value().state, {}, 0, 0, making(validFor, notes));
       },
       "no-recovery-" + std::to_string(id) + ".json");
 }
 
-void SignersScreen::makeRecoveryCancel(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+void SignersScreen::makeRecoveryWithdrawal(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
   const auto account = issuer_.account();
   if (!account) {
     say(kNoIssuer);
@@ -742,9 +750,9 @@ void SignersScreen::makeRecoveryCancel(ui::DataModelHandle, ui::Event &, const u
         if (!held) {
           return held.error();
         }
-        return net::makeRecoveryCancel(chain, held.value().signers, held.value().state, making(validFor, notes));
+        return net::makeRecoveryWithdrawal(chain, id, held.value().state, making(validFor, notes));
       },
-      "cancel-recovery-" + std::to_string(id) + ".json");
+      "withdraw-recovery-" + std::to_string(id) + ".json");
 }
 
 } // namespace apps::online

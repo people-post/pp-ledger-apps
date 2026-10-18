@@ -1,0 +1,30 @@
+# Against a running chain, after wallet-recovery-frozen.script: the wallet holding the account's two
+# recovery keys withdraws the announcement, signed by both.
+wait 5
+click #unlock-passphrase
+type guardian passphrase
+click #unlock
+idle
+wait 5
+click #nav-recovery
+idle
+wait 3
+click #recover-account
+clear
+type @ACCOUNT@
+click #recover-withdraw
+idle
+wait 5
+idle
+wait 3
+expect #action-send
+shot @OUT@/wallet-14-withdraw.png
+click #action-send
+idle
+wait 5
+idle
+wait 5
+idle
+wait 5
+shot @OUT@/wallet-15-withdrawn.png
+quit

@@ -42,13 +42,15 @@ A lost key cannot sign: replace it while enough of the others can still sign.
 
 ## Its recovery
 
-If too many of the keys are lost to sign anything, the account is lost — unless it has a **recovery
-set**: keys kept apart (in another office, with a trusted party) that can name its new keys. Under
-*Its recovery* on Signers: add each recovery key's card, choose how many must sign and the days you
-have to cancel in, then *Set the recovery…* — an operation the keys in force sign, like a key
-replacement. *Remove the recovery…* takes it away.
+If too many of the keys are lost or stolen, the account is lost — unless it has a **recovery set**:
+keys above the keys in force, kept apart (in another office, with a trusted party), which can give it
+new keys. Under *Its recovery* on Signers: add each recovery key's card, choose how many must sign and
+the days the account waits for new keys, then *Set the recovery…* — an operation the keys in force
+sign. After that only the recovery keys change it: *Change the recovery set…* and *Remove the
+recovery…* make operations for them to sign.
 
-To recover, the recovery keys' holders use the wallet (Recovery → *Recover an account*): they name the
-issuer's new keys, and those take over when the days have passed. Until then the account works as
-before, and **any change signed by the keys in force cancels it**: if Overview warns of a recovery you
-did not ask for, *Cancel the recovery…* on Signers.
+To recover, the recovery keys' holders use the wallet (Recovery → *As an account's recovery set*):
+they name the issuer's new keys. **The account is frozen at once** — no issuing, no sending — and the
+new keys take over at the first epoch start after the delay. Overview warns of it; if the issuer did
+not ask for it, its recovery keys' holders withdraw it (*Withdraw the recovery…* on Signers, or the
+wallet).

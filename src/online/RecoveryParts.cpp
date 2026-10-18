@@ -51,26 +51,24 @@ std::string keysText(const std::vector<std::string> &keys, uint32_t minSignature
   return std::to_string(minSignatures) + " of " + std::to_string(keys.size()) + " (" + fingerprintsText(keys) + ")";
 }
 
-std::string recoveryText(const pp::AccountRecovery &r, uint64_t epochSeconds) {
+std::string recoveryText(const pp::AccountRecovery &r) {
   if (!r.hasSet()) {
     return "";
   }
   return std::to_string(r.minSignatures) + " of " + std::to_string(r.publicKeys.size()) +
-         " recovery keys; new keys wait " + formatAmount(r.delayEpochs) + " epochs" +
-         (epochSeconds ? " (" + aboutTime(r.delayEpochs * epochSeconds) + ")" : "");
+         " recovery keys; new keys wait " + aboutTime(r.delaySeconds) + " at least, to an epoch start";
 }
 
 std::string announcedText(const pp::AccountRecovery &r, uint64_t tipEpoch, uint64_t epochSeconds,
-                          const std::string &whereToCancel) {
+                          const std::string &advice) {
   if (!r.pending) {
     return "";
   }
   const uint64_t left = r.applyEpoch > tipEpoch ? r.applyEpoch - tipEpoch : 0;
   return "Its recovery set announced new keys, " + keysText(r.nextPublicKeys, r.nextMinSignatures) + ", at block " +
          formatAmount(r.announcedAt) + ". They take over at epoch " + formatAmount(r.applyEpoch) +
-         (epochSeconds ? " — " + aboutTime(left * epochSeconds) + " from now —" : "") +
-         " unless the account's keys cancel it." +
-         (whereToCancel.empty() ? "" : " If you did not ask for it, cancel it now (" + whereToCancel + ").");
+         (epochSeconds ? " (" + aboutTime(left * epochSeconds) + " from now)" : "") +
+         ". Until then the account is frozen: its keys sign nothing." + (advice.empty() ? "" : " " + advice);
 }
 
 } // namespace apps::online

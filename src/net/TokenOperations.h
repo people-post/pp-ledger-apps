@@ -83,37 +83,45 @@ pp::Roe<uint64_t> keyReplacementFee(const ChainInfo &chain, const pp::operation:
                                     uint32_t minSignatures);
 
 // ---- Account recovery (pp-ledger projects/account-recovery) ----
-// An account's recovery set names its next keys when all of its own are lost; they take over after
-// the account's delay unless its keys cancel. Each of these pays the least fee.
+// An account's recovery set stands above its keys: it announces the account's next keys — the
+// account frozen until they take over, at the first epoch start after its delay — withdraws that, or
+// changes itself. The account's keys name the first set. Each of these pays the least fee.
+
+/** Refused while the account is frozen: its recovery set announced new keys. */
+pp::Roe<void> checkNotFrozen(const pp::UserAccount &state);
 
 /** Seconds an epoch lasts under the config in force (0 when the config does not say). */
 uint64_t epochSeconds(const ChainInfo &chain);
 /** The epoch at Unix time `now`, by the chain's clock (its genesis time and epoch length). */
 uint64_t epochAt(const ChainInfo &chain, int64_t now);
-/** The delay of `days`, in epochs (at least 1, rounded up). */
-pp::Roe<uint64_t> delayEpochsFor(const ChainInfo &chain, uint64_t days);
+/** The delay of `days`, in seconds; refused below the chain's least (half an epoch). */
+pp::Roe<uint64_t> delaySecondsFor(const ChainInfo &chain, uint64_t days);
 
 /**
- * The account's recovery set (`keys`, `minSignatures` of them to announce) and delay set, signed by
- * the keys in force (`current`); no keys removes it. The account's keys stay; an announcement waiting
- * is cancelled.
+ * The account's first recovery set (`keys`, `minSignatures` of them to act) and delay, named by the
+ * keys in force (`current`). Its keys stay. Refused once it has a set: only the set changes it.
  */
 pp::Roe<pp::operation::Operation> makeRecoverySet(const ChainInfo &chain, const pp::operation::SignerSet &current,
                                                   const pp::UserAccount &state,
                                                   const std::vector<std::string> &keys, uint32_t minSignatures,
-                                                  uint64_t delayEpochs, const Making &making);
-/** An update changing nothing, signed by the keys in force: cancels the recovery announced. */
-pp::Roe<pp::operation::Operation> makeRecoveryCancel(const ChainInfo &chain, const pp::operation::SignerSet &current,
-                                                     const pp::UserAccount &state, const Making &making);
-/** Who signs a recovery of `account`: its recovery set, as `state` holds it. */
+                                                  uint64_t delaySeconds, const Making &making);
+/** Who signs for account `account`'s recovery set: its keys and threshold, as `state` holds them. */
 pp::Roe<pp::operation::SignerSet> recoverySignersOf(uint64_t account, const pp::UserAccount &state);
 /**
- * Account `account`'s next keys (`keys`, `minSignatures` of them), announced by its recovery set: they
- * take over after its delay unless its keys cancel. The account pays the fee.
+ * Account `account`'s next keys (`keys`, `minSignatures` of them), announced by its recovery set: the
+ * account is frozen until they take over. The account pays the fee.
  */
 pp::Roe<pp::operation::Operation> makeRecoveryAnnouncement(const ChainInfo &chain, uint64_t account,
                                                            const pp::UserAccount &state,
                                                            const std::vector<std::string> &keys,
                                                            uint32_t minSignatures, const Making &making);
+/** The announcement withdrawn by the recovery set: the account's keys sign again. */
+pp::Roe<pp::operation::Operation> makeRecoveryWithdrawal(const ChainInfo &chain, uint64_t account,
+                                                         const pp::UserAccount &state, const Making &making);
+/** The recovery set replaced by itself (`keys`, `minSignatures`, `delaySeconds`), or removed (no keys). */
+pp::Roe<pp::operation::Operation> makeRecoveryChange(const ChainInfo &chain, uint64_t account,
+                                                     const pp::UserAccount &state,
+                                                     const std::vector<std::string> &keys, uint32_t minSignatures,
+                                                     uint64_t delaySeconds, const Making &making);
 
 } // namespace apps::net

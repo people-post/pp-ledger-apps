@@ -32,43 +32,42 @@
     <div data-if="!has_pending">
       <div class="card" data-if="has_chosen">
         <h1>Recovery of {{chosen}}</h1>
-        <p class="muted">A way back if every key of the account is lost: recovery keys — people you trust, or a
-          backup key you keep apart from this wallet — can name its new keys. They take over after a delay, in
-          which this account's keys can cancel it: a recovery key alone cannot take the account.</p>
+        <p class="muted">Recovery keys stand above the account's own: people you trust, or a backup key you
+          keep apart from this wallet. If its keys are lost or stolen, they can give it new keys — the account
+          frozen until then, at least the delay — and only they change the set.</p>
         <p id="recovery-now" data-if="now != ''">{{now}}</p>
-        <div data-if="is_announced">
-          <p id="recovery-announced" class="warning">{{announced}}</p>
-          <button id="recovery-cancel" class="primary" data-event-click="recov_cancel()" data-attrif-disabled="busy">Cancel the recovery</button>
-        </div>
-        <h2>Set its recovery</h2>
-        <p class="muted">Each recovery key from its key card (Keys, Save key card…, in the holder's wallet).</p>
-        <div class="item" data-for="k : set_keys">
-          <span class="grow">{{k.name}} <span class="muted">{{k.fingerprint}}</span></span>
-          <button class="small" data-event-click="recov_set_drop(it_index)">Remove</button>
-        </div>
-        <button id="recovery-add-card" data-event-click="recov_set_card()" data-attrif-disabled="busy">Add a key card…</button>
-        <div class="row">
-          <div class="grow">
-            <label>Recovery keys that must sign</label>
-            <input id="recovery-needed" class="field" type="text" data-value="set_needed"/>
+        <p id="recovery-announced" class="warning" data-if="is_announced">{{announced}}</p>
+        <div data-if="!has_set">
+          <h2>Name its recovery set</h2>
+          <p class="muted">Each recovery key from its key card (Keys, Save key card…, in the holder's wallet).
+            This account's keys sign it; after that, they cannot change it.</p>
+          <div class="item" data-for="k : set_keys">
+            <span class="grow">{{k.name}} <span class="muted">{{k.fingerprint}}</span></span>
+            <button class="small" data-event-click="recov_set_drop(it_index)">Remove</button>
           </div>
-          <div class="grow">
-            <label>Days you have to cancel</label>
-            <input id="recovery-days" class="field" type="text" data-value="days"/>
+          <button id="recovery-add-card" data-event-click="recov_set_card()" data-attrif-disabled="busy">Add a key card…</button>
+          <div class="row">
+            <div class="grow">
+              <label>Recovery keys that must sign</label>
+              <input id="recovery-needed" class="field" type="text" data-value="set_needed"/>
+            </div>
+            <div class="grow">
+              <label>Days the account waits, frozen, for new keys</label>
+              <input id="recovery-days" class="field" type="text" data-value="days"/>
+            </div>
           </div>
-        </div>
-        <div class="row">
           <button id="recovery-set" class="primary" data-event-click="recov_set()" data-attrif-disabled="busy">Set the recovery</button>
-          <button id="recovery-remove" data-if="has_set" data-event-click="recov_remove()" data-attrif-disabled="busy">Remove the recovery</button>
         </div>
       </div>
       <div class="card">
-        <h2>Recover an account</h2>
-        <p class="muted">When you hold one of an account's recovery keys and its owner lost all of theirs: name its
-          new keys — the owner's key card, from their new wallet — or a new key made here, if the account is
-          yours. The other recovery keys sign too, as the account set it.</p>
+        <h2>As an account's recovery set</h2>
+        <p class="muted">When you hold one of an account's recovery keys. The set's other keys sign too, as the
+          account named it: save the operation for them when this wallet does not hold enough.</p>
         <label>The account (its number)</label>
         <input id="recover-account" class="field" type="text" data-value="target"/>
+        <h2>Give it new keys</h2>
+        <p class="muted">The owner's key card, from their new wallet — or a new key made here, if the account is
+          yours. The account is frozen until they take over.</p>
         <div class="item" data-for="k : new_keys">
           <span class="grow">{{k.name}} <span class="muted">{{k.fingerprint}}</span></span>
           <button class="small" data-event-click="recov_new_drop(it_index)">Remove</button>
@@ -79,7 +78,32 @@
         </div>
         <label>New keys that must sign</label>
         <input id="recover-needed" class="field" type="text" data-value="new_needed"/>
-        <button id="recover-announce" class="primary" data-event-click="recov_announce()" data-attrif-disabled="busy">Announce its new keys</button>
+        <div class="row">
+          <button id="recover-announce" class="primary" data-event-click="recov_announce()" data-attrif-disabled="busy">Announce its new keys</button>
+          <button id="recover-withdraw" data-event-click="recov_withdraw()" data-attrif-disabled="busy">Withdraw an announcement</button>
+        </div>
+        <h2>Change the set</h2>
+        <p class="muted">The new recovery keys from their cards; or remove the set (the account's keys may then
+          name a new one).</p>
+        <div class="item" data-for="k : change_keys">
+          <span class="grow">{{k.name}} <span class="muted">{{k.fingerprint}}</span></span>
+          <button class="small" data-event-click="recov_change_drop(it_index)">Remove</button>
+        </div>
+        <button id="change-add-card" data-event-click="recov_change_card()" data-attrif-disabled="busy">Add a key card…</button>
+        <div class="row">
+          <div class="grow">
+            <label>Recovery keys that must sign</label>
+            <input id="change-needed" class="field" type="text" data-value="change_needed"/>
+          </div>
+          <div class="grow">
+            <label>Days the account waits, frozen, for new keys</label>
+            <input id="change-days" class="field" type="text" data-value="change_days"/>
+          </div>
+        </div>
+        <div class="row">
+          <button id="change-set" data-event-click="recov_change()" data-attrif-disabled="busy">Change the set</button>
+          <button id="change-remove" data-event-click="recov_remove()" data-attrif-disabled="busy">Remove the set</button>
+        </div>
       </div>
     </div>
   </div>

@@ -31,14 +31,13 @@ std::string aboutTime(uint64_t seconds);
 std::string fingerprintsText(const std::vector<std::string> &keys);
 /** "2 of 3 (fingerprints)". */
 std::string keysText(const std::vector<std::string> &keys, uint32_t minSignatures);
-/** An account's recovery set and delay ("2 of 3 recovery keys; …"): "" when none. `epochSeconds` 0: unknown. */
-std::string recoveryText(const pp::AccountRecovery &recovery, uint64_t epochSeconds);
+/** An account's recovery set and delay ("2 of 3 recovery keys; new keys wait about 7 days …"): "" when none. */
+std::string recoveryText(const pp::AccountRecovery &recovery);
 /**
- * A recovery announced, and where its owner cancels it (`whereToCancel`: "Recovery…", "Signers"; ""
- * for whoever announced it): "" when none.
- * `tipEpoch`: the epoch now.
+ * A recovery announced — the new keys, when, the account frozen until then — and `advice` (what to do,
+ * for whoever reads it; "" for none): "" when none. `tipEpoch`: the epoch now.
  */
 std::string announcedText(const pp::AccountRecovery &recovery, uint64_t tipEpoch, uint64_t epochSeconds,
-                          const std::string &whereToCancel);
+                          const std::string &advice);
 
 } // namespace apps::online

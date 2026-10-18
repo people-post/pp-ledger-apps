@@ -119,8 +119,9 @@ private:
 };
 
 /**
- * The issuer's keys and threshold replaced, signed by the keys in force; and its recovery set — keys that
- * can name its new keys if all of these are lost, after a delay in which these can cancel it.
+ * The issuer's keys and threshold replaced, signed by the keys in force; and its recovery set — keys
+ * above these, which can give the account new keys (freezing it until then). The keys in force name the
+ * first set; its changes and withdrawals are the set's to sign.
  */
 class SignersScreen : public OperationForm {
 public:
@@ -149,7 +150,7 @@ private:
   void dropRecoveryKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &args);
   void makeRecoverySet(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void makeRecoveryRemoval(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
-  void makeRecoveryCancel(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
+  void makeRecoveryWithdrawal(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void addCandidate(const std::string &publicKey, bool chosen);
   std::vector<std::string> chosenKeys() const;
 

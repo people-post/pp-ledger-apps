@@ -1,5 +1,6 @@
 #include "net/WalletChain.h"
 
+#include "net/TokenOperations.h"
 #include "chain/AccountBuffer.h"
 #include "chain/ClientVerify.h"
 #include "chain/RecordHandler.h"
@@ -156,6 +157,9 @@ pp::Roe<pp::operation::Operation> makeMoveAll(const ChainInfo &chain, const pp::
                                               const pp::UserAccount &state, uint64_t to, const Making &making) {
   if (!from.account || *from.account == to) {
     return pp::Error("Move it to another account");
+  }
+  if (auto ok = checkNotFrozen(state); !ok) {
+    return ok.error();
   }
   pp::Ledger::TxDefault probe;
   probe.fromWalletId = *from.account;

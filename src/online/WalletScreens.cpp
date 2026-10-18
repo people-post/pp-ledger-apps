@@ -362,8 +362,9 @@ void AccountsScreen::read() {
             }
             row.keys = std::to_string(w.minSignatures) + " of " + std::to_string(w.publicKeys.size()) + " keys";
             row.renewal = r->renewal;
-            row.recovery = w.recovery.hasSet() ? "Recovery: " + recoveryText(w.recovery, r->epochSeconds) : "";
-            row.alert = announcedText(w.recovery, r->account->tip.epoch, r->epochSeconds, "Recovery…");
+            row.recovery = w.recovery.hasSet() ? "Recovery: " + recoveryText(w.recovery) : "";
+            row.alert = announcedText(w.recovery, r->account->tip.epoch, r->epochSeconds,
+                                      "If you did not ask for it, ask its recovery keys' holders to withdraw it.");
             row.state = "proven at block " + formatAmount(r->account->provenAtBlock);
             row.proven = true;
           }
@@ -860,20 +861,26 @@ void AccountRecoveryScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("target", &target_);
   model.Bind("new_keys", &newKeys_.rows);
   model.Bind("new_needed", &newNeeded_);
+  model.Bind("change_keys", &changeKeys_.rows);
+  model.Bind("change_needed", &changeNeeded_);
+  model.Bind("change_days", &changeDays_);
   model.BindEventCallback("recov_set_card", &AccountRecoveryScreen::addSetCard, this);
   model.BindEventCallback("recov_set_drop", &AccountRecoveryScreen::dropSetKey, this);
   model.BindEventCallback("recov_set", &AccountRecoveryScreen::setIt, this);
-  model.BindEventCallback("recov_remove", &AccountRecoveryScreen::removeIt, this);
-  model.BindEventCallback("recov_cancel", &AccountRecoveryScreen::cancelIt, this);
   model.BindEventCallback("recov_new_card", &AccountRecoveryScreen::addNewCard, this);
   model.BindEventCallback("recov_new_key", &AccountRecoveryScreen::makeNewKey, this);
   model.BindEventCallback("recov_new_drop", &AccountRecoveryScreen::dropNewKey, this);
   model.BindEventCallback("recov_announce", &AccountRecoveryScreen::announce, this);
+  model.BindEventCallback("recov_withdraw", &AccountRecoveryScreen::withdraw, this);
+  model.BindEventCallback("recov_change_card", &AccountRecoveryScreen::addChangeCard, this);
+  model.BindEventCallback("recov_change_drop", &AccountRecoveryScreen::dropChangeKey, this);
+  model.BindEventCallback("recov_change", &AccountRecoveryScreen::change, this);
+  model.BindEventCallback("recov_remove", &AccountRecoveryScreen::remove, this);
 }
 
 void AccountRecoveryScreen::willShow() {
   clearPending();
-  signersAre_ = "the account's";
+  actedOn_.reset();
   now_.clear();
   announced_.clear();
   hasSet_ = false;
@@ -885,8 +892,8 @@ void AccountRecoveryScreen::willShow() {
     say("", "Proving the account…");
     read();
   } else {
-    from_ = "none chosen";
-    say("", "Choose your account under Accounts (Recovery…) to give it a way back; or recover an account below.");
+    say("", "Choose your account under Accounts (Recovery…) to give it a recovery set; or act below as an "
+            "account's recovery set.");
   }
 }
 
@@ -943,9 +950,14 @@ void AccountRecoveryScreen::read() {
     const uint64_t epoch = net::epochSeconds(chain);
     hasSet_ = r.hasSet();
     isAnnounced_ = r.pending;
-    now_ = hasSet_ ? "Recovery: " + recoveryText(r, epoch) + ". Its recovery keys: " + fingerprintsText(r.publicKeys) + "."
-                   : "No recovery: if every key of this account is lost, so is the account.";
-    announced_ = announcedText(r, account.tip.epoch, epoch, "below");
+    now_ = hasSet_ ? "Recovery: " + recoveryText(r) + ". Its recovery keys: " + fingerprintsText(r.publicKeys) +
+                         ". Only they change it now."
+                   : "No recovery: if every key of this account is lost or stolen, so is the account.";
+    announced_ = announcedText(r, account.tip.epoch, epoch,
+                               "If you did not ask for it, ask its recovery keys' holders to withdraw it.");
+    if (target_.empty()) {
+      target_ = std::to_string(*desk_.selected);
+    }
     say("", "Proven at block " + formatAmount(account.provenAtBlock) + ".");
   });
 }
@@ -996,61 +1008,50 @@ void AccountRecoveryScreen::setIt(ui::DataModelHandle, ui::Event &, const ui::Va
   say("", "Proving the account, and making the change…");
   withProven(*from, [this, keys, n, d](const net::VerifiedAccount &account, const pp::UserAccount &state,
                                        const net::ChainInfo &chain) {
-    auto epochs = net::delayEpochsFor(chain, d);
-    if (!epochs) {
-      say(epochs.error().message + ".");
+    auto delay = net::delaySecondsFor(chain, d);
+    if (!delay) {
+      say(delay.error().message + ".");
       return;
     }
-    auto op = net::makeRecoverySet(chain, net::signersOf(account), state, keys, n, epochs.value(),
+    auto op = net::makeRecoverySet(chain, net::signersOf(account), state, keys, n, delay.value(),
                                    {now(), 3600, "recovery set"});
     if (!op) {
       say(op.error().message + ".");
       return;
     }
+    actedOn_.reset();
     signersAre_ = "the account's";
-    recovering_ = false;
     present(op.value());
-    say("", "If every key of the account is lost, " + std::to_string(n) + " of these recovery keys can name new ones; "
-            "they take over " + std::to_string(d) + (d == 1 ? " day" : " days") + " later, unless the account's keys cancel it.");
+    say("", std::to_string(n) + " of these recovery keys will stand above the account's own: they can give it new "
+            "keys — freezing it until then, at least " + std::to_string(d) + (d == 1 ? " day" : " days") +
+            " — and only they change the set. Choose people, or places, you trust.");
   });
 }
 
-void AccountRecoveryScreen::removeIt(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
-  const auto from = fromAccount();
-  if (!from) {
+void AccountRecoveryScreen::bySet(
+    const std::string &making,
+    std::function<pp::Roe<pp::operation::Operation>(uint64_t, const pp::UserAccount &, const net::ChainInfo &)> build,
+    std::function<std::string(const net::VerifiedAccount &, const net::ChainInfo &)> notice) {
+  auto id = parseAmount(target_);
+  if (!id) {
+    say("Type the number of the account whose recovery keys you hold.");
     return;
   }
-  withProven(*from, [this](const net::VerifiedAccount &account, const pp::UserAccount &state,
-                           const net::ChainInfo &chain) {
-    auto op = net::makeRecoverySet(chain, net::signersOf(account), state, {}, 0, 0, {now(), 3600, "no recovery"});
+  const uint64_t target = id.value();
+  say("", making);
+  withProven(target, [this, target, build = std::move(build), notice = std::move(notice)](
+                         const net::VerifiedAccount &account, const pp::UserAccount &state,
+                         const net::ChainInfo &chain) {
+    auto op = build(target, state, chain);
     if (!op) {
       say(op.error().message + ".");
       return;
     }
-    signersAre_ = "the account's";
-    recovering_ = false;
+    from_ = "account " + formatAmount(target) + ", as its recovery set";
+    signersAre_ = "its recovery set's";
+    actedOn_ = target;
     present(op.value());
-    say("", "With no recovery, an account whose keys are all lost is lost.");
-  });
-}
-
-void AccountRecoveryScreen::cancelIt(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
-  const auto from = fromAccount();
-  if (!from) {
-    return;
-  }
-  withProven(*from, [this](const net::VerifiedAccount &account, const pp::UserAccount &state,
-                           const net::ChainInfo &chain) {
-    auto op = net::makeRecoveryCancel(chain, net::signersOf(account), state, {now(), 3600, "recovery cancelled"});
-    if (!op) {
-      say(op.error().message + ".");
-      return;
-    }
-    signersAre_ = "the account's";
-    recovering_ = false;
-    present(op.value());
-    say("", "Signed by the account's keys, it shows you still hold them: the announced keys never take over. "
-            "If a recovery key may be stolen, set a new recovery afterwards.");
+    say("", notice(account, chain));
   });
 }
 
@@ -1076,12 +1077,7 @@ void AccountRecoveryScreen::dropNewKey(ui::DataModelHandle, ui::Event &, const u
 }
 
 void AccountRecoveryScreen::announce(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
-  auto id = parseAmount(target_);
   auto needed = parseAmount(newNeeded_);
-  if (!id) {
-    say("Type the number of the account to recover.");
-    return;
-  }
   if (newKeys_.keys.empty()) {
     say("Add its new keys: the owner's key card, or a new key made here.");
     return;
@@ -1092,36 +1088,98 @@ void AccountRecoveryScreen::announce(ui::DataModelHandle, ui::Event &, const ui:
   }
   const auto keys = newKeys_.keys;
   const uint32_t n = static_cast<uint32_t>(needed.value());
-  const uint64_t target = id.value();
-  say("", "Proving the account, and making the recovery…");
-  withProven(target, [this, keys, n, target](const net::VerifiedAccount &account, const pp::UserAccount &state,
-                                             const net::ChainInfo &chain) {
-    auto op = net::makeRecoveryAnnouncement(chain, target, state, keys, n, {now(), 3600, "recovery"});
-    if (!op) {
-      say(op.error().message + ".");
-      return;
-    }
-    from_ = "account " + formatAmount(target) + " (recovering)";
-    signersAre_ = "its recovery set's";
-    recovering_ = true;
-    recovered_ = target;
-    present(op.value());
-    const uint64_t epoch = net::epochSeconds(chain);
-    const uint64_t delay = account.wallet.recovery.delayEpochs;
-    say("", "Its new keys take over " + formatAmount(delay) + " epochs after it is in a block" +
-                (epoch ? " (" + aboutTime(delay * epoch) + ")" : "") +
-                ", unless the account's keys cancel it: tell its owner it is coming.");
-  });
+  bySet(
+      "Proving the account, and making the recovery…",
+      [keys, n](uint64_t target, const pp::UserAccount &state, const net::ChainInfo &chain) {
+        return net::makeRecoveryAnnouncement(chain, target, state, keys, n, {now(), 3600, "recovery"});
+      },
+      [](const net::VerifiedAccount &account, const net::ChainInfo &chain) {
+        const uint64_t epoch = net::epochSeconds(chain);
+        const uint64_t delay = account.wallet.recovery.delaySeconds;
+        return "Once it is in a block the account is frozen, and its new keys take over at the first epoch start " +
+               std::string(epoch ? aboutTime(delay) : std::to_string(delay) + " s") +
+               " later at least. Tell its owner it is coming.";
+      });
+}
+
+void AccountRecoveryScreen::withdraw(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  bySet(
+      "Proving the account, and making the withdrawal…",
+      [](uint64_t target, const pp::UserAccount &state, const net::ChainInfo &chain) {
+        return net::makeRecoveryWithdrawal(chain, target, state, {now(), 3600, "recovery withdrawn"});
+      },
+      [](const net::VerifiedAccount &, const net::ChainInfo &) {
+        return std::string("The announced keys never take over, and the account's keys sign again.");
+      });
+}
+
+void AccountRecoveryScreen::addChangeCard(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  addCard(changeKeys_);
+}
+
+void AccountRecoveryScreen::dropChangeKey(ui::DataModelHandle, ui::Event &, const ui::VariantList &args) {
+  changeKeys_.drop(indexArg(args));
+  refresh();
+}
+
+void AccountRecoveryScreen::change(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  auto needed = parseAmount(changeNeeded_);
+  auto days = parseAmount(changeDays_);
+  if (changeKeys_.keys.empty()) {
+    say("Add the new recovery keys' cards (or remove the set).");
+    return;
+  }
+  if (!needed || needed.value() == 0 || needed.value() > changeKeys_.keys.size()) {
+    say("How many of the new recovery keys must sign: between 1 and the keys chosen.");
+    return;
+  }
+  if (!days) {
+    say("Type the delay in days.");
+    return;
+  }
+  const auto keys = changeKeys_.keys;
+  const uint32_t n = static_cast<uint32_t>(needed.value());
+  const uint64_t d = days.value();
+  bySet(
+      "Proving the account, and making the change…",
+      [keys, n, d](uint64_t target, const pp::UserAccount &state, const net::ChainInfo &chain)
+          -> pp::Roe<pp::operation::Operation> {
+        auto delay = net::delaySecondsFor(chain, d);
+        if (!delay) {
+          return delay.error();
+        }
+        return net::makeRecoveryChange(chain, target, state, keys, n, delay.value(), {now(), 3600, "recovery set"});
+      },
+      [](const net::VerifiedAccount &, const net::ChainInfo &) {
+        return std::string("The new set stands above the account's keys from then on; this one acts no more.");
+      });
+}
+
+void AccountRecoveryScreen::remove(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  bySet(
+      "Proving the account, and making the removal…",
+      [](uint64_t target, const pp::UserAccount &state, const net::ChainInfo &chain) {
+        return net::makeRecoveryChange(chain, target, state, {}, 0, 0, {now(), 3600, "no recovery"});
+      },
+      [](const net::VerifiedAccount &, const net::ChainInfo &) {
+        return std::string("With no recovery set, an account whose keys are lost or stolen is lost; its keys may "
+                           "name a new set.");
+      });
 }
 
 void AccountRecoveryScreen::afterSent() {
-  if (recovering_) {
-    recovering_ = false;
-    withProven(recovered_, [this](const net::VerifiedAccount &account, const pp::UserAccount &,
-                                  const net::ChainInfo &chain) {
+  if (actedOn_) {
+    const uint64_t target = *actedOn_;
+    actedOn_.reset();
+    withProven(target, [this](const net::VerifiedAccount &account, const pp::UserAccount &,
+                              const net::ChainInfo &chain) {
       newKeys_.clear();
-      say("", "Announced. Proven at block " + formatAmount(account.provenAtBlock) + ": " +
-                  announcedText(account.wallet.recovery, account.tip.epoch, net::epochSeconds(chain), ""));
+      changeKeys_.clear();
+      const auto &r = account.wallet.recovery;
+      say("", "Done. Proven at block " + formatAmount(account.provenAtBlock) + ": " +
+                  (r.pending ? announcedText(r, account.tip.epoch, net::epochSeconds(chain), "")
+                   : r.hasSet() ? "its recovery: " + recoveryText(r) + "."
+                                : "it has no recovery set."));
     });
     return;
   }

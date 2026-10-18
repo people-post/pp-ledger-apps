@@ -41,7 +41,7 @@ operation made from the chain, signed with the smoke keys, submitted, and checke
 reserve → registrar transfer; a config update raising the mint cap, a mint, an admin-set rotation;
 an issued account for an owner's key, funded by the registrar; a token issuer's issue, signers and send;
 a fee round; the wallet's proven accounts, a send, an evacuation and an account recovery set, announced
-and cancelled; a recovery naming a new admin set.
+(the account shown frozen) and withdrawn; a recovery naming a new admin set.
 `scripts/genesis_smoke.sh <build> <pp-ledger checkout>` runs the offline genesis ceremony: the
 Genesis app plans block 0 from key cards, its admin keys sign it, and `pp-beacon --init --genesis-op`
 writes block 0 from it.
@@ -59,5 +59,5 @@ writes block 0 from it.
 | `src/apps/reserve` | `pp-ledger-reserve`: transfers out of the reserve — made from the chain, signed, merged, submitted, followed into a block |
 | `src/apps/fees` | `pp-ledger-fees`: fee rounds — a period read from the chain, the relays' measures, the rules, the payouts as one batch from the fee account; round files checked by their digest |
 | `src/apps/token` | `pp-ledger-token`: a token issuer's overview, issuing its token, sending, replacing its signers, its recovery set |
-| `src/apps/wallet` | `pp-ledger-wallet`: everyone's last resort — the network pinned from a card, accounts proven (no node believed), send, receive, evacuate, recovery (set, cancel, recover an account), key backups |
+| `src/apps/wallet` | `pp-ledger-wallet`: everyone's last resort — the network pinned from a card, accounts proven (no node believed), send, receive, evacuate, recovery (an account's set; acting as a set: announce, withdraw, change), key backups |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

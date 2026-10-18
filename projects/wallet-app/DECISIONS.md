@@ -90,9 +90,12 @@ passphrase, the 10-minute lock. To revisit if people find unlocking too slow.
 ## WL010 — A way back, in the wallet
 
 **Date:** 2026-10-19
-**Decision:** The wallet sets an account's recovery set (pp-ledger `projects/account-recovery`: keys
-from key cards, a delay in days), warns of a recovery announced — proven, on Accounts — and cancels
-it; and announces a recovery for whoever holds an account's recovery keys. The token app sets and
-cancels its issuer's; its recovery-key holders use the wallet.
-**Rationale:** The last resort is where lost keys are met; the owner's veto only works if the owner
-sees the announcement without trusting a node, and the wallet's reads are proven.
+**Decision:** The wallet names an account's first recovery set (pp-ledger `projects/account-recovery`:
+keys from key cards, a delay in days), shows an announcement — proven, on Accounts — with the account
+frozen, and refuses to make what a frozen account would sign. For whoever holds an account's recovery
+keys it announces new keys, withdraws that, changes or removes the set. The token app names its
+issuer's first set and makes the set's changes and withdrawals as operation files; its recovery-key
+holders can use the wallet too.
+**Rationale:** The last resort is where lost and stolen keys are met. The recovery set stands above
+the account's keys (pp-ledger AR002), so an owner whose account is frozen must see why without
+trusting a node — the wallet's reads are proven.
