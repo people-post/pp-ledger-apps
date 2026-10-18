@@ -18,9 +18,4 @@ that doc.
 |---------|--------|
 | [admin-apps](admin-apps/DESIGN.md) | Desktop apps (Linux, macOS) for the holders of a pp-ledger chain's system keys: an app per role (Genesis, Admin, Reserve, Registrar) and an offline Signer; operations exchanged as files, signed in parallel |
 | [token-app](token-app/DESIGN.md) | The token issuers' app (replacing pp-token-admin): an issuer's overview, issuing and sending its token, its keys; multi-signature, on the admin apps' code, its own package |
-
-## Later
-
-| Project | Intent |
-|---------|--------|
-| Fee distribution | Manage the fee account so fees are redistributed to node operators, with tools to analyze their contributions. Details not settled |
+| [fee-app](fee-app/DESIGN.md) | The fee account's app: rounds that hand the collected fees on to miners and relays — a period report from the chain (and relays' measures from outside), rules kept across rounds, one batch operation per round, evidence on the chain |
