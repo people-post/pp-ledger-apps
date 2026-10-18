@@ -27,4 +27,4 @@ Ordering only; status lives in [CURRENT_STATE.md](CURRENT_STATE.md). Design: [DE
       force), beacon certificates, admin key rotation
 - [x] **ad7** Registrar: creating and funding issued accounts
 - [x] **ad8** Genesis: key cards, the genesis plan, recovery operations
-- [ ] **ad9** Packaging (AppImage / `.deb`, notarized `.dmg`) and operator guides; promote to `docs/`
+- [x] **ad9** Packaging (AppImage / `.deb`, notarized `.dmg`) and operator guides; promote to `docs/`

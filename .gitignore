@@ -68,3 +68,6 @@ vcpkg_installed/
 Testing/
 .cache/
 .ccache/
+
+# Local macOS signing credentials
+packaging/macos/signing.env

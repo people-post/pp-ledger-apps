@@ -2,3 +2,4 @@
 add_executable(pp-admin-signer main.cpp)
 target_link_libraries(pp-admin-signer PRIVATE admin_ui)
 pp_admin_apply_warnings(pp-admin-signer)
+pp_admin_app(pp-admin-signer signer "PP Ledger Signer" "Review and sign pp-ledger operations, offline")

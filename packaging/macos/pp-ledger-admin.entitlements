@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Hardened runtime, nothing more: the role apps reach a node (outgoing UDP), the Signer nothing.
+     Outgoing network needs no entitlement outside the App Sandbox, which these apps do not use. -->
+<plist version="1.0">
+<dict>
+</dict>
+</plist>

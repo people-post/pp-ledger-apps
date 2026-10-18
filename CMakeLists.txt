@@ -1,7 +1,9 @@
 # pp-ledger-admin: desktop apps for a pp-ledger chain's system key holders (Linux, macOS).
 cmake_minimum_required(VERSION 3.24)
 
-project(pp-ledger-admin VERSION 0.1.0 LANGUAGES C CXX)
+# The release workflow sets the version from its tag (v1.2.3).
+set(PP_ADMIN_VERSION "0.1.0" CACHE STRING "Version of the apps and packages")
+project(pp-ledger-admin VERSION ${PP_ADMIN_VERSION} LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,4 +30,6 @@ if(PP_ADMIN_BUILD_TESTS)
   enable_testing()
 endif()
 
+include(AdminApps)
 add_subdirectory(src)
+include(AdminPackaging)
