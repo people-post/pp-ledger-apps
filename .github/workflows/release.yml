@@ -52,7 +52,7 @@ jobs:
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_ADMIN_BUILD_TESTS=OFF \
             -DPP_ADMIN_VERSION=${{ needs.version.outputs.version }}
           cmake --build build -j 4
-      - name: Package (.deb, AppImages)
+      - name: Package (.debs, AppImages)
         run: |
           mkdir -p dist
           (cd build && cpack) && mv build/*.deb dist/
@@ -76,7 +76,11 @@ jobs:
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_ADMIN_BUILD_TESTS=OFF \
             -DPP_ADMIN_VERSION=${{ needs.version.outputs.version }}
           cmake --build build -j 3
-          cmake --install build --prefix install
+          # A folder per disk image: the Signer and the system apps; the Signer and the Token app.
+          for set in admin token; do
+            cmake --install build --prefix "install/$set" --component signer
+            cmake --install build --prefix "install/$set" --component "$set"
+          done
       - name: Sign the apps
         env:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
@@ -84,11 +88,13 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          for app in install/*.app; do ./scripts/macos_sign_and_notarize.sh sign-app "$app"; done
+          for app in install/*/*.app; do ./scripts/macos_sign_and_notarize.sh sign-app "$app"; done
       - name: Disk image
         run: |
           mkdir -p dist
-          ./scripts/macos_dmg.sh install ${{ needs.version.outputs.version }} dist
+          for set in admin token; do
+            ./scripts/macos_dmg.sh "install/$set" ${{ needs.version.outputs.version }} dist "$set"
+          done
       - name: Notarize
         env:
           APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
@@ -121,4 +127,4 @@ jobs:
         run: |
           gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
             --title "pp-ledger-admin ${{ needs.version.outputs.version }}" \
-            --notes "Linux: a .deb (Ubuntu 24.04 and later) and an AppImage per app. macOS (Apple silicon): a disk image of the five apps. Guides: docs/guides."
+            --notes "System key holders: pp-ledger-admin and pp-ledger-signer (.deb, Ubuntu 24.04 and later), or the pp-ledger-admin disk image (macOS, Apple silicon). Token issuers: pp-ledger-token and pp-ledger-signer, or the pp-ledger-token disk image. Linux also has an AppImage per app. Guides: docs/guides."

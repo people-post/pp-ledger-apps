@@ -1,0 +1,47 @@
+<rml>
+<head>
+  <title>Issue</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="issue">
+    <div class="card">
+      <h1>Issue tokens</h1>
+      <p class="muted">Token {{issuer}} to a holder's account: they hold it from then on. Out so far: {{supply}}.
+        The fee is paid in the native token.</p>
+      <label>To account (its number)</label>
+      <input id="issue-to" class="field" type="text" data-value="to" data-attrif-disabled="busy"/>
+      <div class="row">
+        <div class="grow">
+          <label>Amount</label>
+          <input id="issue-amount" class="field" type="text" data-value="amount" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Fee</label>
+          <input id="issue-fee" class="field" type="text" data-value="fee" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="issue-make" class="primary" data-event-click="issue_make()" data-attrif-disabled="busy">Make the operation…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

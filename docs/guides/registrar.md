@@ -10,4 +10,5 @@ funds them.
    smallest fee the chain takes is filled in, including its fee for new accounts.
 4. *Make the operation…*, sign, collect the other registrar holders' signatures, submit.
 
-Tell the owner their account's number once it is in a block.
+Tell the owner their account's number once it is in a block. A token issuer's account is one of
+these: its owners run it with the Token app ([Token](token.md)); fund it enough for its renewals.

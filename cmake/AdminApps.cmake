@@ -2,9 +2,10 @@
 # desktop entry and icon each on Linux (the assets under share/pp-ledger-admin). UiApp::assetPath
 # finds the assets either way.
 
-# pp_admin_app(<target> <slug> <title> <comment>): `slug` names the icon (assets/icons/<slug>.png)
-# and ids; `title` is what people see ("PP Ledger Signer").
-function(pp_admin_app target slug title comment)
+# pp_admin_app(<target> <slug> <title> <comment> <package>): `slug` names the icon
+# (assets/icons/<slug>.png) and ids; `title` is what people see ("PP Ledger Signer"); `package` the
+# install component it ships in (AdminPackaging.cmake): signer, admin or token.
+function(pp_admin_app target slug title comment package)
   set(icon ${PROJECT_SOURCE_DIR}/assets/icons/${slug}.png)
   if(APPLE)
     target_sources(${target} PRIVATE ${icon})
@@ -23,11 +24,11 @@ function(pp_admin_app target slug title comment)
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/assets
               "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Resources/assets"
       VERBATIM)
-    install(TARGETS ${target} BUNDLE DESTINATION . COMPONENT apps)
+    install(TARGETS ${target} BUNDLE DESTINATION . COMPONENT ${package})
   else()
     # One less library a distribution must match: the C++ runtime comes with the binary.
     target_link_options(${target} PRIVATE -static-libstdc++ -static-libgcc)
-    install(TARGETS ${target} RUNTIME DESTINATION bin COMPONENT apps)
+    install(TARGETS ${target} RUNTIME DESTINATION bin COMPONENT ${package})
     set(PP_APP_SLUG ${slug})
     set(PP_APP_TITLE "${title}")
     set(PP_APP_COMMENT "${comment}")
@@ -35,12 +36,13 @@ function(pp_admin_app target slug title comment)
     configure_file(${PROJECT_SOURCE_DIR}/packaging/linux/app.desktop.in
                    ${CMAKE_CURRENT_BINARY_DIR}/pp-ledger-admin-${slug}.desktop @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pp-ledger-admin-${slug}.desktop DESTINATION share/applications
-            COMPONENT apps)
+            COMPONENT ${package})
     install(FILES ${icon} DESTINATION share/icons/hicolor/512x512/apps RENAME pp-ledger-admin-${slug}.png
-            COMPONENT apps)
+            COMPONENT ${package})
   endif()
 endfunction()
 
+# The assets ship with the Signer, which both other packages depend on.
 if(NOT APPLE)
-  install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION share/pp-ledger-admin/assets COMPONENT apps)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION share/pp-ledger-admin/assets COMPONENT signer)
 endif()

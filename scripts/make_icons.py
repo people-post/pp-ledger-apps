@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The apps' icons: a coloured rounded square, a white symbol. Pure Python (no imaging library):
 shapes are sampled 3×3 per pixel and written as RGBA PNGs to assets/icons/<app>.png.
-Run again after changing a shape; the PNGs are committed."""
+Run again after changing a shape (`make_icons.py [app…]`: only those); the PNGs are committed."""
 import math, os, struct, zlib
 
 SIZE = 512
@@ -78,6 +78,9 @@ ICONS = {
                                         rounded(0.70, 0.40, 0.79, 0.68, 0.02), rounded(0.61, 0.49, 0.88, 0.58, 0.02))),
     # Genesis: a star — the start.
     'genesis': ((180, 83, 9), star(0.5, 0.52, 0.27, 0.11, 5)),
+    # Token: a coin with a T — an issuer's token.
+    'token': ((190, 18, 60), union(ring(0.5, 0.5, 0.27, 0.06), rounded(0.37, 0.36, 0.63, 0.44, 0.02),
+                                   rounded(0.46, 0.36, 0.54, 0.66, 0.02))),
 }
 
 def render(colour, glyph):
@@ -108,6 +111,9 @@ def render(colour, glyph):
 if __name__ == '__main__':
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'icons')
     os.makedirs(out, exist_ok=True)
+    import sys
     for name, (colour, glyph) in ICONS.items():
+        if len(sys.argv) > 1 and name not in sys.argv[1:]:
+            continue
         png(os.path.join(out, name + '.png'), render(colour, glyph))
         print('wrote', name + '.png')
