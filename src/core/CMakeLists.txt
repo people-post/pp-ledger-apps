@@ -2,6 +2,8 @@
 # Signer links this and the UI only (DESIGN.md § Shape of the code, AD005).
 add_library(admin_core STATIC
     AddressBook.cpp
+    Amounts.cpp
+    Amounts.h
     AddressBook.h
     AtomicFile.cpp
     AtomicFile.h

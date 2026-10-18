@@ -4,6 +4,8 @@
 //     <home>/transfer.json: a reserve transfer, 2 of 3, signed by Alice; <home>/transfer.bob.json:
 //     the same, signed by Bob (a copy to merge); <home>/genesis.json: a genesis plan (pp-ledger's
 //     builder) the vault's admin key is one of three admins of, 2 to sign.
+//   pp-admin-devfixture import <home> <passphrase> <role> <name>.key…
+//     Makes <home>/vault (cheap KDF) holding the given pp-client keygen keys (each with its .pub).
 //   pp-admin-devfixture verify <operation file> <signatures>
 //     Exit 0 when the file holds exactly that many valid signatures (and no invalid one).
 #include "core/AddressBook.h"
@@ -15,6 +17,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <fstream>
 #include <string>
 #include <filesystem>
 #include <iostream>
@@ -32,6 +35,36 @@ int main(int argc, char **argv) {
     const auto check = op::check(operation.value());
     std::cout << check.signedBy.size() << " valid, " << check.invalid << " invalid\n";
     return check.signedBy.size() == static_cast<size_t>(std::atoi(argv[3])) && check.invalid == 0 ? 0 : 1;
+  }
+  if (argc >= 6 && std::string(argv[1]) == "import") {
+    const std::filesystem::path home = argv[2];
+    const auto role = roleFromName(argv[4]);
+    if (!role) {
+      std::cerr << "unknown role " << argv[4] << "\n";
+      return 2;
+    }
+    Vault vault((home / "vault").string(), KdfLimits::minimum());
+    if (auto created = vault.create(argv[3]); !created) {
+      std::cerr << created.error().message << "\n";
+      return 1;
+    }
+    for (int i = 5; i < argc; ++i) {
+      const std::filesystem::path keyPath = argv[i];
+      auto privateKey = pp::utl::readPrivateKey(keyPath.string(), "");
+      std::ifstream pubFile(std::filesystem::path(keyPath).replace_extension(".pub"));
+      std::string pubHex;
+      pubFile >> pubHex;
+      if (!privateKey) {
+        std::cerr << keyPath << ": " << privateKey.error().message << "\n";
+        return 1;
+      }
+      auto key = vault.importKey(keyPath.stem().string(), *role, privateKey.value(), pp::utl::hexDecode(pubHex));
+      if (!key) {
+        std::cerr << keyPath << ": " << key.error().message << "\n";
+        return 1;
+      }
+    }
+    return 0;
   }
   if (argc != 3) {
     std::cerr << "usage: pp-admin-devfixture <home> <passphrase>\n";

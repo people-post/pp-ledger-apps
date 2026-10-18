@@ -50,7 +50,7 @@ void VaultScreen::finish(const std::string &error) {
   error_ = error;
   refresh();
   if (error.empty()) {
-    session_.navigate("review");
+    session_.navigate(""); // the app's first screen
   }
 }
 

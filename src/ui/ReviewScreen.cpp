@@ -53,6 +53,10 @@ void ReviewScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("notes", &notes_);
   model.Bind("signable", &signable_);
   model.Bind("unsaved", &unsaved_);
+  model.Bind("can_submit", &canSubmit_);
+  model.Bind("submitting", &submitting_);
+  model.Bind("submit_status", &submitStatus_);
+  model.Bind("submitted", &submitted_);
   model.Bind("error", &error_);
   model.Bind("notice", &notice_);
   model.BindEventCallback("review_open", &ReviewScreen::chooseFile, this);
@@ -60,6 +64,7 @@ void ReviewScreen::bind(ui::DataModelConstructor &model) {
   model.BindEventCallback("review_close", &ReviewScreen::close, this);
   model.BindEventCallback("review_add_copies", &ReviewScreen::addCopies, this);
   model.BindEventCallback("review_save", &ReviewScreen::saveMerged, this);
+  model.BindEventCallback("review_submit", &ReviewScreen::submit, this);
 }
 
 void ReviewScreen::willShow() { show(); }
@@ -81,6 +86,8 @@ void ReviewScreen::open(const std::string &path) {
   review_ = std::move(review.value());
   path_ = path;
   unsaved_ = false;
+  submitStatus_.clear();
+  submitted_ = false;
   error_.clear();
   notice_.clear();
   show();
@@ -148,6 +155,7 @@ void ReviewScreen::show() {
   for (const auto &key : keysToSign(operation, keys)) {
     signable_.push_back({key.id, key.label});
   }
+  canSubmit_ = static_cast<bool>(session_.submit) && complete_ && !expired_ && operation.kind != op::Kind::Genesis;
   refresh();
 }
 
@@ -244,6 +252,24 @@ void ReviewScreen::saveMerged(ui::DataModelHandle, ui::Event &, const ui::Varian
     say("", review_->signatures.complete()
                 ? "Saved " + std::filesystem::path(*path).filename().string() + ": complete, ready to submit."
                 : "Saved " + std::filesystem::path(*path).filename().string() + ".");
+  });
+}
+
+void ReviewScreen::submit(ui::DataModelHandle, ui::Event &, const ui::VariantList &) {
+  if (!review_ || !canSubmit_ || submitting_) {
+    return;
+  }
+  submitting_ = true;
+  submitted_ = false;
+  submitStatus_ = "Sending…";
+  say("", "");
+  session_.submit(review_->operation, [this](const Session::SubmitProgress &progress) {
+    submitStatus_ = progress.status;
+    if (progress.done || progress.failed) {
+      submitting_ = false;
+      submitted_ = progress.done;
+    }
+    refresh();
   });
 }
 

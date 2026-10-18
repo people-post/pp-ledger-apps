@@ -6,9 +6,9 @@
 <body>
   <div class="bar" data-model="nav">
     <span class="app">{{app}}</span>
-    <span id="nav-review" class="tab" data-class-current="current == 'review'" data-event-click="nav_go('review')">Review and sign</span>
-    <span id="nav-keys" class="tab" data-class-current="current == 'keys'" data-event-click="nav_go('keys')">Keys and people</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
     <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
     <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
   </div>
   <div class="page" data-model="review">
@@ -47,6 +47,11 @@
       <div class="card">
         <h2>Signatures: {{progress}}</h2>
         <p class="notice" data-if="complete">Enough signatures: it can be submitted.</p>
+        <div class="row" data-if="can_submit">
+          <button id="submit" class="primary" data-if="!submitted" data-event-click="review_submit()" data-attrif-disabled="submitting">Submit to the chain</button>
+          <span class="muted" data-if="submit_status != '' &amp;&amp; !submitted">{{submit_status}}</span>
+          <span id="submit-done" class="done-text" data-if="submitted">{{submit_status}}</span>
+        </div>
         <p class="warning" data-if="unsaved">Merged signatures are not saved yet.</p>
         <div class="item" data-for="signer : signers">
           <span class="status-done" data-if="signer.done">Signed</span>

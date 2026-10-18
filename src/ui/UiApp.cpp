@@ -349,6 +349,11 @@ int UiApp::run() {
   int frames = 0;
   while (running_) {
     if (!script_.empty() && !stepScript()) {
+      running_ = false;
+      while (backgroundJobs_ > 0) { // let workers see it and finish
+        SDL_Delay(10);
+        drainPosted();
+      }
       return scriptFailed_ ? 1 : 0;
     }
     // Sleep until something happens, unless the UI animates, a screenshot is due or a script runs.
@@ -375,6 +380,7 @@ int UiApp::run() {
     }
     host_.presentFrame();
   }
+  running_ = false;
   // A worker may still post: let it finish before the app goes.
   while (backgroundJobs_ > 0) {
     SDL_Delay(10);

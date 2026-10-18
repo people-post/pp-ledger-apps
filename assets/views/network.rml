@@ -1,0 +1,33 @@
+<rml>
+<head>
+  <title>Network</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="network">
+    <div class="card">
+      <h2>The node this app talks to</h2>
+      <p class="muted">A relay (or the beacon) of your chain: its operator gives you its address, which
+        starts with /ip4/ or /dns4/ and ends with /p2p/ and a long id.</p>
+      <label>Node address</label>
+      <input id="network-address" class="field" type="text" data-value="address" data-attrif-disabled="busy"/>
+      <button id="network-check" class="primary" data-event-click="network_check()" data-attrif-disabled="busy">Check and save</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+      <div class="facts">
+        <div class="item" data-for="fact : facts">
+          <span class="label">{{fact.label}}</span>
+          <span class="value">{{fact.value}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>
