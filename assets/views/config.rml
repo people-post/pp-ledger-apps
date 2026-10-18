@@ -1,0 +1,47 @@
+<rml>
+<head>
+  <title>Config</title>
+  <link type="text/rcss" href="../themes/admin.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="config">
+    <div class="card">
+      <h1>Change the chain's config</h1>
+      <p class="muted">Change the new values you mean to; the update applies from the epoch after the block it is in, one update at a time. Slot timing is fixed at genesis.</p>
+      <p class="warning" data-if="pending != ''">{{pending}}</p>
+      <div class="facts">
+        <div class="item">
+          <span class="label"><strong>Setting</strong></span>
+          <span class="grow"><strong>In force</strong></span>
+          <span style="width: 220dp;"><strong>New</strong></span>
+        </div>
+        <div class="item" data-for="row : rows">
+          <span class="label">{{row.title}}</span>
+          <span class="grow">{{row.current}}</span>
+          <input class="field" style="width: 220dp; margin: 0;" type="text" data-attr-id="'config-' + row.name" data-value="row.next" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="config-make" class="primary" data-event-click="config_make()" data-attrif-disabled="busy">Make the update…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

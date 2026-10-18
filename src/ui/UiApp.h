@@ -30,7 +30,7 @@ struct AppOptions {
   int screenshotFrames{30};
   /**
    * Development (PP_ADMIN_DEV_HOOKS): steps to drive the app, one per line — `click #id`,
-   * `type <text>`, `wait <frames>`, `idle` (background work done), `answer <path>[|<path>…]` (the
+   * `type <text>`, `clear` (the focused field), `wait <frames>`, `idle` (background work done), `answer <path>[|<path>…]` (the
    * next file dialog's choice), `sleep <ms>`, `expect #id` (fails the run unless the screen shown
    * has it), `shot <png>`, `quit`. A failed step ends the run with exit code 1.
    */

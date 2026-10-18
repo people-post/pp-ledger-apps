@@ -1,5 +1,6 @@
 // pp-admin-signer: every key holder's app. Opens an operation, shows what it does, signs it with a
 // key from the vault — offline. Usage: pp-admin-signer [operation file]
+#include "ui/IdleLock.h"
 #include "ui/KeysScreen.h"
 #include "ui/Nav.h"
 #include "ui/ReviewScreen.h"
@@ -42,22 +43,7 @@ int main(int argc, char **argv) {
       app.show(review);
     }
   };
-  int idleSeconds = Session::kIdleLockMinutes * 60;
-#ifdef PP_ADMIN_DEV_HOOKS
-  if (const char *seconds = std::getenv("PP_ADMIN_DEV_IDLE_SECONDS")) {
-    idleSeconds = std::atoi(seconds);
-  }
-#endif
-  app.setIdleTimeout(idleSeconds, [&] {
-    if (session.vault.isUnlocked()) {
-      session.vault.lock();
-      session.lockedBecause = "Locked after " +
-                              (idleSeconds % 60 == 0 ? std::to_string(idleSeconds / 60) + " minutes"
-                                                     : std::to_string(idleSeconds) + " seconds") +
-                              " without use.";
-      session.navigate("vault");
-    }
-  });
+  installIdleLock(app, session);
   std::string first = "vault";
 #ifdef PP_ADMIN_DEV_HOOKS
   // Development only: unattended unlock and a first screen, for screenshots.

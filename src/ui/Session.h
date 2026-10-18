@@ -5,6 +5,8 @@
 #include "operation/Operation.h"
 
 #include <functional>
+#include <utility>
+#include <vector>
 #include <string>
 
 namespace admin::ui_host {
@@ -26,6 +28,15 @@ struct Session {
    * UI thread. Empty in the Signer, which has no network (AD005).
    */
   std::function<void(const pp::operation::Operation &, std::function<void(const SubmitProgress &)>)> submit;
+
+  /**
+   * Role apps: what `operation` would change, against the chain now (a config update's settings
+   * and admin set, a certificate's generation), as label/value lines, on the UI thread; the error
+   * as a single line. Empty in the Signer: offline, it shows the operation alone.
+   */
+  std::function<void(const pp::operation::Operation &,
+                     std::function<void(std::vector<std::pair<std::string, std::string>>)>)>
+      compare;
 
   /** Why the vault was locked, for the vault screen to say ("" when the person locked it). */
   std::string lockedBecause;

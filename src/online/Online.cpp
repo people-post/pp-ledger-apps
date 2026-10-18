@@ -1,6 +1,8 @@
 #include "online/Online.h"
 
+#include "net/AdminOperations.h"
 #include "common/io/Json.h"
+#include "lib/common/BinaryPack.hpp"
 
 #include <chrono>
 #include <memory>
@@ -19,10 +21,71 @@ int64_t nowSeconds() {
 } // namespace
 
 Online::Online(ui_host::UiApp &app, ui_host::Session &session) : app_(app), session_(session) {
+  session_.compare = [this](const op::Operation &operation,
+                            std::function<void(std::vector<std::pair<std::string, std::string>>)> done) {
+    compare(operation, std::move(done));
+  };
   session_.submit = [this](const op::Operation &operation,
                            std::function<void(const ui_host::Session::SubmitProgress &)> report) {
     submit(operation, std::move(report));
   };
+}
+
+void Online::compare(const op::Operation &operation,
+                     std::function<void(std::vector<std::pair<std::string, std::string>>)> done) {
+  auto lines = std::make_shared<std::vector<std::pair<std::string, std::string>>>();
+  withChain(
+      [operation, lines](net::ChainLink &link) -> std::string {
+        auto chain = link.info();
+        if (!chain) {
+          return chain.error().message;
+        }
+        const auto &now = chain.value().meta;
+        if (operation.kind == op::Kind::ConfigUpdate) {
+          auto tx = pp::utl::binaryUnpack<pp::Ledger::TxConfig>(operation.record.data);
+          pp::GenesisAccountMeta next;
+          if (!tx || !next.ltsFromString(tx.value().meta)) {
+            return "The update does not decode";
+          }
+          for (const auto &change : net::configChanges(now.config, next.config)) {
+            lines->emplace_back(change.title, "from " + change.before + " to " + change.after);
+          }
+          const auto &a = now.genesis.wallet;
+          const auto &b = next.genesis.wallet;
+          if (a.publicKeys != b.publicKeys || a.minSignatures != b.minSignatures) {
+            lines->emplace_back("Admin set", "from " + std::to_string(a.minSignatures) + " of " +
+                                                 std::to_string(a.publicKeys.size()) + " to " +
+                                                 std::to_string(b.minSignatures) + " of " +
+                                                 std::to_string(b.publicKeys.size()) + " (keys below)");
+          }
+          if (lines->empty()) {
+            lines->emplace_back("Changes", "none: the chain is already so");
+          }
+          if (now.hasPending) {
+            lines->emplace_back("Refused while", "another update is pending (from epoch " +
+                                                     op::groupDigits(now.pending.activationEpoch) + ")");
+          }
+        } else if (operation.kind == op::Kind::BeaconCertificate) {
+          auto tx = pp::utl::binaryUnpack<pp::Ledger::TxBeaconCert>(operation.record.data);
+          pp::BeaconCertificate cert;
+          if (!tx || !cert.ltsFromString(tx.value().meta)) {
+            return "The certificate does not decode";
+          }
+          lines->emplace_back("Generation", "from " + std::to_string(now.authority.beacon.generation) + " (in force) to " +
+                                                std::to_string(cert.generation) +
+                                                (cert.generation == now.authority.beacon.generation + 1
+                                                     ? " (the next one)"
+                                                     : " (not the next one: the chain refuses it)"));
+        }
+        return "";
+      },
+      [lines, done = std::move(done)](const std::string &error) {
+        if (!error.empty()) {
+          done({{"Cannot compare", error}});
+          return;
+        }
+        done(*lines);
+      });
 }
 
 void Online::load() {

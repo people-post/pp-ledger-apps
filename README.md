@@ -31,16 +31,17 @@ Development builds (`-DPP_ADMIN_DEV_HOOKS=ON`, never a release) add `pp-admin-de
 and an operation to review) and let the apps run a script (`--script`: click, type, answer file
 dialogs, check what is shown, take screenshots); `scripts/ui_smoke.sh` drives the Signer that way
 under Xvfb (a ctest when `xvfb-run` is present). `scripts/chain_smoke.sh <build> <pp-ledger checkout>`
-drives the Reserve app against pp-ledger's local smoke network (a built pp-ledger with its apps):
-a reserve → registrar transfer made, signed with the smoke reserve keys, submitted, and the
-registrar's balance checked on chain.
+drives the role apps against pp-ledger's local smoke network (a built pp-ledger with its apps), each
+operation made from the chain, signed with the smoke keys, submitted, and checked on chain: a
+reserve → registrar transfer; a config update raising the mint cap, a mint, an admin-set rotation.
 
 | Piece | What |
 |-------|------|
 | `src/core` (`admin_core`) | The vault, key cards and the address book, the operation workflow — no network code |
-| `src/net` (`admin_net`) | The link to a node: chain info and the config in force (`CONFIG_GET`), accounts and their signers, the minimum fee, submitting, finding a transaction in a block |
+| `src/net` (`admin_net`) | The link to a node: chain info and the config in force (`CONFIG_GET`), accounts and their signers, the minimum fee, submitting, finding a transaction in a block; the admin set's operations built and checked by pp-ledger's rules (`AdminOperations`) |
 | `src/ui` (`admin_ui`) | The window host (SDL3 + OpenGL 3, pp-cpp-ui), the app frame, the shared screens: vault, keys and people, operation review |
 | `src/online` (`admin_online`) | What role apps add: the node setting (kept in the vault), chain work off the UI thread, submitting and following an operation, the transfer form |
 | `src/apps/signer` | `pp-admin-signer`: review, sign and merge operations (genesis plans included), offline; locks itself after 10 minutes without use |
+| `src/apps/admin` | `pp-admin-admin`: minting to the reserve, config updates (the changes shown against the chain), rotating the admin set, beacon certificates |
 | `src/apps/reserve` | `pp-admin-reserve`: transfers out of the reserve — made from the chain, signed, merged, submitted, followed into a block |
 | `assets/` | Views (RML), the theme (RCSS), the font (Lato, SIL Open Font License 1.1: `assets/fonts/NOTICE`) |

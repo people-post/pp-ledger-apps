@@ -325,6 +325,9 @@ bool UiApp::stepScript() {
     } else if (verb == "sleep") {
       SDL_Delay(static_cast<Uint32>(std::atoi(rest.c_str())));
       return true;
+    } else if (verb == "clear") { // empty the focused field: select all, delete
+      context_->ProcessKeyDown(ui::Input::KI_A, ui::Input::KM_CTRL);
+      context_->ProcessKeyDown(ui::Input::KI_BACK, 0);
     } else if (verb == "type") {
       context_->ProcessTextInput(rest);
     } else if (verb == "answer") {
