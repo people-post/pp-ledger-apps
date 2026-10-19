@@ -16,10 +16,10 @@
 #include "core/AddressBook.h"
 #include "core/KeyCard.h"
 #include "core/Vault.h"
-#include "chain/Genesis.h"
-#include "client/AccountIds.h"
-#include "operation/Operation.h"
-#include "lib/common/Utilities.h"
+#include "ledger/chain/Genesis.h"
+#include "ledger/client/AccountIds.h"
+#include "ledger/operation/Operation.h"
+#include "ledger/lib/common/Utilities.h"
 
 #include <chrono>
 #include <cstdlib>

@@ -3,7 +3,7 @@
 #include "core/Operations.h"
 #include "TempDir.h"
 
-#include "client/AccountIds.h"
+#include "ledger/client/AccountIds.h"
 
 #include <gtest/gtest.h>
 

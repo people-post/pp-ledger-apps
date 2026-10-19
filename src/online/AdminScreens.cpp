@@ -4,9 +4,9 @@
 #include "core/AddressBook.h"
 #include "core/Amounts.h"
 #include "core/Operations.h"
-#include "lib/common/BinaryPack.hpp"
-#include "lib/common/Utilities.h"
-#include "client/AccountIds.h"
+#include "ledger/lib/common/BinaryPack.hpp"
+#include "ledger/lib/common/Utilities.h"
+#include "ledger/client/AccountIds.h"
 
 #include <algorithm>
 #include <memory>

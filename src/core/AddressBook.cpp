@@ -1,6 +1,6 @@
 #include "core/AddressBook.h"
 
-#include "lib/common/Utilities.h"
+#include "ledger/lib/common/Utilities.h"
 #include "common/io/Json.h"
 
 #include <algorithm>

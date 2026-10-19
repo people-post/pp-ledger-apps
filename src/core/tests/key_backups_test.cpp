@@ -2,7 +2,7 @@
 #include "core/KeyBackups.h"
 #include "TempDir.h"
 
-#include "lib/common/Utilities.h"
+#include "ledger/lib/common/Utilities.h"
 
 #include <gtest/gtest.h>
 

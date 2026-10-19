@@ -2,7 +2,7 @@
 // What the wallet's and the token app's account recovery share (pp-ledger projects/account-recovery):
 // keys chosen from key cards, and an account's recovery as people read it.
 
-#include "client/Client.h"
+#include "ledger/client/Client.h"
 
 #include <cstdint>
 #include <string>

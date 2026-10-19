@@ -1,7 +1,7 @@
 #include "net/FeeOperations.h"
 
-#include "chain/RecordHandler.h"
-#include "client/AccountIds.h"
+#include "ledger/chain/RecordHandler.h"
+#include "ledger/client/AccountIds.h"
 
 #include <map>
 

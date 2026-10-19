@@ -2,9 +2,9 @@
 // carrying the round's mark.
 #include "net/FeeOperations.h"
 
-#include "client/AccountIds.h"
-#include "lib/common/BinaryPack.hpp"
-#include "lib/common/Utilities.h"
+#include "ledger/client/AccountIds.h"
+#include "ledger/lib/common/BinaryPack.hpp"
+#include "ledger/lib/common/Utilities.h"
 
 #include <gtest/gtest.h>
 

@@ -10,7 +10,7 @@
 #include "ui/UiApp.h"
 #include "ui/VaultScreen.h"
 
-#include "client/AccountIds.h"
+#include "ledger/client/AccountIds.h"
 #include "core/Vault.h"
 
 #include <SDL3/SDL_main.h>

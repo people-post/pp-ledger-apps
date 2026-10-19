@@ -1,11 +1,11 @@
 #include "net/ChainLink.h"
 
-#include "chain/RecordHandler.h"
-#include "client/Client.h"
-#include "lib/common/BinaryPack.hpp"
-#include "lib/common/Utilities.h"
-#include "network/LedgerAmpRuntime.h"
-#include "network/amp/AmpIdentity.h"
+#include "ledger/chain/RecordHandler.h"
+#include "ledger/client/Client.h"
+#include "ledger/lib/common/BinaryPack.hpp"
+#include "ledger/lib/common/Utilities.h"
+#include "ledger/network/LedgerAmpRuntime.h"
+#include "ledger/network/amp/AmpIdentity.h"
 
 #include <algorithm>
 
