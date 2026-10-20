@@ -5,7 +5,7 @@
 
 #include "core/AddressBook.h"
 #include "core/Vault.h"
-#include "operation/Operation.h"
+#include "ledger/operation/Operation.h"
 
 #include <string>
 #include <vector>

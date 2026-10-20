@@ -3,9 +3,9 @@
 // the beacon — read for what forms show and operations need, and sent complete operations.
 // Calls block on the network: run them off the UI thread, one at a time.
 
-#include "operation/Operation.h"
-#include "chain/Types.h"
-#include "client/Client.h"
+#include "ledger/operation/Operation.h"
+#include "ledger/chain/Types.h"
+#include "ledger/client/Client.h"
 
 #include <cstdint>
 #include <memory>

@@ -6,8 +6,8 @@
 #include "core/AtomicFile.h"
 #include "core/KeyBackups.h"
 #include "core/KeyCard.h"
-#include "lib/common/Utilities.h"
-#include "operation/Operation.h"
+#include "ledger/lib/common/Utilities.h"
+#include "ledger/operation/Operation.h"
 
 #include <sodium.h>
 

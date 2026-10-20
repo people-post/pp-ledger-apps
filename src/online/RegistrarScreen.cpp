@@ -1,12 +1,12 @@
 #include "online/RegistrarScreen.h"
 
 #include "net/AdminOperations.h"
-#include "chain/Domains.h"
+#include "ledger/chain/Domains.h"
 #include "core/AtomicFile.h"
 #include "core/Amounts.h"
 #include "core/KeyCard.h"
-#include "client/AccountIds.h"
-#include "lib/common/Utilities.h"
+#include "ledger/client/AccountIds.h"
+#include "ledger/lib/common/Utilities.h"
 
 #include <sodium.h>
 

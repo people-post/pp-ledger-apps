@@ -4,7 +4,7 @@
 #include "core/AddressBook.h"
 #include "core/Amounts.h"
 #include "core/Operations.h"
-#include "chain/Genesis.h"
+#include "ledger/chain/Genesis.h"
 
 #include <cctype>
 #include <ctime>

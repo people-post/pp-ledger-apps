@@ -2,7 +2,7 @@
 
 #include "net/AdminOperations.h"
 #include "common/io/Json.h"
-#include "lib/common/BinaryPack.hpp"
+#include "ledger/lib/common/BinaryPack.hpp"
 
 #include <chrono>
 #include <memory>

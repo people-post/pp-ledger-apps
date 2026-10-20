@@ -10,7 +10,7 @@ endif()
 set(PP_CPP_COMMON_SOURCE_DIR "" CACHE PATH "Optional local checkout of pp-cpp-common")
 set(PP_CPP_COMMON_GIT_REPOSITORY "https://github.com/people-post/pp-cpp-common.git"
   CACHE STRING "Git remote for pp-cpp-common")
-pp_fetch_git_tag(PP_CPP_COMMON_GIT_TAG "v0.3.1" "Release tag on pp-cpp-common main")
+pp_fetch_git_tag(PP_CPP_COMMON_GIT_TAG "v1.2.0" "Release tag on pp-cpp-common main")
 set(PP_COMMON_BUILD_TESTS OFF CACHE BOOL "Build pp-cpp-common tests" FORCE)
 
 if(PP_CPP_COMMON_SOURCE_DIR)

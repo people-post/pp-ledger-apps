@@ -1,7 +1,7 @@
 #include "core/Vault.h"
 
 #include "core/AtomicFile.h"
-#include "lib/common/Utilities.h"
+#include "ledger/lib/common/Utilities.h"
 #include "common/io/Json.h"
 
 #include <sodium.h>

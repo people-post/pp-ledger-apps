@@ -2,7 +2,7 @@
 // What the screens of an app share: the person's vault, and how to move between screens.
 
 #include "core/Vault.h"
-#include "operation/Operation.h"
+#include "ledger/operation/Operation.h"
 
 #include <functional>
 #include <utility>

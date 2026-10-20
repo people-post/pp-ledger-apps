@@ -3,12 +3,12 @@
 #include "net/TokenOperations.h"
 #include "core/Operations.h"
 #include "core/Roles.h"
-#include "lib/common/BinaryPack.hpp"
+#include "ledger/lib/common/BinaryPack.hpp"
 #include "core/AtomicFile.h"
 #include "core/KeyCard.h"
 #include "core/Amounts.h"
-#include "client/AccountIds.h"
-#include "lib/common/Utilities.h"
+#include "ledger/client/AccountIds.h"
+#include "ledger/lib/common/Utilities.h"
 
 #include <algorithm>
 #include <set>

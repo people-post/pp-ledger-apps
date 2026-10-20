@@ -5,9 +5,9 @@
 #include "core/Amounts.h"
 #include "core/KeyCard.h"
 #include "core/Operations.h"
-#include "client/AccountIds.h"
-#include "lib/common/Utilities.h"
-#include "lib/common/BinaryPack.hpp"
+#include "ledger/client/AccountIds.h"
+#include "ledger/lib/common/Utilities.h"
+#include "ledger/lib/common/BinaryPack.hpp"
 #include "common/io/Json.h"
 
 #include <algorithm>

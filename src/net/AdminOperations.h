@@ -4,7 +4,7 @@
 // the reserve, a config update (settings and/or the admin set itself), the next beacon certificate.
 
 #include "net/ChainLink.h"
-#include "chain/Genesis.h"
+#include "ledger/chain/Genesis.h"
 
 #include <functional>
 #include <optional>

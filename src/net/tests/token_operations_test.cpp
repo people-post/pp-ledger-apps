@@ -1,9 +1,9 @@
 // A token issuer's operations, built against a chain state and checked by pp-ledger's rules.
 #include "net/TokenOperations.h"
 
-#include "client/AccountIds.h"
-#include "lib/common/BinaryPack.hpp"
-#include "lib/common/Utilities.h"
+#include "ledger/client/AccountIds.h"
+#include "ledger/lib/common/BinaryPack.hpp"
+#include "ledger/lib/common/Utilities.h"
 
 #include <gtest/gtest.h>
 
