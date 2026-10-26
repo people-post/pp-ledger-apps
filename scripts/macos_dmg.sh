@@ -24,5 +24,18 @@ cp -R "$src"/*.app "$stage/"
 ln -s /Applications "$stage/Applications"
 dmg="$out/pp-ledger-${set}-${version}-macos-$(uname -m).dmg"
 rm -f "$dmg"
-hdiutil create -volname "$volume" -srcfolder "$stage" -ov -format UDZO "$dmg" >/dev/null
+# hdiutil occasionally fails with "Resource busy" on GHA macos runners when several
+# DMGs are built back-to-back; retry a few times like pp-browser's release packaging.
+attempts=0
+max_attempts=5
+until hdiutil create -volname "$volume" -srcfolder "$stage" -ov -format UDZO "$dmg" >/dev/null; do
+  attempts=$((attempts + 1))
+  if [[ "$attempts" -ge "$max_attempts" ]]; then
+    echo "error: hdiutil create failed after ${max_attempts} attempts: ${dmg}" >&2
+    exit 1
+  fi
+  echo "warning: hdiutil create attempt ${attempts} failed; retrying in 5s" >&2
+  rm -f "$dmg"
+  sleep 5
+done
 echo "$dmg"
