@@ -105,6 +105,11 @@ jobs:
           SIGNED: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_NOTARY_KEY_ID != '' }}
         run: |
           if [[ "$SIGNED" != "true" ]]; then echo "Unsigned apps: not notarized."; exit 0; fi
+          # Decode once; pass a path so each DMG does not re-mktemp the key.
+          p8="${RUNNER_TEMP}/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_P8_BASE64" | base64 --decode >"$p8"
+          export APPLE_NOTARY_P8_PATH="$p8"
+          unset APPLE_NOTARY_P8_BASE64
           for dmg in dist/*.dmg; do
             ./scripts/macos_sign_and_notarize.sh notarize "$dmg"
             ./scripts/macos_sign_and_notarize.sh staple "$dmg"

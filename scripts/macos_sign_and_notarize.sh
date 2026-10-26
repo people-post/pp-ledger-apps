@@ -132,7 +132,8 @@ prepare_keychain() {
 
   local p12_path=""
   if [[ -n "${APPLE_CERTIFICATE_BASE64:-}" ]]; then
-    TEMP_P12="$(mktemp "${TMPDIR:-/tmp}/frame-cert.XXXXXX.p12")"
+    # macOS mktemp requires the X's at the end of the template (no .p12 suffix).
+    TEMP_P12="$(mktemp "${TMPDIR:-/tmp}/frame-cert-XXXXXX")"
     decode_base64_to "$APPLE_CERTIFICATE_BASE64" "$TEMP_P12"
     p12_path="$TEMP_P12"
   elif [[ -n "${APPLE_CERTIFICATE_PATH:-}" ]]; then
@@ -174,7 +175,10 @@ notary_key_path() {
     return
   fi
 
-  TEMP_P8="$(mktemp "${TMPDIR:-/tmp}/AuthKey.XXXXXX.p8")"
+  # macOS mktemp requires the X's at the end of the template (no .p8 suffix).
+  # A suffix broke multi-DMG notarize loops: first call left AuthKey.XXXXXX.p8,
+  # the next failed with "File exists" and an empty key path.
+  TEMP_P8="$(mktemp "${TMPDIR:-/tmp}/pp-notary-XXXXXX")"
   decode_base64_to "$APPLE_NOTARY_P8_BASE64" "$TEMP_P8"
   printf '%s' "$TEMP_P8"
 }
