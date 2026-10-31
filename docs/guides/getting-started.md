@@ -21,7 +21,7 @@ Each release has two sets: **pp-ledger-system** (the Signer, Reserve, Admin, Reg
 Genesis apps) for the system key holders, and **pp-ledger-token** (the Signer and the Token app) for token
 issuers.
 
-- **macOS (Apple silicon, macOS 13 or later):** open your set's disk image and drag the apps you need
+- **macOS (Apple silicon, macOS 14 or later):** open your set's disk image and drag the apps you need
   to Applications.
 - **Linux (Ubuntu 24.04 or later, and similar):** install your set's `.deb` with the Signer's, in one
   command: `sudo apt install ./pp-ledger-system_…_amd64.deb ./pp-ledger-signer_…_amd64.deb` (token

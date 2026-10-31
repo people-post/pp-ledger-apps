@@ -10,7 +10,7 @@ publishes them as a GitHub release.
 | `pp-ledger-token_<v>_amd64.deb`: the Token app; depends on `pp-ledger-signer` | Same |
 | `pp-ledger-wallet_<v>_amd64.deb`: the Wallet, standing alone (its own copy of the assets) | Same |
 | `PP_Ledger_<App>-<v>-x86_64.AppImage`, one per app | ubuntu-24.04 (`scripts/linux_appimages.sh`) |
-| `pp-ledger-system-<v>-macos-arm64.dmg`: the Signer and the five system apps | macos-14: Apple silicon, macOS 13+ (`scripts/macos_dmg.sh`) |
+| `pp-ledger-system-<v>-macos-arm64.dmg`: the Signer and the five system apps | macos-15: Apple silicon, macOS 14+ (`CMAKE_OSX_DEPLOYMENT_TARGET` 14.0; `scripts/macos_dmg.sh`) |
 | `pp-ledger-token-<v>-macos-arm64.dmg`: the Signer and the Token app | Same |
 | `pp-ledger-wallet-<v>-macos-arm64.dmg`: the Wallet alone | Same |
 | `SHA256SUMS`: every file's SHA-256 | The publish job |

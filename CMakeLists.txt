@@ -4,6 +4,13 @@ cmake_minimum_required(VERSION 3.24)
 
 # The release workflow sets the version from its tag (v1.2.3).
 set(PP_APPS_VERSION "0.1.0" CACHE STRING "Version of the apps and packages")
+
+# macOS: pin the minimum macOS before project(). Unpinned, clang targets the build machine's own version,
+# so a newer CI runner (macos-15) would quietly raise what the apps need. 14.0 is what the macos-14 runners
+# built for (packaging/macos/Info.plist.in says the same).
+if(CMAKE_HOST_APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version for the apps" FORCE)
+endif()
 project(pp-ledger-apps VERSION ${PP_APPS_VERSION} LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
