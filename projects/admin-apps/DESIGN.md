@@ -9,8 +9,8 @@ engineers: every step is a form or a file, never a command line or a JSON edit.
 ## Who uses them, for what
 
 The chain's authority sits in a few multi-signature accounts and key sets
-([pp-ledger WIRE_SCHEMA § Account / ledger model](https://github.com/people-post/pp-ledger/blob/develop/docs/contracts/WIRE_SCHEMA.md),
-[BEACON_AUTHORITY.md](https://github.com/people-post/pp-ledger/blob/develop/docs/contracts/BEACON_AUTHORITY.md)). Each group of holders
+([pp-ledger WIRE_SCHEMA § Account / ledger model](https://github.com/people-post/pp-ledger/blob/main/docs/contracts/WIRE_SCHEMA.md),
+[BEACON_AUTHORITY.md](https://github.com/people-post/pp-ledger/blob/main/docs/contracts/BEACON_AUTHORITY.md)). Each group of holders
 gets an app for what only they may start:
 
 | App | For | Starts (creates operations) | Records on chain |

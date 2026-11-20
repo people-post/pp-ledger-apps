@@ -11,7 +11,7 @@ code, shipped as a package of its own (TA002).
 ## What a token issuer is, on pp-ledger
 
 - An **issued account** (ids 2²⁰ … 2³⁰−1) is created and funded by the registrar
-  ([pp-ledger WIRE_SCHEMA § Account / ledger model](https://github.com/people-post/pp-ledger/blob/develop/docs/contracts/WIRE_SCHEMA.md)).
+  ([pp-ledger WIRE_SCHEMA § Account / ledger model](https://github.com/people-post/pp-ledger/blob/main/docs/contracts/WIRE_SCHEMA.md)).
   The Registrar app makes it for its owners' keys and threshold.
 - **Its token is its account id** (TA004). pp-ledger lets an issued account's balance of the token
   with its own id go negative: a transfer of that token out of the account *issues* it, and minus the
