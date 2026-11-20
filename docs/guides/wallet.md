@@ -79,7 +79,7 @@ remove it. Choose them with care: together, they can take the account.
 ## Keys in and out
 
 - **Save key backup…** (Keys) writes one key to a `.ppkey` file under the backup passphrase: any wallet
-  that reads key backups ([the format](https://github.com/people-post/pp-ledger/blob/develop/docs/contracts/KEY_BACKUP.md))
+  that reads key backups ([the format](https://github.com/people-post/pp-ledger/blob/main/docs/contracts/KEY_BACKUP.md))
   takes it.
 - **Import a key backup…** brings one in.
 - A key backup is as strong as its passphrase: keep the file and the passphrase apart.

@@ -1,7 +1,7 @@
 # Releasing
 
-Push a tag `v<major>.<minor>.<patch>`: `.github/workflows/release.yml` builds the packages and
-publishes them as a GitHub release.
+Push a tag `v<major>.<minor>.<patch>` on `main`: `.github/workflows/release.yml` builds the packages
+and publishes them as a GitHub release.
 
 | Package | Built on |
 |---------|----------|

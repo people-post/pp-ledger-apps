@@ -38,7 +38,7 @@ follows from them:
 ## Trusting the chain without trusting a node (WL003)
 
 pp-ledger already gives a node's word a chain of proof back to block 0
-([pp-ledger BEACON_AUTHORITY § Trust chain](https://github.com/people-post/pp-ledger/blob/develop/docs/contracts/BEACON_AUTHORITY.md)):
+([pp-ledger BEACON_AUTHORITY § Trust chain](https://github.com/people-post/pp-ledger/blob/main/docs/contracts/BEACON_AUTHORITY.md)):
 
 ```text
 the genesis hash the person pinned
@@ -55,7 +55,7 @@ the genesis hash the person pinned
 - **The tip** is the beacon's signed tip (`STATUS`), checked with that key; its block's header hashes
   to the signed hash, and carries the `stateRoot`.
 - **The account**: `stateRoot` is a sparse Merkle tree over account ids (depth 64,
-  [WIRE_SCHEMA § Commitments](https://github.com/people-post/pp-ledger/blob/develop/docs/contracts/WIRE_SCHEMA.md)).
+  [WIRE_SCHEMA § Commitments](https://github.com/people-post/pp-ledger/blob/main/docs/contracts/WIRE_SCHEMA.md)).
   A node proves an account by its leaf and the path's siblings; the wallet recomputes the root. pp-ledger
   needs to serve that proof (`ACCOUNT_PROOF`, wl1); the verification lives in pp-ledger too, public and
   reusable — by pp-browser's own wallet plugins as well.
