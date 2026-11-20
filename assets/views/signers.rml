@@ -1,0 +1,87 @@
+<rml>
+<head>
+  <title>Signers</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="signers">
+    <div class="card">
+      <h1>The issuer's signers</h1>
+      <p class="muted">In force: {{current}}. Choose the keys from then on and how many must sign; the keys
+        in force sign the change. Others' keys come from their key cards (account owner keys).</p>
+      <div class="item" data-for="candidate : candidates">
+        <input type="checkbox" data-attr-id="'signer-' + it_index" data-checked="candidate.chosen" data-attrif-disabled="busy"/>
+        <span class="grow">{{candidate.name}}</span>
+      </div>
+      <div class="row" style="margin: 8dp 0 12dp 0;">
+        <button id="signers-card" data-event-click="signers_card()" data-attrif-disabled="busy">Add a key card…</button>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Signatures needed</label>
+          <input id="signers-threshold" class="field" type="text" data-value="threshold" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Fee</label>
+          <div class="row">
+            <input id="signers-fee" class="field grow" type="text" data-value="fee" data-attrif-disabled="busy"/>
+            <button id="signers-least" style="margin-bottom: 12dp;" data-event-click="signers_fee()" data-attrif-disabled="busy">Work it out</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="signers-make" class="primary" data-event-click="signers_make()" data-attrif-disabled="busy">Make the change…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+    <div class="card">
+      <h2>Its recovery</h2>
+      <p class="muted">Recovery keys stand above the keys in force: they can give the issuer new keys — when
+        these are lost or stolen — freezing the account until then, at least the delay. The keys in force
+        name the first set; after that only the set changes it, and its holders sign what this makes. The
+        hours and notes above apply here too.</p>
+      <p id="recovery-now" data-if="recovery_now != ''">{{recovery_now}}</p>
+      <div data-if="is_announced">
+        <p id="recovery-announced" class="warning">{{announced}}</p>
+        <button id="recovery-withdraw" data-event-click="recovery_withdraw()" data-attrif-disabled="busy">Withdraw the recovery… (its recovery keys sign)</button>
+      </div>
+      <div class="item" data-for="k : recovery_keys">
+        <span class="grow">{{k.name}} <span class="muted">{{k.fingerprint}}</span></span>
+        <button class="small" data-event-click="recovery_drop(it_index)">Remove</button>
+      </div>
+      <button id="recovery-card" data-event-click="recovery_card()" data-attrif-disabled="busy">Add a recovery key card…</button>
+      <div class="row">
+        <div class="grow">
+          <label>Recovery keys that must sign</label>
+          <input id="recovery-needed" class="field" type="text" data-value="recovery_needed" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Days the account waits, frozen, for new keys</label>
+          <input id="recovery-days" class="field" type="text" data-value="recovery_days" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <button id="recovery-set" class="primary" data-if="!has_recovery" data-event-click="recovery_set()" data-attrif-disabled="busy">Set the recovery… (the keys in force sign)</button>
+        <button id="recovery-change" class="primary" data-if="has_recovery" data-event-click="recovery_set()" data-attrif-disabled="busy">Change the recovery set… (its recovery keys sign)</button>
+        <button id="recovery-remove" data-if="has_recovery" data-event-click="recovery_remove()" data-attrif-disabled="busy">Remove the recovery… (its recovery keys sign)</button>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>

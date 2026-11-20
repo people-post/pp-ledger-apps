@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PP Ledger — who does what</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm 11mm 12mm; }
+  :root { --ink: #111827; --muted: #4b5563; --line: #e5e7eb; --accent: #1d4ed8; --soft: #eff6ff; --warn: #92400e; --warnbg: #fffbeb; }
+  * { box-sizing: border-box; }
+  body { font: 9.4pt/1.36 -apple-system, "Segoe UI", Lato, Helvetica, Arial, sans-serif; color: var(--ink); margin: 0 auto; max-width: 186mm; }
+  h1 { font-size: 16pt; margin: 0 0 1pt; letter-spacing: -0.2pt; }
+  h2 { font-size: 11pt; margin: 8pt 0 4pt; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 2pt; }
+  h3 { font-size: 9.6pt; margin: 0 0 2pt; }
+  p { margin: 0 0 5pt; }
+  .sub { color: var(--muted); margin-bottom: 4pt; font-size: 8.8pt; }
+  .principles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5pt; margin: 5pt 0 4pt; }
+  .principles div { background: var(--soft); border-radius: 5pt; padding: 5pt 6pt; font-size: 8.5pt; }
+  .principles b { display: block; color: var(--accent); margin-bottom: 1pt; }
+  .flow { font-size: 8.6pt; color: var(--muted); margin: 3pt 0 0; }
+  .roles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5pt; }
+  .role { border: 1px solid var(--line); border-radius: 5pt; padding: 5pt 6pt; break-inside: avoid; page-break-inside: avoid; }
+  .role .who { color: var(--muted); font-size: 8pt; margin-bottom: 2pt; }
+  .role ul { margin: 0; padding-left: 11pt; font-size: 8.3pt; line-height: 1.3; }
+  .role li { margin: 0 0 1pt; }
+  .label { font-size: 7.4pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; margin: 2pt 0 0.5pt; }
+  .can { color: #065f46; }
+  .cannot { color: #991b1b; }
+  .app { font-size: 7.8pt; color: var(--muted); margin-top: 2pt; }
+  .open { background: var(--warnbg); color: var(--warn); border-radius: 5pt; padding: 5pt 7pt; font-size: 8.5pt; margin-top: 6pt; break-inside: avoid; }
+  .open ul { margin: 2pt 0 0; padding-left: 13pt; }
+  .page2 { page-break-before: always; break-before: page; }
+  footer { margin-top: 5pt; font-size: 7.8pt; color: var(--muted); }
+  @media screen { body { padding: 24px 16px; font-size: 10.5pt; } .role ul { font-size: 9.4pt; } }
+</style>
+</head>
+<body>
+
+<h1>PP Ledger — who does what</h1>
+<p class="sub">An overview for stakeholders: what the chain is, who holds which powers, and where each power stops. As of pp-ledger 1.5.0 and pp-ledger-apps, October 2026. <a href="roles.zh.html">中文</a></p>
+
+<h2>The chain in one paragraph</h2>
+<p>PP Ledger is an account-based chain with a native token and tokens issued by approved organisations. Every account
+is kept alive by small, regular renewal fees. Blocks are produced by registered miners, and a beacon signs the chain's
+progress. Every important power belongs to a <b>set of keys</b> — several people, a threshold of whom must sign — rather
+than to a person or a server. Each power is limited by rules every node enforces.</p>
+
+<div class="principles">
+  <div><b>Shared keys</b>Powers need several signatures (for example 2 of 3), collected as operation files, signed offline if wished.</div>
+  <div><b>Rules, not trust</b>Every node checks every rule; a key holder cannot exceed their role, and every act is on chain.</div>
+  <div><b>Verify, don't believe</b>Wallets prove balances, keys and names back to the chain's first block; no server has to be trusted.</div>
+  <div><b>A way back</b>Lost or stolen keys can be replaced: by the recovery set for the system, and by an optional recovery set for any account.</div>
+</div>
+<p class="flow"><b>How value flows:</b> the admin set mints new supply only into the <i>reserve</i> (within a per-epoch cap) →
+the reserve funds the <i>registrar</i> and others → the registrar creates and funds <i>issuers</i>; anyone funded creates
+<i>user</i> accounts → every fee goes to the <i>fee account</i>, which pays relays and miners in periodic rounds → an account
+that cannot pay its renewal ends, and what it held goes to the <i>recycle</i> account.</p>
+
+<h2>The roles</h2>
+<div class="roles">
+
+  <div class="role">
+    <h3>Admin set (the genesis account)</h3>
+    <div class="who">The chain's governors: 3 or more keys, 2 or more to sign.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Mint new native tokens into the reserve, up to the cap per epoch.</li>
+      <li>Change the chain's settings (fees, limits, miner rules), effective from the next epoch.</li>
+      <li>Certify the next beacon generation (moving or replacing the beacon).</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Touch any account's funds, create accounts, or send anywhere but the reserve.</li>
+      <li>Change the recovery set; act at all while a recovery of the admin set is announced.</li>
+    </ul>
+    <div class="app">Apps: Admin, Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>Recovery set (system)</h3>
+    <div class="who">Cold keys, kept apart from the admins; used almost never.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Name a new admin set if the admins' keys are lost or stolen. The admin set is frozen during the delay (about a month by default), then replaced.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Mint, spend, or change settings; hold admin keys itself.</li>
+      <li>Act without its own threshold of signatures.</li>
+    </ul>
+    <div class="app">Apps: Genesis, Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>Reserve</h3>
+    <div class="who">The treasury: holds the supply not yet in circulation.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Transfer to any account (fund the registrar, programmes, partners); create user accounts.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Mint (only the admin set adds to it); create issuer accounts; act below its threshold.</li>
+    </ul>
+    <div class="app">Apps: Reserve, Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>Registrar</h3>
+    <div class="who">The gatekeeper for issuers and their names.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Create issuer accounts for an organisation's keys, and fund them.</li>
+      <li>Give an issuer its symbol (4–7 letters, e.g. ACME): its token's ticker and its domain, once and for good.</li>
+      <li>Decide whether a symbol freed by an ended issuer is given again, and to whom.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Rename or take back a symbol while its account lives; control an issuer after creating it.</li>
+      <li>Give 1–3 letter names: those are the system accounts', fixed at genesis.</li>
+    </ul>
+    <div class="app">Apps: Registrar, Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>Fee account and its distributors</h3>
+    <div class="who">Collects every fee; pays those who run the network.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Run periodic fee rounds: gather the period's chain activity, apply the round's rules, and pay relays and miners in one signed batch, each payout marked to its round.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Collect anything but fees, or pay without its holders' threshold.</li>
+      <li>Hide a round: its payouts and evidence are on chain for the next round to check.</li>
+    </ul>
+    <div class="app">Apps: Fees, Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>Beacon operator</h3>
+    <div class="who">Runs the node that anchors the chain's progress.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Sign the chain's latest block so wallets can verify it, and serve the chain to others.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Hold or use any account's keys, or change balances or rules.</li>
+      <li>Replace itself: only the admin set certifies a new beacon.</li>
+    </ul>
+    <div class="app">Tools: pp-beacon</div>
+  </div>
+
+
+  <div class="role">
+    <h3>Miners</h3>
+    <div class="who">Produce blocks; registered accounts with a stake.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Register (with a stake and a fee) and produce blocks when elected for a slot.</li>
+      <li>Be paid in fee rounds for the blocks they produced.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Change rules or include invalid transactions: every node rejects such blocks.</li>
+      <li>Stay registered while missing their slots (they are deregistered automatically).</li>
+    </ul>
+    <div class="app">Tools: pp-miner</div>
+  </div>
+
+  <div class="role">
+    <h3>Relay operators</h3>
+    <div class="who">The network's public front: serve wallets and apps.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Pass transactions on and answer queries; be paid in fee rounds for the service measured.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Forge a balance, a key or a name: wallets check every answer against the chain's proofs.</li>
+    </ul>
+    <div class="app">Tools: pp-relay</div>
+  </div>
+
+  <div class="role">
+    <h3>Token issuers</h3>
+    <div class="who">Organisations with an issuer account (e.g. shares of a company), run by several key holders.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Issue their own token, under their symbol, to holders; send native or other tokens.</li>
+      <li>Replace their signers; name a recovery set for their account.</li>
+      <li>See their supply out, their balance and what renewals cost.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Issue anyone else's token, or choose or change their own symbol (the registrar gives it).</li>
+      <li>Skip renewals: an issuer that cannot pay ends, and its symbol becomes free.</li>
+    </ul>
+    <div class="app">Apps: Token, Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>Users</h3>
+    <div class="who">Anyone with an account: people, shops, services.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Hold, send and receive the native token and issued tokens, to a number or a symbol.</li>
+      <li>See everything proven, in the last-resort wallet; move funds away from leaked keys at once.</li>
+      <li>Name a recovery set (friends, or a backup key) as a way back.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Have a symbol or issue tokens; send more than they hold.</li>
+      <li>Keep an account that cannot pay its renewal (its balance goes to recycling).</li>
+    </ul>
+    <div class="app">Apps: Wallet (and plugins such as pp-browser)</div>
+  </div>
+
+  <div class="role">
+    <h3>Recovery-key holders (for an account)</h3>
+    <div class="who">People or places an account's owner chose as its way back.</div>
+    <div class="label can">Can</div>
+    <ul>
+      <li>Give the account new keys if its own are lost or stolen. The account is frozen immediately (a thief's key signs nothing), and the new keys take over after the delay chosen.</li>
+      <li>Withdraw that, change or remove the set, at their own threshold.</li>
+    </ul>
+    <div class="label cannot">Cannot</div>
+    <ul>
+      <li>Spend from the account directly, or act below their threshold.</li>
+      <li>Act silently: the announcement is on chain and shown in the owner's wallet.</li>
+    </ul>
+    <div class="app">Apps: Wallet (Recovery)</div>
+  </div>
+
+  <div class="role">
+    <h3>The genesis ceremony</h3>
+    <div class="who">Once, at the start: the founding key holders together.</div>
+    <div class="label can">Decides</div>
+    <ul>
+      <li>Who holds each system account and the recovery set, and how many must sign.</li>
+      <li>The beacon's first key, the first miners, the starting settings, and the system names (e.g. PPL for the native token).</li>
+    </ul>
+    <div class="label cannot">Fixed afterwards</div>
+    <ul>
+      <li>The network's identity, slot timing and system names; system accounts are created only here.</li>
+    </ul>
+    <div class="app">Apps: Genesis, Signer</div>
+  </div>
+
+</div>
+
+<div class="open">
+  <b>Open decisions</b>
+  <ul>
+    <li><b>System names:</b> PPL, RSV, REG, FEE and RCY are provisional, pending agreement; they are fixed at the genesis of the live network.</li>
+    <li><b>Ended accounts:</b> whether an ended account's number and symbol may be reused, and after how long, is to be decided as one rule.</li>
+    <li><b>Domain resolution:</b> symbols are this chain's names, not internet domains. How they will resolve (a suffix we own, or natively in pp-browser) is not decided yet.</li>
+  </ul>
+</div>
+
+<footer>Details: pp-ledger's <a href="https://github.com/people-post/pp-ledger/tree/develop/docs/contracts">docs/contracts</a> (wire and rules) and this repository's <a href="guides/getting-started.md">docs/guides</a> (one guide per role). Prints on two A4 pages.</footer>
+
+</body>
+</html>

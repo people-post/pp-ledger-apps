@@ -1,0 +1,14 @@
+# Unlock, leave the app alone: it locks itself and says why.
+wait 5
+click #unlock-passphrase
+type fixture passphrase
+click #unlock
+idle
+wait 5
+expect #nav-lock
+sleep 2500
+wait 5
+expect #unlock
+expect #vault-notice
+shot @OUT@/locked.png
+quit

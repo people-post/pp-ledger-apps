@@ -1,0 +1,139 @@
+name: release
+
+# A tag v1.2.3 builds the packages and publishes them as a GitHub release; a manual run builds them
+# (artifacts only). macOS bundles are signed and the disk image notarized when the repository's
+# Apple secrets are set (packaging/macos/signing.env.example lists them); unsigned otherwise.
+on:
+  push:
+    tags: ['v*']
+  # The packages are built (not published) when a change touches packaging.
+  pull_request:
+    paths:
+      - 'packaging/**'
+      - 'scripts/linux_appimages.sh'
+      - 'scripts/macos_*.sh'
+      - 'cmake/AppsApps.cmake'
+      - 'cmake/AppsPackaging.cmake'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for the packages (numeric, e.g. 1.2.3)'
+        required: false
+        default: '0.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then v="${GITHUB_REF_NAME#v}"; else v="${{ inputs.version || '0.0.0' }}"; fi
+          [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "not a version: $v"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+  linux:
+    needs: version
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: >
+          sudo apt-get update && sudo apt-get install -y ninja-build
+          libx11-dev libxext-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev libxfixes-dev
+          libxrender-dev libxss-dev libgl-dev
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_APPS_BUILD_TESTS=OFF -DPP_APPS_RELEASE=ON \
+            -DPP_APPS_VERSION=${{ needs.version.outputs.version }}
+          cmake --build build -j 4
+      - name: Package (.debs, AppImages)
+        run: |
+          mkdir -p dist
+          (cd build && cpack) && mv build/*.deb dist/
+          cmake --install build --prefix stage/usr
+          ./scripts/linux_appimages.sh stage ${{ needs.version.outputs.version }} dist
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  macos:
+    needs: version
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: brew install ninja
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPP_APPS_BUILD_TESTS=OFF -DPP_APPS_RELEASE=ON \
+            -DPP_APPS_VERSION=${{ needs.version.outputs.version }}
+          cmake --build build -j 3
+          # A folder per disk image: the Signer and the system apps; the Signer and the Token app.
+          for set in system token; do
+            cmake --install build --prefix "install/$set" --component signer
+            cmake --install build --prefix "install/$set" --component "$set"
+          done
+          # The wallet stands alone: its own disk image, the wallet only.
+          cmake --install build --prefix "install/wallet" --component wallet
+      - name: Sign the apps
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for app in install/*/*.app; do ./scripts/macos_sign_and_notarize.sh sign-app "$app"; done
+      - name: Disk image
+        run: |
+          mkdir -p dist
+          for set in system token wallet; do
+            ./scripts/macos_dmg.sh "install/$set" ${{ needs.version.outputs.version }} dist "$set"
+          done
+      - name: Notarize
+        env:
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APPLE_NOTARY_P8_BASE64: ${{ secrets.APPLE_NOTARY_P8_BASE64 }}
+          SIGNED: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_NOTARY_KEY_ID != '' }}
+        run: |
+          if [[ "$SIGNED" != "true" ]]; then echo "Unsigned apps: not notarized."; exit 0; fi
+          # Decode once; pass a path so each DMG does not re-mktemp the key.
+          p8="${RUNNER_TEMP}/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_P8_BASE64" | base64 --decode >"$p8"
+          export APPLE_NOTARY_P8_PATH="$p8"
+          unset APPLE_NOTARY_P8_BASE64
+          for dmg in dist/*.dmg; do
+            ./scripts/macos_sign_and_notarize.sh notarize "$dmg"
+            ./scripts/macos_sign_and_notarize.sh staple "$dmg"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [version, linux, macos]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: (cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS)
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
+            --title "pp-ledger-apps ${{ needs.version.outputs.version }}" \
+            --notes "Everyone: the wallet — pp-ledger-wallet (.deb, Ubuntu 24.04 and later; AppImage), its disk image (macOS, Apple silicon). System key holders: pp-ledger-system and pp-ledger-signer, or the pp-ledger-system disk image. Token issuers: pp-ledger-token and pp-ledger-signer, or the pp-ledger-token disk image. Linux also has an AppImage per app. SHA256SUMS lists every file's checksum; docs/REPRODUCIBLE.md says how to rebuild them. Guides: docs/guides."

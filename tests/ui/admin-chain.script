@@ -1,0 +1,101 @@
+# Against a running chain: raise the mint cap by a config update (the smoke chain's is 0), mint to
+# the reserve, rotate the admin set (a fourth key, 2 to sign) — each made from the chain, signed
+# with the vault's three admin keys, submitted, seen in a block.
+wait 5
+click #unlock-passphrase
+type admin passphrase
+click #unlock
+idle
+wait 5
+click #nav-network
+wait 3
+click #network-address
+type @NODE@
+click #network-check
+idle
+wait 3
+click #nav-config
+idle
+wait 5
+shot @OUT@/5-config.png
+click #config-maxIssuancePerEpoch
+clear
+type @CAP@
+answer @OUT@/config.json
+click #config-make
+idle
+wait 5
+idle
+wait 5
+shot @OUT@/6-config-review.png
+answer @OUT@/config1.json
+click #sign
+wait 5
+answer @OUT@/config2.json
+click #sign
+wait 5
+answer @OUT@/config3.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+# The update applies from the next epoch (smoke: 10 slots of 2 s).
+sleep 25000
+click #nav-mint
+idle
+wait 5
+click #mint-amount
+type @MINT@
+answer @OUT@/mint.json
+click #mint-make
+idle
+wait 5
+answer @OUT@/mint1.json
+click #sign
+wait 5
+answer @OUT@/mint2.json
+click #sign
+wait 5
+answer @OUT@/mint3.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+shot @OUT@/4-minted.png
+# Rotate the admin set: the three in force and a fourth (imported last), 2 to sign.
+click #nav-admins
+idle
+wait 5
+click #admin-3
+click #admins-threshold
+clear
+type 2
+shot @OUT@/7-admins.png
+answer @OUT@/admins.json
+click #admins-make
+idle
+wait 5
+idle
+wait 5
+answer @OUT@/admins1.json
+click #sign
+wait 5
+answer @OUT@/admins2.json
+click #sign
+wait 5
+answer @OUT@/admins3.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+click #nav-beacon
+idle
+wait 5
+shot @OUT@/8-beacon.png
+quit

@@ -1,0 +1,15 @@
+# Unlock, add Bob's signed copy to Alice's, save the merged operation.
+wait 5
+click #unlock-passphrase
+type fixture passphrase
+click #unlock
+idle
+wait 5
+answer @FIXTURE@/transfer.bob.json
+click #add-copies
+wait 5
+answer @OUT@/transfer.merged.json
+click #save-merged
+wait 5
+shot @OUT@/merge.png
+quit

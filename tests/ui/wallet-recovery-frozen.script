@@ -1,0 +1,41 @@
+# Against a running chain, after wallet-recover.script: the owner's wallet shows the account frozen —
+# on Accounts and Recovery, proven — and Send makes nothing for it.
+wait 5
+click #unlock-passphrase
+type wallet passphrase
+click #unlock
+idle
+wait 5
+click #nav-accounts
+idle
+wait 5
+idle
+wait 5
+expect #account-alert-0
+shot @OUT@/wallet-11-frozen.png
+click #account-recovery-0
+idle
+wait 5
+idle
+wait 3
+expect #recovery-announced
+shot @OUT@/wallet-12-recovery-frozen.png
+click #nav-accounts
+idle
+wait 5
+idle
+wait 3
+click #account-send-0
+idle
+wait 3
+click #send-to
+type 2
+click #send-amount
+type 5
+click #send-prepare
+idle
+wait 5
+idle
+wait 3
+shot @OUT@/wallet-13-send-refused.png
+quit

@@ -1,0 +1,49 @@
+# Against a running chain, after wallet-chain.script: the owner gives the evacuated account a way back —
+# two recovery keys from their key cards, both to sign, a day to cancel in — signed with its new key.
+wait 5
+click #unlock-passphrase
+type wallet passphrase
+click #unlock
+idle
+wait 5
+click #nav-accounts
+idle
+wait 5
+idle
+wait 5
+expect #account-proven-0
+click #account-recovery-0
+idle
+wait 5
+idle
+wait 3
+answer @OUT@/guardian1.card.json
+click #recovery-add-card
+idle
+wait 2
+answer @OUT@/guardian2.card.json
+click #recovery-add-card
+idle
+wait 2
+click #recovery-needed
+clear
+type 2
+click #recovery-days
+clear
+type 1
+click #recovery-set
+idle
+wait 5
+idle
+wait 3
+expect #action-send
+shot @OUT@/wallet-7-recovery-set.png
+click #action-send
+idle
+wait 5
+idle
+wait 5
+idle
+wait 5
+shot @OUT@/wallet-8-recovery-in-force.png
+quit

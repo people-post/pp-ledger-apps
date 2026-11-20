@@ -1,0 +1,37 @@
+# Against a running chain: the recovery set names a new admin set (three fresh admin keys, 2 to sign),
+# signed with the vault's recovery key, submitted, seen in a block.
+wait 5
+click #unlock-passphrase
+type genesis passphrase
+click #unlock
+idle
+wait 5
+click #nav-network
+wait 3
+click #network-address
+type @NODE@
+click #network-check
+idle
+wait 3
+click #nav-recovery
+idle
+wait 5
+click #recovery-0
+click #recovery-1
+click #recovery-2
+click #recovery-threshold
+clear
+type 2
+shot @OUT@/10-recovery.png
+answer @OUT@/recovery.json
+click #recovery-make
+idle
+wait 5
+answer @OUT@/recovery1.json
+click #sign
+wait 5
+click #submit
+idle
+wait 5
+expect #submit-done
+quit

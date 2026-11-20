@@ -1,0 +1,92 @@
+<rml>
+<head>
+  <title>Rules</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="rules">
+    <div class="card">
+      <h1>The rules</h1>
+      <p class="muted">In force: {{in_force}}. What is kept back of the fee account's balance; the rest — less
+        the payouts' fees — split into shares, each among its recipients by one measure. The shares add up to 100%.</p>
+      <div class="row">
+        <div class="grow">
+          <label>Their name</label>
+          <input id="rules-name" class="field" type="text" data-value="name" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Kept back, of the balance</label>
+          <input id="rules-keep" class="field" type="text" data-value="keep_back" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Miners, by blocks produced</label>
+          <input id="rules-blocks" class="field" type="text" data-value="by_blocks" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Miners, by the fees in their blocks</label>
+          <input id="rules-fees" class="field" type="text" data-value="by_fees" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Relays, by uptime</label>
+          <input id="rules-uptime" class="field" type="text" data-value="by_uptime" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Everyone paid, equally</label>
+          <input id="rules-equal" class="field" type="text" data-value="equal" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Blocks a miss costs</label>
+          <input id="rules-penalty" class="field" type="text" data-value="miss_penalty" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Smallest payout (less waits for a later round)</label>
+          <input id="rules-min" class="field" type="text" data-value="min_payout" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <div class="item">
+        <input id="rules-registered" type="checkbox" data-checked="registered_only" data-attrif-disabled="busy"/>
+        <span class="grow">Leave out miners no longer registered</span>
+      </div>
+      <div class="row">
+        <button id="rules-preview" class="primary" data-event-click="rules_preview()" data-attrif-disabled="busy">Preview the payouts</button>
+        <button id="rules-keep-them" data-event-click="rules_keep()" data-attrif-disabled="busy">Keep as the rules in force</button>
+      </div>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+      <div class="facts">
+        <div class="item" data-for="fact : totals">
+          <span class="label">{{fact.label}}</span>
+          <span class="value">{{fact.value}}</span>
+        </div>
+      </div>
+      <div class="facts" data-if="payouts.size > 0">
+        <div class="item">
+          <span class="label"><strong>Account</strong></span>
+          <span class="grow"><strong>Who</strong></span>
+          <span style="width: 140dp;"><strong>Paid</strong></span>
+          <span style="width: 140dp;"><strong>Last round</strong></span>
+        </div>
+        <div class="item" data-for="p : payouts">
+          <span class="label">{{p.account}}</span>
+          <span class="grow">{{p.who}}</span>
+          <span style="width: 140dp;">{{p.amount}}</span>
+          <span class="muted" style="width: 140dp;">{{p.last}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>

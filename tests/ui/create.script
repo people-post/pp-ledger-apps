@@ -1,0 +1,17 @@
+# A first run: create the vault, make a key.
+wait 5
+click #create-passphrase
+type correct horse battery staple
+click #create-confirm
+type correct horse battery staple
+click #create
+idle
+wait 5
+click #nav-keys
+wait 3
+click #new-label
+type Smoke reserve key
+click #generate
+wait 3
+shot @OUT@/create.png
+quit

@@ -1,0 +1,12 @@
+# Unlock, review a genesis plan, sign it with the vault's admin key (every record of block 0).
+wait 5
+click #unlock-passphrase
+type fixture passphrase
+click #unlock
+idle
+wait 5
+shot @OUT@/genesis-review.png
+answer @OUT@/genesis.signed.json
+click #sign
+wait 5
+quit

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>PP Ledger — 谁做什么</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm 11mm 12mm; }
+  :root { --ink: #111827; --muted: #4b5563; --line: #e5e7eb; --accent: #1d4ed8; --soft: #eff6ff; --warn: #92400e; --warnbg: #fffbeb; }
+  * { box-sizing: border-box; }
+  body { font: 9.2pt/1.45 -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Segoe UI", Lato, Helvetica, Arial, sans-serif; color: var(--ink); margin: 0 auto; max-width: 186mm; }
+  h1 { font-size: 16pt; margin: 0 0 1pt; letter-spacing: -0.2pt; }
+  h2 { font-size: 11pt; margin: 8pt 0 4pt; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 2pt; }
+  h3 { font-size: 9.6pt; margin: 0 0 2pt; }
+  p { margin: 0 0 5pt; }
+  .sub { color: var(--muted); margin-bottom: 4pt; font-size: 8.8pt; }
+  .principles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5pt; margin: 5pt 0 4pt; }
+  .principles div { background: var(--soft); border-radius: 5pt; padding: 5pt 6pt; font-size: 8.5pt; }
+  .principles b { display: block; color: var(--accent); margin-bottom: 1pt; }
+  .flow { font-size: 8.6pt; color: var(--muted); margin: 3pt 0 0; }
+  .roles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5pt; }
+  .role { border: 1px solid var(--line); border-radius: 5pt; padding: 5pt 6pt; break-inside: avoid; page-break-inside: avoid; }
+  .role .who { color: var(--muted); font-size: 8pt; margin-bottom: 2pt; }
+  .role ul { margin: 0; padding-left: 11pt; font-size: 8.3pt; line-height: 1.3; }
+  .role li { margin: 0 0 1pt; }
+  .label { font-size: 7.6pt; font-weight: 700; letter-spacing: 0.4pt; margin: 2pt 0 0.5pt; }
+  .can { color: #065f46; }
+  .cannot { color: #991b1b; }
+  .app { font-size: 7.8pt; color: var(--muted); margin-top: 2pt; }
+  .open { background: var(--warnbg); color: var(--warn); border-radius: 5pt; padding: 5pt 7pt; font-size: 8.5pt; margin-top: 6pt; break-inside: avoid; }
+  .open ul { margin: 2pt 0 0; padding-left: 13pt; }
+  .page2 { page-break-before: always; break-before: page; }
+  footer { margin-top: 5pt; font-size: 7.8pt; color: var(--muted); }
+  @media screen { body { padding: 24px 16px; font-size: 10.5pt; } .role ul { font-size: 9.4pt; } }
+</style>
+</head>
+<body>
+
+<h1>PP Ledger — 谁做什么</h1>
+<p class="sub">写给利益相关方的概览：这条链是什么、谁掌握哪些权力、每种权力的边界在哪里。基于 pp-ledger 1.5.0 与 pp-ledger-apps，2026 年 10 月。<a href="roles.html">English</a></p>
+
+<h2>一段话了解这条链</h2>
+<p>PP Ledger 是一条基于账户的区块链，有一种原生代币，以及经批准的机构发行的代币。每个账户靠定期缴纳少量续期费保持有效。
+区块由已注册的矿工生产，信标（beacon）为链的进展签名。每一项重要权力都属于一组<b>密钥</b>——由几个人共同持有，需达到门槛人数签名——而不属于某个人或某台服务器。
+每项权力都受规则约束，并由每个节点执行。</p>
+
+<div class="principles">
+  <div><b>共管密钥</b>权力需要多人签名（例如 3 人中 2 人），以操作文件的形式收集，可完全离线签名。</div>
+  <div><b>规则而非信任</b>每个节点都检查每条规则；持钥人无法越权，每一次操作都记录在链上。</div>
+  <div><b>验证，而非相信</b>钱包从链的第一个区块出发证明余额、密钥与名称，无需信任任何服务器。</div>
+  <div><b>留有退路</b>丢失或被盗的密钥可以更换：系统由恢复组负责；任何账户也可自设恢复组。</div>
+</div>
+<p class="flow"><b>价值如何流动：</b>管理组只能把新增供应铸入<i>储备账户</i>（每个纪元有上限）→ 储备为<i>注册账户</i>等注资 →
+注册账户创建并资助<i>发行方</i>；任何有余额的账户都可以创建<i>用户</i>账户 → 所有手续费进入<i>手续费账户</i>，
+按周期分配给中继与矿工 → 无力续期的账户被终止，其余额进入<i>回收账户</i>。</p>
+
+<h2>各个角色</h2>
+<div class="roles">
+
+  <div class="role">
+    <h3>管理组（创世账户）</h3>
+    <div class="who">链的治理者：至少 3 把密钥，至少 2 人签名。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>向储备账户铸造新的原生代币，不超过每个纪元的上限。</li>
+      <li>修改链的参数（费用、限额、矿工规则），从下一个纪元起生效。</li>
+      <li>为下一代信标签发证书（迁移或更换信标）。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>动用任何账户的资金、创建账户，或向储备以外的地方转账。</li>
+      <li>更改恢复组；管理组的恢复公告生效期间不能做任何操作。</li>
+    </ul>
+    <div class="app">应用：Admin、Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>恢复组（系统）</h3>
+    <div class="who">冷密钥，与管理组分开保管，几乎从不使用。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>在管理组密钥丢失或被盗时指定新的管理组：等待期内（默认约一个月）管理组被冻结，之后由新管理组取代。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>铸币、花费或修改参数；自身持有管理组密钥。</li>
+      <li>未达到自身签名门槛时采取任何行动。</li>
+    </ul>
+    <div class="app">应用：Genesis、Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>储备账户</h3>
+    <div class="who">国库：持有尚未流通的供应。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>向任何账户转账（为注册账户、项目、合作方注资）；创建用户账户。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>铸币（只有管理组能为它增发）；创建发行方账户；未达门槛时行动。</li>
+    </ul>
+    <div class="app">应用：Reserve、Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>注册账户</h3>
+    <div class="who">发行方及其名称的把关者。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>为机构的密钥创建发行方账户并注资。</li>
+      <li>为发行方指定代号（4–7 个字母，如 ACME）：既是其代币的交易代码，也是其域名，一经指定即永久有效。</li>
+      <li>决定已终止发行方释放出的代号是否再次分配、分配给谁。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>在账户存续期间更改或收回代号；创建发行方之后控制它。</li>
+      <li>分配 1–3 个字母的名称：那是系统账户的，于创世时确定。</li>
+    </ul>
+    <div class="app">应用：Registrar、Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>手续费账户及其分配人</h3>
+    <div class="who">收取所有手续费，回报维持网络运行的人。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>定期进行手续费分配：汇总本期链上活动，按本轮规则用一笔多签批量付款支付中继与矿工，每笔付款都标明所属轮次。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>收取手续费以外的任何款项，或在未达持钥门槛时付款。</li>
+      <li>隐瞒某一轮：其付款与依据都在链上，供下一轮核查。</li>
+    </ul>
+    <div class="app">应用：Fees、Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>信标运营方</h3>
+    <div class="who">运行锚定链进展的节点。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>为链的最新区块签名，使钱包能够验证；向他人提供链数据。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>持有或使用任何账户的密钥，或更改余额与规则。</li>
+      <li>自行更换：只有管理组能为新信标签发证书。</li>
+    </ul>
+    <div class="app">工具：pp-beacon</div>
+  </div>
+
+  <div class="role">
+    <h3>矿工</h3>
+    <div class="who">生产区块；已注册并有质押的账户。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>注册（缴纳质押与费用），当选某个时隙时生产区块。</li>
+      <li>按所生产的区块在手续费分配中获得报酬。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>更改规则或打包无效交易：所有节点都会拒绝这样的区块。</li>
+      <li>屡次错过时隙仍保持注册（会被自动注销）。</li>
+    </ul>
+    <div class="app">工具：pp-miner</div>
+  </div>
+
+  <div class="role">
+    <h3>中继运营方</h3>
+    <div class="who">网络的公共入口：为钱包和应用提供服务。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>转发交易、响应查询；按度量的服务量在手续费分配中获得报酬。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>伪造余额、密钥或名称：钱包会用链上证明核对每个回答。</li>
+    </ul>
+    <div class="app">工具：pp-relay</div>
+  </div>
+
+  <div class="role">
+    <h3>代币发行方</h3>
+    <div class="who">拥有发行方账户的机构（例如发行公司股份），由多位持钥人共同运营。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>以自己的代号向持有人发行自己的代币；发送原生代币或其他代币。</li>
+      <li>更换签名人；为自己的账户设立恢复组。</li>
+      <li>查看已发行量、余额以及续期费用。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>发行他人的代币，或自行选择、更改代号（代号由注册账户指定）。</li>
+      <li>跳过续期：无力续期的发行方会被终止，其代号随之释放。</li>
+    </ul>
+    <div class="app">应用：Token、Signer</div>
+  </div>
+
+  <div class="role">
+    <h3>用户</h3>
+    <div class="who">任何拥有账户的人：个人、商户、服务。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>持有、发送、接收原生代币和已发行代币，收款方可填账号或代号。</li>
+      <li>在“最后防线”钱包中看到经证明的一切；密钥泄露时立即转移资金。</li>
+      <li>设立恢复组（亲友或备用密钥）作为退路。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>拥有代号或发行代币；发送超过所持数量。</li>
+      <li>保留无力续期的账户（其余额进入回收账户）。</li>
+    </ul>
+    <div class="app">应用：Wallet（以及 pp-browser 等插件）</div>
+  </div>
+
+  <div class="role">
+    <h3>账户的恢复密钥持有人</h3>
+    <div class="who">账户主人选定的、作为其退路的人或保管处。</div>
+    <div class="label can">可以</div>
+    <ul>
+      <li>在账户密钥丢失或被盗时为其指定新密钥：账户立即冻结（窃取者的密钥无法签名），新密钥在设定的等待期后接管。</li>
+      <li>在自身门槛下撤回公告、更换或撤销恢复组。</li>
+    </ul>
+    <div class="label cannot">不可以</div>
+    <ul>
+      <li>直接从账户花费，或在未达门槛时行动。</li>
+      <li>悄然行动：公告记录在链上，并显示在账户主人的钱包中。</li>
+    </ul>
+    <div class="app">应用：Wallet（Recovery）</div>
+  </div>
+
+  <div class="role">
+    <h3>创世仪式</h3>
+    <div class="who">仅一次，在起点：创始持钥人共同完成。</div>
+    <div class="label can">决定</div>
+    <ul>
+      <li>每个系统账户和恢复组由谁持有、需要几人签名。</li>
+      <li>信标的首把密钥、首批矿工、初始参数，以及系统名称（如原生代币的 PPL）。</li>
+    </ul>
+    <div class="label cannot">此后固定</div>
+    <ul>
+      <li>网络标识、时隙时间与系统名称；系统账户只在此时创建。</li>
+    </ul>
+    <div class="app">应用：Genesis、Signer</div>
+  </div>
+
+</div>
+
+<div class="open">
+  <b>待定事项</b>
+  <ul>
+    <li><b>系统名称：</b>PPL、RSV、REG、FEE、RCY 为暂定名称，待各方确认后于正式网络创世时确定。</li>
+    <li><b>已终止的账户：</b>已终止账户的账号与代号能否再次使用、间隔多久，将作为同一条规则一并决定。</li>
+    <li><b>域名解析：</b>这些代号是本链的名称，而非互联网域名；如何解析（使用我们拥有的后缀，或由 pp-browser 原生解析）尚未决定。</li>
+  </ul>
+</div>
+
+<footer>详细资料：pp-ledger 的 <a href="https://github.com/people-post/pp-ledger/tree/develop/docs/contracts">docs/contracts</a>（数据格式与规则）及本仓库的 <a href="guides/getting-started.md">docs/guides</a>（各角色指南，英文）。可打印为两页 A4。</footer>
+
+</body>
+</html>

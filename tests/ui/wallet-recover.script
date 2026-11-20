@@ -1,0 +1,37 @@
+# Against a running chain: a wallet holding an account's two recovery keys pins the network and announces
+# the account's next key — a new one made here — signed by both.
+wait 5
+click #unlock-passphrase
+type guardian passphrase
+click #unlock
+idle
+wait 5
+answer @OUT@/network-card.json
+click #wnet-import-first
+wait 3
+idle
+wait 3
+click #nav-recovery
+idle
+wait 3
+click #recover-account
+type @ACCOUNT@
+click #recover-new-key
+idle
+wait 2
+click #recover-announce
+idle
+wait 5
+idle
+wait 3
+expect #action-send
+shot @OUT@/wallet-9-recover.png
+click #action-send
+idle
+wait 5
+idle
+wait 5
+idle
+wait 5
+shot @OUT@/wallet-10-announced.png
+quit

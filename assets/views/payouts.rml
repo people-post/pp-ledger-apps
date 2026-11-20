@@ -1,0 +1,55 @@
+<rml>
+<head>
+  <title>Payouts</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="payouts">
+    <div class="card">
+      <h1>{{title}}</h1>
+      <p class="muted">One operation from the fee account pays them all: each of its holders reviews it and
+        signs once. Its round file is saved beside it — hand both to the holders.</p>
+      <div class="facts">
+        <div class="item" data-for="fact : totals">
+          <span class="label">{{fact.label}}</span>
+          <span class="value">{{fact.value}}</span>
+        </div>
+      </div>
+      <div class="facts" data-if="payouts.size > 0">
+        <div class="item">
+          <span class="label"><strong>Account</strong></span>
+          <span class="grow"><strong>Who</strong></span>
+          <span style="width: 140dp;"><strong>Paid</strong></span>
+          <span style="width: 140dp;"><strong>Last round</strong></span>
+        </div>
+        <div class="item" data-for="p : payouts">
+          <span class="label">{{p.account}}</span>
+          <span class="grow">{{p.who}}</span>
+          <span style="width: 140dp;">{{p.amount}}</span>
+          <span class="muted" style="width: 140dp;">{{p.last}}</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Hours the signers have</label>
+          <input id="form-hours" class="field" type="text" data-value="valid_hours" data-attrif-disabled="busy"/>
+        </div>
+        <div class="grow">
+          <label>Notes for the signers (optional, shown as yours)</label>
+          <input id="form-notes" class="field" type="text" data-value="notes" data-attrif-disabled="busy"/>
+        </div>
+      </div>
+      <button id="payouts-make" class="primary" data-event-click="payouts_make()" data-attrif-disabled="busy">Make the operation…</button>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+  </div>
+</body>
+</rml>

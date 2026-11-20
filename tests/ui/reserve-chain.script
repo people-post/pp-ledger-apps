@@ -1,0 +1,46 @@
+# Against a running chain: set the node, make a transfer from the reserve to the registrar, sign it
+# with the vault's three reserve keys, submit it, see it land.
+wait 5
+click #unlock-passphrase
+type reserve passphrase
+click #unlock
+idle
+wait 5
+click #nav-network
+wait 3
+click #network-address
+type @NODE@
+click #network-check
+idle
+wait 3
+shot @OUT@/1-network.png
+click #nav-transfer
+idle
+wait 5
+click #transfer-to
+type 2
+click #transfer-amount
+type @AMOUNT@
+click #transfer-notes
+type chain smoke: reserve to registrar
+shot @OUT@/2-transfer.png
+answer @OUT@/transfer.json
+click #transfer-make
+idle
+wait 5
+answer @OUT@/signed1.json
+click #sign
+wait 5
+answer @OUT@/signed2.json
+click #sign
+wait 5
+answer @OUT@/signed3.json
+click #sign
+wait 5
+expect #submit
+click #submit
+idle
+wait 5
+expect #submit-done
+shot @OUT@/3-submitted.png
+quit

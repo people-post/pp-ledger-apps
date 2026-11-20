@@ -1,0 +1,39 @@
+<rml>
+<head>
+  <title>Rounds</title>
+  <link type="text/rcss" href="../themes/apps.rcss"/>
+</head>
+<body>
+  <div class="bar" data-model="nav">
+    <span class="app">{{app}}</span>
+    <span class="tab" data-for="tab : tabs" data-attr-id="'nav-' + tab.id" data-class-current="current == tab.id" data-event-click="nav_go(tab.id)">{{tab.title}}</span>
+    <span class="spacer"></span>
+    <span class="status" data-if="status != ''">{{status}}</span>
+    <span id="nav-lock" class="tab" data-event-click="nav_lock()">Lock</span>
+  </div>
+  <div class="page" data-model="rounds">
+    <div class="card">
+      <h1>Fee rounds</h1>
+      <p class="muted">Every fee collects in the fee account (balance {{balance}}). A round hands it on to the
+        network's miners and relays: its period read from the chain, the relays' measures, the rules, the
+        payouts signed by the fee account's holders.</p>
+      <div class="row">
+        <button id="rounds-next" class="primary" data-event-click="rounds_next()">Start the next round</button>
+        <button id="rounds-import" data-event-click="rounds_import()">Import a round file…</button>
+      </div>
+      <p class="notice" data-if="notice != ''">{{notice}}</p>
+      <p class="error" data-if="error != ''">{{error}}</p>
+    </div>
+    <div class="card">
+      <h2>Rounds so far</h2>
+      <p class="muted" data-if="rows.size == 0">None yet. Another holder's rounds come in as round files (Import).</p>
+      <div class="item" data-for="row : rows">
+        <span style="width: 60dp;"><strong>{{row.number}}</strong></span>
+        <span class="grow">blocks {{row.blocks}} · paid {{row.paid}}</span>
+        <span class="mono" style="width: 170dp;">{{row.digest}}</span>
+        <button class="small" data-attr-id="'round-export-' + it_index" data-event-click="rounds_export(it_index)">Save round file…</button>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>
