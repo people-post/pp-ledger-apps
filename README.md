@@ -10,7 +10,8 @@ and macOS.
 Guides for key holders: [docs/guides](docs/guides/getting-started.md). Packages: the repository's
 releases (`.deb`s and AppImages for Linux, disk images for macOS, with checksums; [docs/RELEASE.md](docs/RELEASE.md)).
 Design: [projects/admin-apps](projects/admin-apps/DESIGN.md), [projects/token-app](projects/token-app/DESIGN.md),
-[projects/fee-app](projects/fee-app/DESIGN.md), [projects/wallet-app](projects/wallet-app/DESIGN.md).
+[projects/fee-app](projects/fee-app/DESIGN.md), [projects/wallet-app](projects/wallet-app/DESIGN.md);
+proposed: [projects/operator-app](projects/operator-app/DESIGN.md) (certifying relays and nodes).
 
 ## Build
 
