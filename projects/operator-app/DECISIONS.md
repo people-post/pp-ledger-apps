@@ -32,7 +32,8 @@ open, review, sign and merge stay one path.
 ## OP003 — The relay certificate's codec from a shared library
 
 **Date:** 2026-11-22
-**Status:** Proposed
+**Status:** Proposed; its library amended by [OP008](#op008--the-codec-comes-from-pp-browsers-capabilities-repo-after-release-1)
+(pp-browser's capabilities repository, not pp-cpp-crypto or pp-cpp-common). One shared codec still holds.
 **Decision:** The C++ codec for the operator set, the relay id and the relay certificate moves out of pp-browser
 (`capabilities/net/src/lib/net/RelayCertificate.*`, `capabilities/base/src/foundation/crypto/RelayId.*`) into a library
 both repositories pin (pp-cpp-crypto, or pp-cpp-common beside `ExtArea`), with pp-browser's frozen vectors. This
@@ -92,3 +93,34 @@ code path.
 verifier.
 **Alternatives:** The app defines a generic service certificate for all three (a format that neither pp-node nor
 pp-ledger reads).
+
+## OP008 — The codec comes from pp-browser's capabilities repo, after release 1
+
+**Date:** 2026-11-22
+**Status:** Accepted (Hongwei, 2026-11-22). Amends OP003's library.
+**Decision:** The relay id, operator set and relay certificate code (pp-browser `capabilities/net/src/lib/net/RelayCertificate.*`,
+`capabilities/base/src/foundation/crypto/RelayId.*`) leaves pp-browser as the first move of its capabilities plan:
+into the one capabilities repository, in the net capability's target, with its vectors per pp-browser's
+[capability-repos](https://github.com/people-post/pp-browser/blob/main/projects/capability-repos/DECISIONS.md) CR005,
+CR006, CR010 and CR012. This app is the "second app" CR005 waits for. The move happens after pp-browser's release 1;
+op1 waits for it, and the app's relay kind follows it.
+**Rationale:** pp-cpp-crypto holds primitives, the algorithm registry and typed blobs; its README keeps product wire
+formats in the apps. Of the certificate code, only BLAKE2b, ML-DSA, typed blobs and the PeerId are crypto, and those are
+already there. The rest is a product format: the set and certificate layouts and domains, set changes, origin parsing
+and comparison, sequences, verdicts, keeping the highest. pp-browser's own decisions name the capabilities repo as the
+home for code a second app needs. Nothing waits on it: release 1's ceremonies use the relay's tool.
+**A reference port exists:** pp-cpp-crypto branch `feat/relay-certificate` (commit 402421f, 2026-11-22; not merged, not
+to be released from there). It carries the code with pp-browser's vectors byte for byte, and every case reads with the
+same verdict. What it found, for whoever does the move:
+- **Origin policy is the caller's.** pp-browser refuses an origin it could not put on its account card (128 bytes
+  among other bounds). The shared code keeps the structural rules (1 to 4 origins, http(s) with a host and a valid
+  port, distinct by their key) and takes an origin predicate; pp-browser must pass its card rule when it switches, or
+  it accepts certificates it refuses today.
+- **Errors are the shared code's own category,** with the verdict as the code; pp-browser maps them to its own errors
+  (today `AppError::NewerFormat` and `RelayIdentityUnavailable`), as it does for the algorithm registry's.
+- **It needs pp-cpp-common 1.5.0 or later** (`ExtArea`).
+- The signing domains stay `pp-browser:relay-certificate` and `pp-browser:relay-operator-set-change`: they are in every
+  signed certificate.
+**Alternatives:** pp-cpp-crypto (outside its scope, as above). A copy here, kept equal by the vectors (OP003's reason
+still holds). Starting the capabilities repository now with only this target (its pin and vendored-code prerequisites,
+CR012, during pp-browser's release freeze).

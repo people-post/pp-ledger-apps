@@ -119,7 +119,7 @@ certificate body does not expire before it is signed. A body carries its own exp
 | `apps_ui` | the Services, New service, Next certificate, Merge and check and Publish screens; Review shared with the Signer |
 | `pp-ledger-operator` | the operator app: core and UI; network only from op4 |
 | `pp-ledger-signer` | opens certificate operation files beside pp-ledger's (still no network code) |
-| the codec | the relay certificate's, from a shared library (OP003); a kind's codec comes from its format's owner |
+| the codec | the relay certificate's, from pp-browser's capabilities repository (OP003, OP008); a kind's codec comes from its format's owner |
 
 ## What it does not do
 
