@@ -22,7 +22,7 @@ using namespace apps::online;
 
 int main(int argc, char **argv) {
   std::vector<std::string> args;
-  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Wallet — PP Ledger"}, args);
+  AppOptions options = UiApp::parseArgs(argc, argv, {.title = "Wallet - PP Ledger"}, args);
   UiApp app(options);
   if (!app.start()) {
     return 1;
