@@ -9,7 +9,8 @@
       <h1>Unlock your vault</h1>
       <p class="muted">Your keys are kept in it, encrypted with your passphrase.</p>
       <label>Passphrase</label>
-      <input id="unlock-passphrase" class="field" type="password" data-value="passphrase" data-attrif-disabled="busy"/>
+      <input id="unlock-passphrase" class="field" type="password" data-value="passphrase"
+             data-event-change="vault_submit()" data-attrif-disabled="busy"/>
       <div class="row">
         <button id="unlock" class="primary" data-event-click="vault_unlock()" data-attrif-disabled="busy">Unlock</button>
         <span class="muted" data-if="busy">Unlocking… this takes a few seconds.</span>
@@ -20,9 +21,11 @@
       <p class="muted">It keeps your keys on this computer, encrypted with a passphrase only you know.
         Choose a few words you will remember: nobody can recover a forgotten passphrase.</p>
       <label>Passphrase</label>
-      <input id="create-passphrase" class="field" type="password" data-value="passphrase" data-attrif-disabled="busy"/>
+      <input id="create-passphrase" class="field" type="password" data-value="passphrase"
+             data-event-change="vault_submit()" data-attrif-disabled="busy"/>
       <label>The same passphrase again</label>
-      <input id="create-confirm" class="field" type="password" data-value="confirm" data-attrif-disabled="busy"/>
+      <input id="create-confirm" class="field" type="password" data-value="confirm"
+             data-event-change="vault_submit()" data-attrif-disabled="busy"/>
       <div class="row">
         <button id="create" class="primary" data-event-click="vault_create()" data-attrif-disabled="busy">Create the vault</button>
         <span class="muted" data-if="busy">Creating… this takes a few seconds.</span>

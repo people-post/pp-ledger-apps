@@ -1,0 +1,10 @@
+# Unlock by typing the passphrase and pressing Enter (not clicking Unlock).
+wait 5
+click #unlock-passphrase
+type fixture passphrase
+enter
+idle
+wait 5
+expect #nav-keys
+shot @OUT@/unlock-enter.png
+quit
