@@ -115,7 +115,7 @@ pp::Roe<VerifiedAccount> Verifier::account(ChainLink &link, uint64_t id) {
       why = checked.error().message;
       continue;
     }
-    auto proven = pp::verify::checkAccountProof(checked.value().second.back().block, proof.value());
+    auto proven = pp::verify::checkAccountProof(checked.value().second.back().block, proof.value(), id);
     if (!proven) {
       return pp::Error("The node's account proof does not hold: " + proven.error().message);
     }
@@ -150,7 +150,7 @@ pp::Roe<VerifiedDomain> Verifier::domain(ChainLink &link, const std::string &typ
       why = checked.error().message;
       continue;
     }
-    auto proven = pp::verify::checkDomainProof(checked.value().second.back().block, proof.value());
+    auto proven = pp::verify::checkDomainProof(checked.value().second.back().block, proof.value(), *name);
     if (!proven) {
       return pp::Error("The node's domain proof does not hold: " + proven.error().message);
     }
