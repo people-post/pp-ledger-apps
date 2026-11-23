@@ -2,6 +2,10 @@
 
 #include "ui/UiApp.h"
 
+#include <ui/dom/Element.h>
+#include <ui/dom/ElementDocument.h>
+#include <ui/dom/Event.h>
+
 #include <sodium.h>
 
 #include <memory>
@@ -27,8 +31,31 @@ void VaultScreen::bind(ui::DataModelConstructor &model) {
   model.Bind("notice", &notice_);
   model.Bind("busy", &busy_);
   model.Bind("dir", &dir_);
+  model.BindEventCallback("vault_submit", &VaultScreen::submit, this);
   model.BindEventCallback("vault_unlock", &VaultScreen::unlock, this);
   model.BindEventCallback("vault_create", &VaultScreen::create, this);
+}
+
+void VaultScreen::submit(ui::DataModelHandle model, ui::Event &event, const ui::VariantList &args) {
+  // Typing also fires change; only Enter on a single-line field sets linebreak (pp-cpp-ui).
+  if (!event.GetParameter("linebreak", false)) {
+    return;
+  }
+  if (exists_) {
+    unlock(model, event, args);
+    return;
+  }
+  // Creating: Enter in the first field moves to confirm when that is still empty.
+  ui::Element *target = event.GetTargetElement();
+  if (confirm_.empty() && target && target->GetId() == "create-passphrase") {
+    if (ui::ElementDocument *doc = document()) {
+      if (ui::Element *confirm = doc->GetElementById("create-confirm")) {
+        confirm->Focus();
+        return;
+      }
+    }
+  }
+  create(model, event, args);
 }
 
 void VaultScreen::willShow() {

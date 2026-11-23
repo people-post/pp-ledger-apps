@@ -17,6 +17,8 @@ protected:
   void bind(ui::DataModelConstructor &model) override;
 
 private:
+  /** Enter in a passphrase field (single-line `change` with `linebreak`) hits Unlock / Create. */
+  void submit(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void unlock(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void create(ui::DataModelHandle, ui::Event &, const ui::VariantList &);
   void finish(const std::string &error);
