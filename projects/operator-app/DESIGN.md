@@ -16,6 +16,10 @@ code (OP001). However many services a holder signs for, managing one looks like 
 | **Relay** (pp-relay-apis: the org's relays per environment, a user-run relay) | the relay's transport key (its PeerId), its signing key, 1–4 origins | pp-browser [SIGNED_FORMATS § 3](https://github.com/people-post/pp-browser/blob/main/projects/release-compatibility/SIGNED_FORMATS.md#3-the-relay-operator-set-and-certificate): frozen for release 1, built | the relay's secrets; pp-browser's `config/relay-certs/<env>.cert` and `PP_RELAY_ID_<ENV>` |
 | **Node** (pp-node; `ledger_relay` among its roles when it runs `--ledger-role relay`) | the node's transport key, its account key, its roles | **to be specified** by pp-browser (with its signed node records, N031) | the node, by `install` |
 | **Ledger relay** (pp-ledger's `pp-relay`, alone) | the relay's Amp key, its network | **to be specified** by pp-ledger | the relay, by `install` |
+| **Miner** (pp-ledger's `pp-miner`; pp-node with `--ledger-role miner`) | **no operator set**: the miner account itself certifies the producer key the host signs blocks with, on chain | **to be specified** by pp-ledger ([SLOT_COMMITTEE_OPEN_ITEMS § Miner producer keys](https://github.com/people-post/pp-ledger/blob/main/docs/architecture/SLOT_COMMITTEE_OPEN_ITEMS.md#miner-producer-keys)) | the chain: the account's holders sign it in the Signer as a pp-ledger operation, not here |
+
+A miner is not a service of this app: its producer key is certified by its own account, a chain operation like any
+other the account signs, so no operator set or certificate operation file is involved.
 
 A pp-node that runs the ledger relay is **one** node service: it runs the ledger relay on the node's own identity
 (pp-browser `docs/ops/BUILD.md`, "Ledger role"), so one certificate names both. A `pp-relay` run alone is a ledger relay service.
