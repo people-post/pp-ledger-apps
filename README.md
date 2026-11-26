@@ -26,6 +26,9 @@ cmake --build build -j
 ctest --test-dir build --output-on-failure
 ```
 
+Warnings fail the build by default; an older compiler with false positives (GCC 12, as on Debian 12) builds with
+`-DPP_APPS_WARNINGS_AS_ERRORS=OFF`, which also turns `-Werror` off in pp-ledger and pp-cpp-ui.
+
 Local checkouts instead of the pins: `-DPP_LEDGER_SOURCE_DIR=../pp-ledger`
 (`PP_CPP_UI_SOURCE_DIR`, `PP_CPP_COMMON_SOURCE_DIR`, `PP_CPP_CRYPTO_SOURCE_DIR` likewise).
 
