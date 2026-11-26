@@ -8,6 +8,9 @@ set(PP_LEDGER_SOURCE_DIR "" CACHE PATH "Optional local checkout of pp-ledger")
 set(PP_LEDGER_GIT_REPOSITORY "https://github.com/people-post/pp-ledger.git"
   CACHE STRING "Git remote for pp-ledger")
 pp_fetch_git_tag(PP_LEDGER_GIT_TAG "release/v1.8.1" "pp-ledger release tag")
+# Its -Werror follows ours: a plain variable overrides pp-ledger's option() (CMP0077), in a fresh or an existing build
+# folder. A pp-ledger release before PP_LEDGER_WARNINGS_AS_ERRORS ignores it.
+set(PP_LEDGER_WARNINGS_AS_ERRORS ${PP_APPS_WARNINGS_AS_ERRORS})
 
 if(PP_LEDGER_SOURCE_DIR)
   add_subdirectory("${PP_LEDGER_SOURCE_DIR}" "${PROJECT_BINARY_DIR}/_deps/pp_ledger-build" EXCLUDE_FROM_ALL)

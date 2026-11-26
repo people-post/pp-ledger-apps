@@ -1,4 +1,5 @@
-# First-party targets build with warnings, as errors by default.
+# First-party targets build with warnings, as errors by default. Off also turns -Werror off in pp-ledger and pp-cpp-ui
+# (PpLedger.cmake, PpCppUi.cmake): for an older compiler with false positives (GCC 12, as on Debian 12).
 option(PP_APPS_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 function(pp_apps_apply_warnings target)

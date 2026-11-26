@@ -10,6 +10,8 @@ pp_fetch_git_tag(PP_CPP_UI_GIT_TAG "v0.4.0" "Release tag on pp-cpp-ui main")
 
 set(PP_UI_BUILD_TESTS OFF CACHE BOOL "Build pp-cpp-ui standalone tests" FORCE)
 set(UI_TESTS OFF CACHE BOOL "Build UI engine unit tests" FORCE)
+# Its -Werror follows ours, as pp-ledger's (PpLedger.cmake).
+set(PP_UI_WARNINGS_AS_ERRORS ${PP_APPS_WARNINGS_AS_ERRORS})
 set(FT_DISABLE_BROTLI ON CACHE BOOL "" FORCE)
 set(FT_REQUIRE_BROTLI OFF CACHE BOOL "" FORCE)
 
